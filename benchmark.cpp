@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <time.h>
-#include "src/quadtree.h"
+#include "include/quad_tree.hpp"
 
 static void
 bench(void (*bm)(), char *label){

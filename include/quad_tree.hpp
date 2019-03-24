@@ -1,0 +1,187 @@
+// The MIT License 
+// (c) 2019 Daniel Williams
+
+#ifndef _QUAD_TREE_HPP_
+#define _QUAD_TREE_HPP_
+
+#define QUAD_TREE_VERSION "0.0.1"
+
+#include <stdlib.h>
+#include <string>
+using std::string;
+#include <cmath>
+#include <memory>
+using std::unique_ptr;
+
+#include "bounds.hpp"
+#include "point.hpp"
+#include "quad_node.hpp"
+
+namespace quadtree {
+
+/**
+ * Datastructure: A point Quad Tree for representing 2D data. Each
+ * region has the same ratio as the bounds for the tree.
+ * 
+ * The implementation currently requires pre-determined bounds for data as it
+ * can not rebalance itself to that degree.
+ */
+template <class V>
+class QuadTree {
+
+    /**
+     * Constructs a new quad tree.
+     *
+     * @param {double} minX Minimum x-value that can be held in tree.
+     * @param {double} minY Minimum y-value that can be held in tree.
+     * @param {double} maxX Maximum x-value that can be held in tree.
+     * @param {double} maxY Maximum y-value that can be held in tree.
+     */
+    QuadTree();
+    
+    /**
+     * Performs a deep reset of all tree data.
+     */
+    void reset();
+
+    /**
+     * 
+     */
+    ~QuadTree();
+
+    /**
+     * Sets the value of an (x, y) point within the quad-tree.
+     *
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @param {V} value The value associated with the point.
+     */
+    void set(double x, double y, V new_value);
+
+    /**
+     * Gets the value of the point at (x, y) or null if the point is empty.
+     *
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @param {V} opt_default The default value to return if the node doesn't
+     *                 exist.
+     * @return {*} The value of the node, the default value if the node
+     *         doesn't exist, or undefined if the node doesn't exist and no default
+     *         has been provided.
+     */
+    V search(double x, double y);
+
+    /**
+     * Removes a point from (x, y) if it exists.
+     *
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @return {V} The value of the node that was removed, or null if the
+     *         node doesn't exist.
+     */
+    bool remove(double x, double y);
+
+    /**
+     * Returns true if the point at (x, y) exists in the tree.
+     *
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @return {bool} Whether the tree contains a point at (x, y).
+     */
+    bool contains(double x, double y);
+
+
+    void deserialize(string frozen);
+    string serialize();
+
+
+
+    // public Point<V>[] searchIntersect(final double xmin, final double ymin, final double xmax, final double ymax);
+
+    // public Point<V>[] searchWithin(final double xmin, final double ymin, final double xmax, final double ymax);
+
+    // public void navigate(Node<V> node, Func<V> func, double xmin, double ymin, double xmax, double ymax);
+
+    // private bool intersects(double left, double bottom, double right, double top,QuadNode<V> node);
+
+
+private:
+
+    // /**
+    //  * Traverses the tree depth-first, with quadrants being traversed in clockwise
+    //  * order (NE, SE, SW, NW).  The provided function will be called for each
+    //  * leaf node that is encountered.
+    //  * @param {QuadTree.Node} node The current node.
+    //  * @param {function(QuadTree.Node)} fn The function to call
+    //  *     for each leaf node. This function takes the node as an argument, and its
+    //  *     return value is irrelevant.
+    //  * @private
+    //  */
+    // void traverse(Node<V> node, Func<V> func);
+
+    // /**
+    //  * Finds a leaf node with the same (x, y) coordinates as the target point, or
+    //  * null if no point exists.
+    //  * @param {QuadTree.Node} node The node to search in.
+    //  * @param {number} x The x-coordinate of the point to search for.
+    //  * @param {number} y The y-coordinate of the point to search for.
+    //  * @return {QuadTree.Node} The leaf node that matches the target,
+    //  *     or null if it doesn't exist.
+    //  * @private
+    //  */
+    // publicQuadNode<V> find(Node<V> node, double x, double y);
+
+    // /**
+    //  * Inserts a point into the tree, updating the tree's structure if necessary.
+    //  * @param {.QuadTree.Node} parent The parent to insert the point
+    //  *     into.
+    //  * @param {QuadTree.Point} point The point to insert.
+    //  * @return {bool} True if a new node was added to the tree; False if a node
+    //  *     already existed with the correpsonding coordinates and had its value
+    //  *     reset.
+    //  * @private
+    //  */
+    // private bool insert(Node<V> parent, Point<V> point);
+
+    // /**
+    //  * Converts a leaf node to a pointer node and reinserts the node's point into
+    //  * the correct child.
+    //  * @param {QuadTree.Node} node The node to split.
+    //  * @private
+    //  */
+    // private void split(Node<V> node);
+
+    // /**
+    //  * Attempts to balance a node. A node will need balancing if all its children
+    //  * are empty or it contains just one leaf.
+    //  * @param {QuadTree.Node} node The node to balance.
+    //  * @private
+    //  */
+    // private void balance(Node<V> node);
+
+    // /**
+    //  * Returns the child quadrant within a node that contains the given (x, y)
+    //  * coordinate.
+    //  * @param {QuadTree.Node} parent The node.
+    //  * @param {number} x The x-coordinate to look for.
+    //  * @param {number} y The y-coordinate to look for.
+    //  * @return {QuadTree.Node} The child quadrant that contains the
+    //  *     point.
+    //  * @private
+    //  */
+    // privateQuadNode<V> getQuadrantForPoint(Node<V> parent, double x, double y);
+
+    // /**
+    //  * Sets the point for a node, as long as the node is a leaf or empty.
+    //  * @param {QuadTree.Node} node The node to set the point for.
+    //  * @param {QuadTree.Point} point The point to set.
+    //  * @private
+    //  */
+    // private void setPointForNode(Node<V> node, Point<V> point);
+
+private:
+    unique_ptr<QuadNode<V>> root;
+};
+
+} // namespace quadtree
+#endif // _QUAD_TREE_HPP_

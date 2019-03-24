@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "src/quadtree.h"
+#include "include/quad_tree.hpp"
 
 #define test(fn) \
         printf("\x1b[33m" # fn "\x1b[0m "); \
