@@ -4,6 +4,7 @@
 #ifndef _QUAD_TREE_NODE_HPP_
 #define _QUAD_TREE_NODE_HPP_
 
+#include <cstdint>
 #include <string>
 using std::string;
 
@@ -14,7 +15,8 @@ using std::unique_ptr;
 
 namespace quadtree {
 
-template <class V>
+typedef uint32_t node_value_t;
+    
 class QuadNode {
 public:
     enum NodeType { EMPTY, LEAF, BRANCH };
@@ -24,11 +26,11 @@ public:
     QuadNode(double x, double y, double w, double h);
     ~QuadNode();
 
-    NodeType get_type();
 
     double get_height() const;
+    NodeType get_type() const;
+    node_value_t get_value() const;
     double get_width() const;
-    V      get_value() const;
     double get_x() const;
     double get_y() const;
     
@@ -38,7 +40,7 @@ public:
     bool is_branch();
 
     void set_height(double h);
-    void set_value(V new_value);
+    void set_value(node_value_t new_value);
     void set_width(double w);
     void set_x(double x);
     void set_y(double x);
@@ -49,7 +51,7 @@ public:
 public:
     NodeType nodetype = NodeType::EMPTY;
     
-    //QuadNode<V>* parent;
+    //QuadNode * parent;
 
     // quadtree_bounds_t *bounds;
 
@@ -60,7 +62,7 @@ public:
     double height;
 
     // purpose unclear
-    V value;
+    node_value_t value;
 
     // purpose unclear
     void *key;
@@ -71,9 +73,5 @@ public:
     unique_ptr<QuadNode> southeast; //se;
 
 };
-
-// experiment:
-typedef QuadNode<double> XYQuodnode;
-
 } // namespace quadtree
 #endif // _QUAD_TREE_NODE_HPP_

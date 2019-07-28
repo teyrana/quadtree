@@ -6,7 +6,7 @@
 
 #define QUAD_TREE_VERSION "0.0.1"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 using std::string;
 #include <cmath>
@@ -18,7 +18,7 @@ using std::unique_ptr;
 #include "quad_node.hpp"
 
 namespace quadtree {
-
+    
 /**
  * Datastructure: A point Quad Tree for representing 2D data. Each
  * region has the same ratio as the bounds for the tree.
@@ -26,9 +26,8 @@ namespace quadtree {
  * The implementation currently requires pre-determined bounds for data as it
  * can not rebalance itself to that degree.
  */
-template <class V>
 class QuadTree {
-
+public:
     /**
      * Constructs a new quad tree.
      *
@@ -56,7 +55,7 @@ class QuadTree {
      * @param {double} y The y-coordinate.
      * @param {V} value The value associated with the point.
      */
-    void set(double x, double y, V new_value);
+    void set(double x, double y, node_value_t new_value);
 
     /**
      * Gets the value of the point at (x, y) or null if the point is empty.
@@ -69,7 +68,7 @@ class QuadTree {
      *         doesn't exist, or undefined if the node doesn't exist and no default
      *         has been provided.
      */
-    V search(double x, double y);
+    node_value_t search(double x, double y);
 
     /**
      * Removes a point from (x, y) if it exists.
@@ -180,7 +179,7 @@ private:
     // private void setPointForNode(Node<V> node, Point<V> point);
 
 private:
-    unique_ptr<QuadNode<V>> root;
+    unique_ptr<QuadNode> root;
 };
 
 } // namespace quadtree

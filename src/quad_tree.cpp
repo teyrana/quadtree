@@ -8,31 +8,27 @@ using std::string;
 using std::unique_ptr;
 
 #include "quad_tree.hpp"
-
+using quadtree::node_value_t;
 using quadtree::QuadNode;
 using quadtree::QuadTree;
 
-template<class V>
-QuadTree<V>::QuadTree(){}
+QuadTree::QuadTree(){}
 
-template<class V>
-void QuadTree<V>::reset() {
+void QuadTree::reset() {
     this->root.reset();
 }
 
-template<class V>
-QuadTree<V>::~QuadTree(){
+QuadTree::~QuadTree(){
     this->reset();
 }
 
-template<class V>
-void QuadTree<V>::set(double x, double y, V value) {
+void QuadTree::set(double x, double y, node_value_t value) {
     /*
     // Java Implementation
     if (x < root.getX() || y < root.getY() || x > root.getX() + root.getW() || y > root.getY() + root.getH()) {
         throw new QuadTreeException("Out of bounds : (" + x + ", " + y + ")");
     }
-    if (this.insert(root, new Point<V>(x, y, value))) {
+    if (this.insert(root, new Point(x, y, value))) {
         this.count_++;
     }
     */
@@ -58,16 +54,16 @@ void QuadTree<V>::set(double x, double y, V value) {
 
 }
 
-template<class V>
-V QuadTree<V>::search(double x, double y) {
-    // Node<V> node = this.find(this.root_, x, y);
+
+node_value_t QuadTree::search(double x, double y) {
+    // Node node = this.find(this.root_, x, y);
     // return node != null ? node.getValue();
     return root->get_value();
 }
 
-template<class V>
-bool QuadTree<V>::remove(double x, double y) {
-    // Node<V> node = this.find(this.root_, x, y);
+
+bool QuadTree::remove(double x, double y) {
+    // Node node = this.find(this.root_, x, y);
     // if (node != null) {
     //     V value = node.getPoint().getValue();
     //     node.setPoint(null);
@@ -80,29 +76,28 @@ bool QuadTree<V>::remove(double x, double y) {
     return false;
 }
 
-template<class V>
-bool QuadTree<V>::contains(double x, double y) {
+bool QuadTree::contains(double x, double y) {
     // NYI
     // return this.get(x, y, null) != null;
     return false;
 }
 
-template<class V>
-void QuadTree<V>::deserialize(string frozen){
+void QuadTree::deserialize(string frozen){
 
 }
-    
-template<class V>
-string QuadTree<V>::serialize(){
-    return this->root.to_json();
+
+
+string QuadTree::serialize(){
+    return "";//this->root.to_json();
 }
 
-    // public Point<V>[] searchIntersect(final double xmin, final double ymin, final double xmax, final double ymax) {
-    //     final List<Point<V>> arr = new ArrayList<Point<V>>();
-    //     this.navigate(this.root_, new Func<V>() {
+
+// public Point[] searchIntersect(final double xmin, final double ymin, final double xmax, final double ymax) {
+    //     final List<Point> arr = new ArrayList<Point>();
+    //     this.navigate(this.root_, new Func() {
             
-    //         public void call(QuadTree<V> quadTree, Node<V> node) {
-    //             Point<V> pt = node.getPoint();
+    //         public void call(QuadTree quadTree, Node node) {
+    //             Point pt = node.getPoint();
     //             if (pt.getX() < xmin || pt.getX() > xmax || pt.getY() < ymin || pt.getY() > ymax) {
     //                 // Definitely not within the polygon!
     //             } else {
@@ -111,24 +106,24 @@ string QuadTree<V>::serialize(){
 
     //         }
     //     }, xmin, ymin, xmax, ymax);
-    //     return arr.toArray((Point<V>[]) new Point[arr.size()]);
+    //     return arr.toArray((Point[]) new Point[arr.size()]);
     // }
 
-//     public Point<V>[] searchWithin(final double xmin, final double ymin, final double xmax, final double ymax) {
-//         final List<Point<V>> arr = new ArrayList<Point<V>>();
-//         this.navigate(this.root_, new Func<V>() {
+//     public Point[] searchWithin(final double xmin, final double ymin, final double xmax, final double ymax) {
+//         final List<Point> arr = new ArrayList<Point>();
+//         this.navigate(this.root_, new Func() {
             
-//             public void call(QuadTree<V> quadTree, Node<V> node) {
-//                 Point<V> pt = node.getPoint();
+//             public void call(QuadTree quadTree, Node node) {
+//                 Point pt = node.getPoint();
 //                 if (pt.getX() > xmin && pt.getX() < xmax && pt.getY() > ymin && pt.getY() < ymax) {
 //                     arr.add(node.getPoint());
 //                 }
 //             }
 //         }, xmin, ymin, xmax, ymax);
-//         return arr.toArray((Point<V>[]) new Point[arr.size()]);
+//         return arr.toArray((Point[]) new Point[arr.size()]);
 //     }
 
-//     public void navigate(Node<V> node, Func<V> func, double xmin, double ymin, double xmax, double ymax) {
+//     public void navigate(Node node, Func func, double xmin, double ymin, double xmax, double ymax) {
 //         switch (node.getNodeType()) {
 //             case LEAF:
 //                 func.call(this, node);
@@ -147,7 +142,7 @@ string QuadTree<V>::serialize(){
 //         }
 //     }
 
-//     private boolean intersects(double left, double bottom, double right, double top, Node<V> node) {
+//     private boolean intersects(double left, double bottom, double right, double top, Node node) {
 //         return !(node.getX() > right ||
 //                 (node.getX() + node.getW()) < left ||
 //                 node.getY() > bottom ||
@@ -157,18 +152,18 @@ string QuadTree<V>::serialize(){
 //      * Clones the quad-tree and returns the new instance.
 //      * @return {QuadTree} A clone of the tree.
 //      */
-//     public QuadTree<V> clone() {
+//     public QuadTree clone() {
 //         double x1 = this.root_.getX();
 //         double y1 = this.root_.getY();
 //         double x2 = x1 + this.root_.getW();
 //         double y2 = y1 + this.root_.getH();
-//         final QuadTree<V> clone = new QuadTree<V>(x1, y1, x2, y2);
+//         final QuadTree clone = new QuadTree(x1, y1, x2, y2);
 //         // This is inefficient as the clone needs to recalculate the structure of the
 //         // tree, even though we know it already.  But this is easier and can be
 //         // optimized when/if needed.
-//         this.traverse(this.root_, new Func<V>() {
+//         this.traverse(this.root_, new Func() {
             
-//             public void call(QuadTree<V> quadTree, Node<V> node) {
+//             public void call(QuadTree quadTree, Node node) {
 //                 clone.set(node.getPoint().getX(), node.getPoint().getY(), node.getPoint().getValue());
 //             }
 //         });
@@ -187,7 +182,7 @@ string QuadTree<V>::serialize(){
 //      *     return value is irrelevant.
 //      * @private
 //      */
-//     public void traverse(Node<V> node, Func<V> func) {
+//     public void traverse(Node node, Func func) {
 //         switch (node.getNodeType()) {
 //             case LEAF:
 //                 func.call(this, node);
@@ -212,8 +207,8 @@ string QuadTree<V>::serialize(){
 //      *     or null if it doesn't exist.
 //      * @private
 //      */
-//     public Node<V> find(Node<V> node, double x, double y) {
-//         Node<V> resposne = null;
+//     public Node find(Node node, double x, double y) {
+//         Node resposne = null;
 //         switch (node.getNodeType()) {
 //             case EMPTY:
 //                 break;
@@ -242,7 +237,7 @@ string QuadTree<V>::serialize(){
 //      *     reset.
 //      * @private
 //      */
-//     private boolean insert(Node<V> parent, Point<V> point) {
+//     private boolean insert(Node parent, Point point) {
 //         Boolean result = false;
 //         switch (parent.getNodeType()) {
 //             case EMPTY:
@@ -275,8 +270,8 @@ string QuadTree<V>::serialize(){
 //      * @param {QuadTree.Node} node The node to split.
 //      * @private
 //      */
-//     private void split(Node<V> node) {
-//         Point<V> oldPoint = node.getPoint();
+//     private void split(Node node) {
+//         Point oldPoint = node.getPoint();
 //         node.setPoint(null);
 
 //         node.setNodeType(NodeType.POINTER);
@@ -286,10 +281,10 @@ string QuadTree<V>::serialize(){
 //         double hw = node.getW() / 2;
 //         double hh = node.getH() / 2;
 
-//         node.setNw(new Node<V>(x, y, hw, hh, node));
-//         node.setNe(new Node<V>(x + hw, y, hw, hh, node));
-//         node.setSw(new Node<V>(x, y + hh, hw, hh, node));
-//         node.setSe(new Node<V>(x + hw, y + hh, hw, hh, node));
+//         node.setNw(new Node(x, y, hw, hh, node));
+//         node.setNe(new Node(x + hw, y, hw, hh, node));
+//         node.setSw(new Node(x, y + hh, hw, hh, node));
+//         node.setSe(new Node(x + hw, y + hh, hw, hh, node));
 
 //         this.insert(node, oldPoint);
 //     }
@@ -300,7 +295,7 @@ string QuadTree<V>::serialize(){
 //      * @param {QuadTree.Node} node The node to balance.
 //      * @private
 //      */
-//     private void balance(Node<V> node) {
+//     private void balance(Node node) {
 //         switch (node.getNodeType()) {
 //             case EMPTY:
 //             case LEAF:
@@ -310,11 +305,11 @@ string QuadTree<V>::serialize(){
 //                 break;
 
 //             case POINTER: {
-//                 Node<V> nw = node.getNw();
-//                 Node<V> ne = node.getNe();
-//                 Node<V> sw = node.getSw();
-//                 Node<V> se = node.getSe();
-//                 Node<V> firstLeaf = null;
+//                 Node nw = node.getNw();
+//                 Node ne = node.getNe();
+//                 Node sw = node.getSw();
+//                 Node se = node.getSe();
+//                 Node firstLeaf = null;
 
 //                 // Look for the first non-empty child, if there is more than one then we
 //                 // break as this node can't be balanced.
@@ -381,7 +376,7 @@ string QuadTree<V>::serialize(){
 //      *     point.
 //      * @private
 //      */
-//     private Node<V> getQuadrantForPoint(Node<V> parent, double x, double y) {
+//     private Node getQuadrantForPoint(Node parent, double x, double y) {
 //         double mx = parent.getX() + parent.getW() / 2;
 //         double my = parent.getY() + parent.getH() / 2;
 //         if (x < mx) {
@@ -397,7 +392,7 @@ string QuadTree<V>::serialize(){
 //      * @param {QuadTree.Point} point The point to set.
 //      * @private
 //      */
-//     private void setPointForNode(Node<V> node, Point<V> point) {
+//     private void setPointForNode(Node node, Point point) {
 //         if (node.getNodeType() == NodeType.POINTER) {
 //             throw new QuadTreeException("Can not set point for node of type POINTER");
 //         }
