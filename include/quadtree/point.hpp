@@ -5,17 +5,18 @@
 #define _QUAD_TREE_POINT_HPP_
 
 namespace quadtree {
-class Point {
+struct Point {
 public:
-    // this is just POD, with some convenient methods:
+    // class is just POD + convenient methods
+    double x;
+    double y;
+
+public:
     Point();
     Point(double x, double y);
 
     void set(double x, double y);
     void clear();
-
-    double x;
-    double y;
 
 };
 } // namespace quadtree

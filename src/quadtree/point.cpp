@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "point.hpp"
+#include "quadtree/point.hpp"
 
 using quadtree::Point;
 

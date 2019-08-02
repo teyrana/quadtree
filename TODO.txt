@@ -1,0 +1,7 @@
+[ ] Enable Ctests w/CMake
+[ ] Integrate & enable a json library (for [de]serialization)
+[ ] Write short debug main
+[ ] Write simple tests for:
+    [ ] Point
+    [ ] Bounds
+    [ ] Node
