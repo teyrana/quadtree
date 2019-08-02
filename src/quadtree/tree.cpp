@@ -7,19 +7,114 @@ using std::string;
 #include <memory>
 using std::unique_ptr;
 
-#include "quad_tree.hpp"
-using quadtree::node_value_t;
-using quadtree::QuadNode;
-using quadtree::QuadTree;
+#include <iostream>
+using std::cout;
+using std::endl;
 
-QuadTree::QuadTree(){}
+#include <nlohmann/json/json.hpp>
 
-void QuadTree::reset() {
-    this->root.reset();
+#include "quadtree/tree.hpp"
+using namespace quadtree;
+
+QuadTree::QuadTree(): QuadTree({0,0}, 1024) {}
+
+QuadTree::QuadTree(Point _center, double _width):
+    root(new Node(_center, _width, _width))
+{
+    root->split();
 }
 
 QuadTree::~QuadTree(){
     this->reset();
+}
+
+void QuadTree::draw_quadrant(std::ostream& sink, const string& prefix, Node* at, const string& as) const {
+    sink << prefix << "[" << as << "]";
+    if(at->is_leaf()){
+	sink << ": " << at->get_value() << '\n';
+    }else{
+	sink << '\n';
+        auto next_prefix = prefix + "    ";
+	draw_quadrant(sink, next_prefix, at->get_northeast(), "NE");
+	draw_quadrant(sink, next_prefix, at->get_northwest(), "NW");
+	draw_quadrant(sink, next_prefix, at->get_southeast(), "SE");
+	draw_quadrant(sink, next_prefix, at->get_southwest(), "SW");
+    }
+
+}
+
+bool QuadTree::contains(const double x, const double y) const {
+    const auto& bounds = get_bounds();
+
+    const double cx = bounds.center.x;
+    const double cy = bounds.center.y;
+    const double dim = bounds.half_height;
+
+    assert(bounds.half_height == bounds.half_width);
+
+    if((x < (cx - dim)) || ((cx + dim) < x)){
+	return false;
+    }else if((y < (cy - dim)) || ((cy + dim) < y)){
+	return false;
+    }
+
+    return true;
+}
+
+void QuadTree::deserialize(std::istream& source){
+    nlohmann::json doc = nlohmann::json::parse( source,    // input
+                                                nullptr,  // callback argument
+                                                false);   // do not allow exceptions
+
+    if(doc.is_discarded()){
+        // in case of ANY error, discard this input
+        return;
+    }
+
+    if(!(doc.is_object() && doc.contains("bounds"))){
+        // 'bounds' is necessary for any well-formed tree serialization
+        return;
+    }else{
+        auto& bounds = doc["bounds"];
+        if(!(bounds.contains("x") && bounds.contains("y") && bounds.contains("width"))){
+            return;
+        }
+
+        // load contents
+        const Point pt = { bounds["x"].get<double>(), bounds["y"].get<double>()};
+        const double width = bounds["width"].get<double>();
+        quadtree::Node* new_root = new quadtree::Node(pt, width);
+        root.reset(new_root);
+
+        doc.erase("bounds");
+        root->load(doc);
+    }
+}
+
+void QuadTree::draw(std::ostream& sink) const{
+    auto& bounds = get_bounds(); 
+    sink << "====== Tree: ======\n";
+    sink << "@(" << bounds.center.x << ", " << bounds.center.y << ")   |" << bounds.half_height << "|\n";
+
+    draw_quadrant(sink, "", root.get(), "RT");
+    
+    sink << endl;
+}
+
+void QuadTree::load(const std::vector<Point>& source){
+}
+
+node_value_t QuadTree::search(const double x, const double y, const node_value_t& default_value) {
+    if(this->contains(x,y)){
+	auto& node = *root->search(x,y);
+	return node.get_value();
+    }else{
+	return default_value;
+    }
+}
+
+void QuadTree::reset() {
+    this->root.reset();
 }
 
 void QuadTree::set(double x, double y, node_value_t value) {
@@ -55,13 +150,6 @@ void QuadTree::set(double x, double y, node_value_t value) {
 }
 
 
-node_value_t QuadTree::search(double x, double y) {
-    // Node node = this.find(this.root_, x, y);
-    // return node != null ? node.getValue();
-    return root->get_value();
-}
-
-
 bool QuadTree::remove(double x, double y) {
     // Node node = this.find(this.root_, x, y);
     // if (node != null) {
@@ -76,19 +164,27 @@ bool QuadTree::remove(double x, double y) {
     return false;
 }
 
-bool QuadTree::contains(double x, double y) {
-    // NYI
-    // return this.get(x, y, null) != null;
-    return false;
+const Bounds& QuadTree::get_bounds() const {
+    return root->get_bounds();
 }
 
-void QuadTree::deserialize(string frozen){
+void QuadTree::serialize(std::ostream& sink) const {
+    nlohmann::json doc;
 
-}
+    // output the bounds once, at the root-level, and all the bounds
+    // for subsequent layers follow deterministicly
+    const Bounds& bounds = root->get_bounds();
+    doc["bounds"] = {
+	{"x", bounds.center.x},
+	{"y", bounds.center.y},
+	// tree is implemented & enforced as square
+	{"width", 2 * bounds.half_width}
+    };
+    
+    doc.update(root->to_json());
 
-
-string QuadTree::serialize(){
-    return "";//this->root.to_json();
+    // write result to output stream:
+    sink << doc;
 }
 
 
@@ -547,3 +643,10 @@ string QuadTree::serialize(){
 //   if(root->se != NULL) quadtree_walk(root->se, descent, ascent);
 //   (*ascent)(root);
 // }
+
+
+std::ostream& operator<<(std::ostream& os, const quadtree::QuadTree& tree)
+{
+    tree.serialize(os);
+    return os;
+}

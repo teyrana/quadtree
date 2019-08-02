@@ -8,14 +8,17 @@
 
 #include <cstdlib>
 #include <string>
-using std::string;
+#include <iostream>
+
 #include <cmath>
 #include <memory>
 using std::unique_ptr;
 
 #include "bounds.hpp"
 #include "point.hpp"
-#include "quad_node.hpp"
+#include "node.hpp"
+#include "node_value.hpp"
+using quadtree::node_value_t;
 
 namespace quadtree {
     
@@ -29,25 +32,52 @@ namespace quadtree {
 class QuadTree {
 public:
     /**
-     * Constructs a new quad tree.
-     *
-     * @param {double} minX Minimum x-value that can be held in tree.
-     * @param {double} minY Minimum y-value that can be held in tree.
-     * @param {double} maxX Maximum x-value that can be held in tree.
-     * @param {double} maxY Maximum y-value that can be held in tree.
+     * Constructs a new quad tree, centered at 0,0 and 1024 units wide, square
+     * 
+     * Use this constructor if the tree will be loaded from a config file, and the initialization values do not matter.
      */
     QuadTree();
     
     /**
-     * Performs a deep reset of all tree data.
+     * Constructs a new quad tree.
+     *
+     * @param {Point} x, y coordinates of tree's center point.
+     * @param {double} tree width.  Tree is square. (i.e. height === width)
      */
-    void reset();
-
+    QuadTree(Point center, double width);
+    
     /**
-     * 
+     *  Releases all memory associated with this quad tree.
      */
     ~QuadTree();
 
+        
+    /**
+     * Returns true if the point at (x, y) exists in the tree.
+     *
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @return {bool} Whether the tree contains a point at (x, y).
+     */
+    bool contains(const double x, const double y) const;
+
+    /**
+     * Loads a representation of a tree from the data source.  The the form source is assumed to
+     * contain a serialization of a tree, as represented in valid json.  That is, in the same
+     * format as QuadTree::serialize(...).
+     *
+     * @param {std::istream} input stream containing the serialization text
+     */
+    void deserialize(std::istream& source);
+
+    /**
+     * Draws a simple debug representation of this tree to the given
+     * output stream. 
+     *
+     * @param {std::ostream&} output stream to write data to
+     */
+    void draw(std::ostream& sink) const;
+    
     /**
      * Sets the value of an (x, y) point within the quad-tree.
      *
@@ -55,20 +85,32 @@ public:
      * @param {double} y The y-coordinate.
      * @param {V} value The value associated with the point.
      */
-    void set(double x, double y, node_value_t new_value);
+    void set(const double x, const double y, const node_value_t new_value);
 
     /**
      * Gets the value of the point at (x, y) or null if the point is empty.
      *
      * @param {double} x The x-coordinate.
      * @param {double} y The y-coordinate.
-     * @param {V} opt_default The default value to return if the node doesn't
+     * @param {node_value_t} opt_default The default value to return if the node doesn't
      *                 exist.
-     * @return {*} The value of the node, the default value if the node
-     *         doesn't exist, or undefined if the node doesn't exist and no default
-     *         has been provided.
+     * @return {node_value_t} The value of the node, if available; or the default value.
      */
-    node_value_t search(double x, double y);
+    node_value_t search(const double x, const double y, const node_value_t& default_value);
+
+    /**
+     * Get the overall bounds of this tree
+     *
+     * @return Bounds object describing the tree's overall bounds.
+     */
+    const Bounds& get_bounds() const;
+
+    /**
+     * Loads the vector of points as a CCW polygon.
+     *
+     * @param {std::istream} input stream containing the serialization text
+     */
+    void load(const std::vector<Point>& source);
 
     /**
      * Removes a point from (x, y) if it exists.
@@ -81,31 +123,20 @@ public:
     bool remove(double x, double y);
 
     /**
-     * Returns true if the point at (x, y) exists in the tree.
-     *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @return {bool} Whether the tree contains a point at (x, y).
+     * Performs a deep reset of all tree data.
      */
-    bool contains(double x, double y);
+    void reset();
 
-
-    void deserialize(string frozen);
-    string serialize();
-
-
-
-    // public Point<V>[] searchIntersect(final double xmin, final double ymin, final double xmax, final double ymax);
-
-    // public Point<V>[] searchWithin(final double xmin, final double ymin, final double xmax, final double ymax);
-
-    // public void navigate(Node<V> node, Func<V> func, double xmin, double ymin, double xmax, double ymax);
-
-    // private bool intersects(double left, double bottom, double right, double top,QuadNode<V> node);
-
+    /**
+     * Writes a json-serialization of the tree to the given out-stream
+     *
+     * @param {std::ostream&} destination for the serialization string
+     */
+    void serialize(std::ostream& sink) const;
 
 private:
-
+    void draw_quadrant(std::ostream& sink, const std::string& prefix, Node* at, const std::string& as) const;
+    
     // /**
     //  * Traverses the tree depth-first, with quadrants being traversed in clockwise
     //  * order (NE, SE, SW, NW).  The provided function will be called for each
@@ -118,19 +149,7 @@ private:
     //  */
     // void traverse(Node<V> node, Func<V> func);
 
-    // /**
-    //  * Finds a leaf node with the same (x, y) coordinates as the target point, or
-    //  * null if no point exists.
-    //  * @param {QuadTree.Node} node The node to search in.
-    //  * @param {number} x The x-coordinate of the point to search for.
-    //  * @param {number} y The y-coordinate of the point to search for.
-    //  * @return {QuadTree.Node} The leaf node that matches the target,
-    //  *     or null if it doesn't exist.
-    //  * @private
-    //  */
-    // publicQuadNode<V> find(Node<V> node, double x, double y);
 
-    // /**
     //  * Inserts a point into the tree, updating the tree's structure if necessary.
     //  * @param {.QuadTree.Node} parent The parent to insert the point
     //  *     into.
@@ -168,19 +187,27 @@ private:
     //  *     point.
     //  * @private
     //  */
-    // privateQuadNode<V> getQuadrantForPoint(Node<V> parent, double x, double y);
+    // privateQuadTreeNode<V> getQuadrantForPoint(Node<V> parent, double x, double y);
 
     // /**
     //  * Sets the point for a node, as long as the node is a leaf or empty.
     //  * @param {QuadTree.Node} node The node to set the point for.
     //  * @param {QuadTree.Point} point The point to set.
     //  * @private
-    //  */
+    //  */source
     // private void setPointForNode(Node<V> node, Point<V> point);
 
 private:
-    unique_ptr<QuadNode> root;
-};
+    unique_ptr<Node> root;
 
+private:
+    friend class TreeTest_LoadValidSource_Test;
+    friend class TreeTest_WriteLoadCycle_Test;
+    friend class TreeTest_TestSearchExplicitTree_Test;
+    friend class TreeTest_TestSearchImplicitTree_Test;
+};
 } // namespace quadtree
+
+std::ostream& operator<<(std::ostream& os, const quadtree::QuadTree& tree);
+
 #endif // _QUAD_TREE_HPP_
