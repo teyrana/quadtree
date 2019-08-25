@@ -1,13 +1,13 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#include "quadtree/point.hpp"
-#include "quadtree/bounds.hpp"
+#include "geometry/point.hpp"
+#include "geometry/bounds.hpp"
 
 #include <cmath>
 
-using quadtree::Point;
-using quadtree::Bounds;
+using geometry::Point;
+using geometry::Bounds;
 
 
 Bounds::Bounds():

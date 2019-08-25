@@ -47,15 +47,15 @@ MESSAGE( STATUS "    with name: ${SHAPE_LIB_LINKAGE}")
 #=============================================================================
 include_directories(include)
 SET(LIB_HEADERS include/quadtree.hpp
-                            include/quadtree/bounds.hpp
-                            include/quadtree/point.hpp
-                            include/quadtree/node.hpp
-                            include/quadtree/tree.hpp)
-  
-SET(LIB_SOURCES src/quadtree/bounds.cpp
-                            src/quadtree/point.cpp
-                            src/quadtree/node.cpp
-                            src/quadtree/tree.cpp)
+                include/geometry/bounds.hpp
+                include/geometry/point.hpp
+                include/quadtree/node.hpp
+                include/quadtree/tree.hpp)
+
+SET(LIB_SOURCES src/geometry/bounds.cpp
+                src/geometry/point.cpp
+                src/quadtree/node.cpp
+                src/quadtree/tree.cpp)
 
 # ============= Quad Tree Library =================
 SET(QUAD_TREE_LIB_NAME quadtree)

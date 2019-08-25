@@ -1,14 +1,14 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#ifndef _QUAD_TREE_BOUNDS_HPP_
-#define _QUAD_TREE_BOUNDS_HPP_
+#ifndef _GEOMETRY_BOUNDS_HPP_
+#define _GEOMETRY_BOUNDS_HPP_
 
 #include <string>
 
 #include "point.hpp"
 
-namespace quadtree {
+namespace geometry {
 class Bounds {
 public:
     Bounds();

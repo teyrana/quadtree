@@ -8,11 +8,14 @@
 #include <gtest/gtest.h>
 
 #include "quadtree/tree.hpp"
-#include "quadtree/point.hpp"
+#include "geometry/point.hpp"
 
 using std::cout;
 using std::endl;
 using std::vector;
+
+using geometry::Point;
+using geometry::Bounds;
 
 namespace quadtree {
 
@@ -125,33 +128,33 @@ TEST( TreeTest, WriteLoadCycle){
 
     // test contents of test_tree
     { // test bounds:
-	auto & bounds = load_tree.get_bounds();
-	ASSERT_DOUBLE_EQ(bounds.center.x,    11);
-	ASSERT_DOUBLE_EQ(bounds.center.y,    11);
-	ASSERT_DOUBLE_EQ(bounds.half_height, 1024);
-	ASSERT_DOUBLE_EQ(bounds.half_width,  1024);
+        auto & bounds = load_tree.get_bounds();
+        ASSERT_DOUBLE_EQ(bounds.center.x,    11);
+        ASSERT_DOUBLE_EQ(bounds.center.y,    11);
+        ASSERT_DOUBLE_EQ(bounds.half_height, 1024);
+        ASSERT_DOUBLE_EQ(bounds.half_width,  1024);
     }
     { // test tree shape
-	auto & root = load_tree.root;
-	ASSERT_FALSE(root->is_leaf());
-	{
-	    auto* ne_quad = root->get_northeast();
-	    ASSERT_FALSE(ne_quad->is_leaf());
-	    ASSERT_TRUE(ne_quad->get_northeast()->is_leaf());
-	    ASSERT_TRUE(ne_quad->get_northwest()->is_leaf());
-	    ASSERT_TRUE(ne_quad->get_southwest()->is_leaf());
-	    ASSERT_TRUE(ne_quad->get_southeast()->is_leaf());
-	}
-	ASSERT_TRUE(root->get_northwest()->is_leaf());
-	ASSERT_TRUE(root->get_southeast()->is_leaf());
-	{
-	    auto* sw_quad = root->get_northeast();
-	    ASSERT_FALSE(sw_quad->is_leaf());
-	    ASSERT_TRUE(sw_quad->get_northeast()->is_leaf());
-	    ASSERT_TRUE(sw_quad->get_northwest()->is_leaf());
-	    ASSERT_TRUE(sw_quad->get_southwest()->is_leaf());
-	    ASSERT_TRUE(sw_quad->get_southeast()->is_leaf());	    
-	}
+        auto & root = load_tree.root;
+        ASSERT_FALSE(root->is_leaf());
+        {
+            auto* ne_quad = root->get_northeast();
+            ASSERT_FALSE(ne_quad->is_leaf());
+            ASSERT_TRUE(ne_quad->get_northeast()->is_leaf());
+            ASSERT_TRUE(ne_quad->get_northwest()->is_leaf());
+            ASSERT_TRUE(ne_quad->get_southwest()->is_leaf());
+            ASSERT_TRUE(ne_quad->get_southeast()->is_leaf());
+        }
+        ASSERT_TRUE(root->get_northwest()->is_leaf());
+        ASSERT_TRUE(root->get_southeast()->is_leaf());
+        {
+            auto* sw_quad = root->get_northeast();
+            ASSERT_FALSE(sw_quad->is_leaf());
+            ASSERT_TRUE(sw_quad->get_northeast()->is_leaf());
+            ASSERT_TRUE(sw_quad->get_northwest()->is_leaf());
+            ASSERT_TRUE(sw_quad->get_southwest()->is_leaf());
+            ASSERT_TRUE(sw_quad->get_southeast()->is_leaf());	    
+        }
     }
 }
     
@@ -198,30 +201,28 @@ TEST( TreeTest, TestSearchImplicitTree){
     // .... Out Of Bounds:
     ASSERT_EQ(tree.search(150, 150, default_value), default_value);
 
+    // const vector<Point> input_polygon{
+    //     {232000, 806410},
+    //     {232400, 820494},
+    //     {243600, 842644},
+    //     {220900, 874092},
+    //     {221700, 906633},
+    //     {238400, 960000},
+    //     {247000, 960000},
+    //     {378000, 960000},
+    //     {378000, 762800},
+    //     {232000, 762800},
+    //     {232000, 806410}};
+    // ASSERT_EQ(input_polygon.size(), 11);
 
-    const vector<Point> input_polygon{
-	{232000, 806410},
-	{232400, 820494},
-	{243600, 842644},
-	{220900, 874092},
-	{221700, 906633},
-	{238400, 960000},
-	{247000, 960000},
-	{378000, 960000},
-	{378000, 762800},
-	{232000, 762800},
-	{232000, 806410}};
-    ASSERT_EQ(input_polygon.size(), 11);
-
-    tree.load(input_polygon);
-    {
-	const auto & bounds = tree.get_bounds();
-	ASSERT_DOUBLE_EQ(bounds.center.x,    491850);
-	ASSERT_DOUBLE_EQ(bounds.center.y,    669000);
-	ASSERT_DOUBLE_EQ(bounds.half_height, 291000);
-	ASSERT_DOUBLE_EQ(bounds.half_width,  291000);
-    }
-    
+    // tree.load(input_polygon);
+    // { // test bounds:
+    //     const auto & bounds = tree.get_bounds();
+    //     ASSERT_DOUBLE_EQ(bounds.center.x,    491850);
+    //     ASSERT_DOUBLE_EQ(bounds.center.y,    669000);
+    //     ASSERT_DOUBLE_EQ(bounds.half_height, 291000);
+    //     ASSERT_DOUBLE_EQ(bounds.half_width,  291000);
+    // }
 
     // Set Quadrant I:
 //    tree.set_value(10, 10, true_value);

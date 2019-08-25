@@ -14,6 +14,8 @@ using std::endl;
 #include <nlohmann/json/json.hpp>
 
 #include "quadtree/tree.hpp"
+
+using namespace geometry;
 using namespace quadtree;
 
 QuadTree::QuadTree(): QuadTree({0,0}, 1024) {}
