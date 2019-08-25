@@ -13,6 +13,8 @@ using nlohmann::json;
 
 using std::cout;
 using std::endl;
+
+using namespace geometry;
 using namespace quadtree;
 
 Node::Node():

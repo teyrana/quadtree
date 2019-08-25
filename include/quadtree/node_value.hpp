@@ -1,8 +1,8 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#ifndef _NODE_VALUE_HPP_
-#define _NODE_VALUE_HPP_
+#ifndef _QUAD_TREE_NODE_VALUE_HPP_
+#define _QUAD_TREE_NODE_VALUE_HPP_
 
 #include <cmath>
 

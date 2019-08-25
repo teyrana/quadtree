@@ -1,10 +1,10 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#ifndef _QUAD_TREE_POINT_HPP_
-#define _QUAD_TREE_POINT_HPP_
+#ifndef _GEOMETRY_POINT_HPP_
+#define _GEOMETRY_POINT_HPP_
 
-namespace quadtree {
+namespace geometry {
 struct Point {
 public:
     // class is just POD + convenient methods

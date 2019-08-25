@@ -10,9 +10,10 @@
 
 #include <nlohmann/json/json_fwd.hpp>
 
-#include "bounds.hpp"
-#include "point.hpp"
+#include "geometry/bounds.hpp"
+#include "geometry/point.hpp"
 #include "node_value.hpp"
+
 
 namespace quadtree {
 
@@ -22,13 +23,13 @@ enum NodeQuadrant {NW, NE, SW, SE};
 class Node {
 public:
     Node();
-    Node(const Point& _center, const double _width);
-    Node(const Point& _center, const double _height, const double _width);
+    Node(const geometry::Point& _center, const double _width);
+    Node(const geometry::Point& _center, const double _height, const double _width);
     //Node(double cx, double cy, double _new_height, double h);  //alternate function signature
 
     ~Node();
 
-    const Bounds& get_bounds() const; 
+    const geometry::Bounds& get_bounds() const; 
     node_value_t get_value() const;
     Node* get_northeast();
     Node* get_northwest();
@@ -53,7 +54,7 @@ private:
     // Important: this *should* be const -- that prevents this node
     // from effectively growing or shrinking, within the context of
     // the tree
-    const quadtree::Bounds bounds;
+    const geometry::Bounds bounds;
 
     // By design, any given node will only cantain (a) children or (b) a value.
     // => If the following uptr, `northeast` has a value, the union will contain pointers.

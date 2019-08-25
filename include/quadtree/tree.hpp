@@ -14,8 +14,8 @@
 #include <memory>
 using std::unique_ptr;
 
-#include "bounds.hpp"
-#include "point.hpp"
+#include "geometry/bounds.hpp"
+#include "geometry/point.hpp"
 #include "node.hpp"
 #include "node_value.hpp"
 using quadtree::node_value_t;
@@ -44,7 +44,7 @@ public:
      * @param {Point} x, y coordinates of tree's center point.
      * @param {double} tree width.  Tree is square. (i.e. height === width)
      */
-    QuadTree(Point center, double width);
+    QuadTree(geometry::Point center, double width);
     
     /**
      *  Releases all memory associated with this quad tree.
@@ -103,14 +103,14 @@ public:
      *
      * @return Bounds object describing the tree's overall bounds.
      */
-    const Bounds& get_bounds() const;
+    const geometry::Bounds& get_bounds() const;
 
     /**
      * Loads the vector of points as a CCW polygon.
      *
      * @param {std::istream} input stream containing the serialization text
      */
-    void load(const std::vector<Point>& source);
+    void load(const std::vector<geometry::Point>& source);
 
     /**
      * Removes a point from (x, y) if it exists.

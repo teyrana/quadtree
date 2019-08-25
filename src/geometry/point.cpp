@@ -3,9 +3,9 @@
 
 #include <cmath>
 
-#include "quadtree/point.hpp"
+#include "geometry/point.hpp"
 
-using quadtree::Point;
+using geometry::Point;
 
 Point::Point() {
   this->x = NAN;

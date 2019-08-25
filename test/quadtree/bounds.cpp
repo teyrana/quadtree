@@ -2,10 +2,10 @@
 
 #include "gtest/gtest.h"
 
-#include "quadtree/bounds.hpp"
+#include "geometry/bounds.hpp"
 
 using std::isnan;
-using quadtree::Bounds;
+using geometry::Bounds;
 
 TEST(BoundsTest, ConstructDefault) {
     Bounds bd;
