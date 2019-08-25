@@ -89,9 +89,10 @@ enable_testing()
 # ============= Build Project Tests  =================
 # https://cmake.org/cmake/help/v3.0/module/FindGTest.html 
 SET(TEST_EXE testtree) 
-SET(TEST_SOURCES test/quadtree/bounds.cpp 
-                               test/quadtree/node.cpp 
-                               test/quadtree/tree.cpp) 
+SET(TEST_SOURCES    test/geometry/bounds.cpp 
+                    test/geometry/point.cpp 
+                    test/quadtree/node.cpp 
+                    test/quadtree/tree.cpp) 
 
 SET(TEST_LINKAGE ${QUAD_TREE_LIB_NAME} gtest gtest_main ) 
 
