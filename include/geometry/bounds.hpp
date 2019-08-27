@@ -14,17 +14,19 @@ public:
     Bounds();
     Bounds(const Point& center, const double height, double width);
 
-    bool contains(double x, double y) const;
+    void clear();
     
+    bool contains(double x, double y) const;
+
+    void extend(const Point p);
     void extend(double x, double y);
 
-    // const Point& get_center() const;
-    // double get_height() const;
-    // double get_max_x() const;
-    // double get_max_y() const;
-    // double get_min_x() const;
-    // double get_min_y() const;
-    // double get_width() const;
+    double get_height() const;
+    double get_x_max() const;
+    double get_x_min() const;
+    double get_y_max() const;
+    double get_y_min() const;
+    double get_width() const;
 
 public:
     Point center;
@@ -36,5 +38,5 @@ public:
 
 
 };
-} // namespace quadtree
+} // namespace geometry
 #endif
