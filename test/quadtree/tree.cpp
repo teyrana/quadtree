@@ -194,8 +194,6 @@ TEST( TreeTest, TestSearchExplicitTree) {
 TEST( TreeTest, TestSearchImplicitTree){
     QuadTree tree({1,1}, 256);
 
-    node_value_t false_value = 5;
-    node_value_t true_value = 14;
     node_value_t default_value = -99;
     
     // .... Out Of Bounds:
