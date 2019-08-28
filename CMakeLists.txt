@@ -28,14 +28,10 @@ ENDIF( WALL_ON)
 
 SET(LIBRARY_LINKAGE "")
 
-# ============= Load ShapeLib  =================
+# ============= GDal =================
 # (Enables loading *.shp shapefiles)
 # >> assumes that you're just installing shapelib from you OS's packaging system...
 
-#ExternalProject_Add( shapelib
-#   DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/vendor/
-#    SOURCE_DIR ${PROJECT_SOURCE_DIR}/vendor/shapelib
-#   URL http://download.osgeo.org/shapelib/shapelib-1.5.0.tar.gz )
 
 SET(SHAPE_LIB_LINKAGE /usr/local/Cellar/shapelib/1.5.0/lib/libshp.1.5.0.dylib)
 
@@ -49,11 +45,13 @@ include_directories(include)
 SET(LIB_HEADERS include/quadtree.hpp
                 include/geometry/bounds.hpp
                 include/geometry/point.hpp
+                include/geometry/polygon.hpp
                 include/quadtree/node.hpp
                 include/quadtree/tree.hpp)
 
 SET(LIB_SOURCES src/geometry/bounds.cpp
                 src/geometry/point.cpp
+                src/geometry/polygon.cpp
                 src/quadtree/node.cpp
                 src/quadtree/tree.cpp)
 
@@ -91,6 +89,7 @@ enable_testing()
 SET(TEST_EXE testtree) 
 SET(TEST_SOURCES    test/geometry/bounds.cpp 
                     test/geometry/point.cpp 
+                    test/geometry/polygon.cpp
                     test/quadtree/node.cpp 
                     test/quadtree/tree.cpp) 
 
