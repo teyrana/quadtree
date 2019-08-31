@@ -80,4 +80,28 @@ TEST(NodeTest, SplitNode){
     ASSERT_TRUE( seq.is_leaf() );
 }
 
+TEST(NodeTest, InterpolateValue) {
+    Node n1({0.0, 0.0},   5.0, 5.0);
+    n1.set_value(0);
+    Node n2({10.0, 10.0}, 5.0, 5.0);
+    n2.set_value(50);
+    
+    ASSERT_TRUE( n1.is_leaf() );
+    ASSERT_TRUE( n2.is_leaf() );
+
+    ASSERT_EQ(n1.interpolate(n2, {-1, -1}),  0);
+    ASSERT_EQ(n1.interpolate(n2, { 0,  0}),  0);
+    ASSERT_EQ(n1.interpolate(n2, { 1,  1}),  5);
+    ASSERT_EQ(n1.interpolate(n2, { 2,  2}), 10);
+    ASSERT_EQ(n1.interpolate(n2, { 3,  3}), 15);
+    ASSERT_EQ(n1.interpolate(n2, { 4,  4}), 20);
+    ASSERT_EQ(n1.interpolate(n2, { 5,  5}), 25);
+    ASSERT_EQ(n1.interpolate(n2, { 6,  6}), 30);
+    ASSERT_EQ(n1.interpolate(n2, { 7,  7}), 35);
+    ASSERT_EQ(n1.interpolate(n2, { 8,  8}), 40);
+    ASSERT_EQ(n1.interpolate(n2, { 9,  9}), 45);
+    ASSERT_EQ(n1.interpolate(n2, {10, 10}), 50);
+    ASSERT_EQ(n1.interpolate(n2, {11, 11}), 50);
+}
+
 } // namespace quadtree

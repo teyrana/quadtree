@@ -90,6 +90,33 @@ bool Node::is_leaf() const{
     return ! northeast;
 }
 
+node_value_t Node::interpolate(const Node& other, const Point& at) const {
+    const auto& node1 = *this;
+    const auto& node2 = other;
+
+    // distances from query point to each interpolation point
+    const double dist1 = at.distance(node1.bounds.center);
+    const double dist2 = at.distance(node2.bounds.center);
+
+    // this is not perfect, but it's a reasonable heuristic
+    // ... in particular, it will return odd values at large distances
+    // ... arguably, this should return a NAN value instead -- for not-applicable
+    const double dist12 = this->bounds.center.distance(other.bounds.center);    
+    if(dist12 < dist1){
+	return node2.value;
+    }else if( dist12 < dist2){
+	return node1.value;
+    }
+
+    const double combined_distance = dist1 + dist2;
+    const double normdist1 = 1 - dist1 / combined_distance;
+    const double normdist2 = 1 - dist2 / combined_distance;
+
+    const double interp_value = (normdist1*node1.value + normdist2*node2.value);
+
+    return round(interp_value);
+}
+
 void Node::load(nlohmann::json doc){
     reset();
     if(doc.is_object()){
@@ -103,6 +130,11 @@ void Node::load(nlohmann::json doc){
         this->set_value(doc.get<double>());
         
     }
+}
+
+std::ostream& operator<<(std::ostream& sink, const Node& source){
+    sink << source.to_string() << endl;
+    return sink;
 }
 
 void Node::set_value(node_value_t new_value){

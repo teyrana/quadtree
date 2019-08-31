@@ -37,6 +37,17 @@ public:
     Node* get_southwest();
     void load(nlohmann::json doc);
 
+
+    /**
+     * Performs the low-level interpolation between this node and another node, at the requested location
+     *
+     * @param {quadtree::Node} the other node to interpolate
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @return {node_value_t} The resultant value
+     */
+    node_value_t interpolate(const Node& other, const geometry::Point& at) const ;
+
     Node* search(double x, double y);
 
     void split();
@@ -75,11 +86,12 @@ private:
     };
 
 private:
-    // does not work, currently
     friend class NodeTest_ConstructDefault_Test;
     friend class NodeTest_ConstructByCenterAndSize_Test;
     friend class NodeTest_SplitNode_Test;
-
 };
+    
+std::ostream& operator<<(std::ostream& sink, const Node& source);
+
 } // namespace quadtree
 #endif // _QUAD_TREE_NODE_HPP_
