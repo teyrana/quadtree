@@ -78,6 +78,10 @@ bool Point::curves_right(const Point& p1, const Point& p2, const Point& p3) {
 }
 
 
+double Point::distance(const Point& other) const {
+    return sqrt(pow(this->x - other.x, 2) + pow(this->y - other.y, 2));
+}
+
 double Point::is_right_handed(const Point * other) const {
     if( (this->x * other->y) < (this->y * other->x)){
         return -1.0;
@@ -109,8 +113,7 @@ bool Point::near(const Point& other) const {
 }
 
 double Point::norm() const {
-    // the order-of-operations is already well defined, here:
-    // the parentheses are purely for humans
+    // the parentheses are purely for humans:
     return sqrt((this->x * this->x) + (this->y * this->y));
 }
 

@@ -55,7 +55,7 @@ public:
     // TODO: BROKEN
     static bool curves_right(const Point& p1, const Point& p2, const Point& p3);
 
-    double distance(const Point * other) const;
+    double distance(const Point& other) const;
 
     /**
      * @return returns the magnitude of the dot product

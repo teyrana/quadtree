@@ -125,4 +125,36 @@ TEST(PointTest, DotProduct) {
     }
 }
 
+TEST(PointTest, Distance) {
+    { // case 1:
+        Point p1; // default constructed to NANs
+        Point p2; // default constructed to NANS
+        ASSERT_TRUE( isnan(p1.distance(p2)));
+    }{ // case 1:
+        Point p1(0.0, 0.0);
+        Point p2(0.0, 0.0);
+        ASSERT_DOUBLE_EQ(p1.distance(p2), 0);
+    }{ // case 2: 
+        Point p1(1.0, 0.0);
+        Point p2(1.0, 0.0);
+        ASSERT_DOUBLE_EQ(p1.distance(p2), 0);
+    }{ // case 3:
+        Point p1(0.0, 0.0);
+        Point p2(1.0, 0.0);
+        ASSERT_DOUBLE_EQ(p1.distance(p2), 1.0);
+    }{ // case 4:
+        Point p1(0.0, 0.0);
+        Point p2(1.0, 1.0);
+        ASSERT_DOUBLE_EQ(p1.distance(p2), M_SQRT2);
+    }{ // case 5:
+	Point p1( 0.0,  0.0);
+        Point p2(-1.0, -1.0);
+        ASSERT_DOUBLE_EQ(p1.distance(p2), M_SQRT2);
+    }{ // case 6:
+	Point p1( 0.0,  0.0);
+        Point p2(-2.0, -2.0);
+        ASSERT_DOUBLE_EQ(p1.distance(p2), 2*M_SQRT2);
+    }
+}
+
 
