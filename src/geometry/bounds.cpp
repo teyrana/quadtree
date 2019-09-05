@@ -1,10 +1,13 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
+#include <iostream>
+#include <cmath>
+
 #include "geometry/point.hpp"
 #include "geometry/bounds.hpp"
 
-#include <cmath>
+using std::ostream;
 
 using geometry::Point;
 using geometry::Bounds;
@@ -24,45 +27,46 @@ void Bounds::clear() {
     half_width = NAN;
 }
 
-bool Bounds::contains(double x, double y) const {
+bool Bounds::contains(const Point& at) const {
     // outside x-bounds:
-    if( (x >= center.x + half_width) || (x <= center.x - half_width) ){
+    if( (at.x < center.x - half_width) || (at.x > center.x + half_width) ){
         return false;
     }
 
     // outside y-bounds:
-    if( (y >= center.y + half_height) || (y <= center.y - half_height) ){
+    if( (at.y < center.y - half_height) || (at.y > center.y + half_height) ){ 
         return false;
     }
     
     return true;
 }
 
-void Bounds::extend(const Point p){
-    extend(p.x, p.y);
-}
 
 void Bounds::extend(double x, double y){
+    extend({x, y});
+}
+
+void Bounds::extend(const Point& p){
     if(isnan(center.x)){
-        center.x = x;
+        center.x = p.x;
         half_width = 0;
-    }else if(x > center.x + half_width){
-        center.x = (x + (center.x - half_width))/2;
-        half_width = x - center.x; 
-    }else if(x < center.x - half_width){
-        center.x = (x + (center.x + half_width))/2;
-        half_width = center.x - x;
+    }else if(p.x > center.x + half_width){
+        center.x = (p.x + (center.x - half_width))/2;
+        half_width = p.x - center.x; 
+    }else if(p.x < center.x - half_width){
+        center.x = (p.x + (center.x + half_width))/2;
+        half_width = center.x - p.x;
     }
 
     if(isnan(center.y)){
-        center.y = y;
+        center.y = p.y;
         half_height = 0;
-    }else if(y > center.y + half_height){
-        center.y = (y + (center.y - half_height))/2;
-        half_height = y - center.y;
-    }else if(y < center.y - half_height){
-        center.y = (y + (center.y + half_height))/2;
-        half_height = center.y - y;
+    }else if(p.y > center.y + half_height){
+        center.y = (p.y + (center.y - half_height))/2;
+        half_height = p.y - center.y;
+    }else if(p.y < center.y - half_height){
+        center.y = (p.y + (center.y + half_height))/2;
+        half_height = center.y - p.y;
     }
 }
 
@@ -88,4 +92,9 @@ double Bounds::get_y_min() const {
 
 double Bounds::get_width() const {
     return half_width*2;
+}
+
+ostream& geometry::operator<<(ostream& sink, const Bounds& b){
+    sink << " @" << b.center << " \u00B1" << b.half_height;
+    return sink;
 }

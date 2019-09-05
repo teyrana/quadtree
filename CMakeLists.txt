@@ -49,7 +49,8 @@ SET(LIB_HEADERS include/quadtree.hpp
                 include/quadtree/node.hpp
                 include/quadtree/tree.hpp)
 
-SET(LIB_SOURCES src/geometry/bounds.cpp
+SET(LIB_SOURCES
+                src/geometry/bounds.cpp
                 src/geometry/point.cpp
                 src/geometry/polygon.cpp
                 src/quadtree/node.cpp

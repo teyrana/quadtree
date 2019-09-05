@@ -18,7 +18,10 @@ using std::unique_ptr;
 #include "geometry/point.hpp"
 #include "node.hpp"
 #include "node_value.hpp"
+
 using quadtree::node_value_t;
+using geometry::Bounds;
+using geometry::Point;
 
 namespace quadtree {
     
@@ -44,7 +47,7 @@ public:
      * @param {Point} x, y coordinates of tree's center point.
      * @param {double} tree width.  Tree is square. (i.e. height === width)
      */
-    QuadTree(geometry::Point center, double width);
+    QuadTree(Point center, double width);
     
     /**
      *  Releases all memory associated with this quad tree.
@@ -78,6 +81,16 @@ public:
      */
     void draw(std::ostream& sink) const;
     
+
+    /**
+     * Gets the value of the point at (x, y).  If the point is not close to the center of a node, this function interpolates or extrapolates an appropriate value.
+     *
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @return {node_value_t} The resultant value
+     */
+    node_value_t interp(const Point& at) const;
+
     /**
      * Sets the value of an (x, y) point within the quad-tree.
      *
@@ -96,21 +109,23 @@ public:
      *                 exist.
      * @return {node_value_t} The value of the node, if available; or the default value.
      */
-    node_value_t search(const double x, const double y, const node_value_t& default_value);
+    node_value_t search(const double x, const double y);
 
     /**
      * Get the overall bounds of this tree
      *
      * @return Bounds object describing the tree's overall bounds.
      */
-    const geometry::Bounds& get_bounds() const;
+    const Bounds& get_bounds() const;
+
+    node_value_t get_default_value(const Point& at) const;
 
     /**
      * Loads the vector of points as a CCW polygon.
      *
      * @param {std::istream} input stream containing the serialization text
      */
-    void load(const std::vector<geometry::Point>& source);
+    void load(const std::vector<Point>& source);
 
     /**
      * Removes a point from (x, y) if it exists.
@@ -137,6 +152,8 @@ public:
 private:
     void draw_quadrant(std::ostream& sink, const std::string& prefix, Node* at, const std::string& as) const;
     
+    static bool is_perimeter_cell(const Bounds& root_bounds, const Bounds& near_bounds);
+    
     // /**
     //  * Traverses the tree depth-first, with quadrants being traversed in clockwise
     //  * order (NE, SE, SW, NW).  The provided function will be called for each
@@ -161,42 +178,6 @@ private:
     //  */
     // private bool insert(Node<V> parent, Point<V> point);
 
-    // /**
-    //  * Converts a leaf node to a pointer node and reinserts the node's point into
-    //  * the correct child.
-    //  * @param {QuadTree.Node} node The node to split.
-    //  * @private
-    //  */
-    // private void split(Node<V> node);
-
-    // /**
-    //  * Attempts to balance a node. A node will need balancing if all its children
-    //  * are empty or it contains just one leaf.
-    //  * @param {QuadTree.Node} node The node to balance.
-    //  * @private
-    //  */
-    // private void balance(Node<V> node);
-
-    // /**
-    //  * Returns the child quadrant within a node that contains the given (x, y)
-    //  * coordinate.
-    //  * @param {QuadTree.Node} parent The node.
-    //  * @param {number} x The x-coordinate to look for.
-    //  * @param {number} y The y-coordinate to look for.
-    //  * @return {QuadTree.Node} The child quadrant that contains the
-    //  *     point.
-    //  * @private
-    //  */
-    // privateQuadTreeNode<V> getQuadrantForPoint(Node<V> parent, double x, double y);
-
-    // /**
-    //  * Sets the point for a node, as long as the node is a leaf or empty.
-    //  * @param {QuadTree.Node} node The node to set the point for.
-    //  * @param {QuadTree.Point} point The point to set.
-    //  * @private
-    //  */source
-    // private void setPointForNode(Node<V> node, Point<V> point);
-
 private:
     unique_ptr<Node> root;
 
@@ -204,6 +185,7 @@ private:
     friend class TreeTest_LoadValidSource_Test;
     friend class TreeTest_WriteLoadCycle_Test;
     friend class TreeTest_TestSearchExplicitTree_Test;
+    friend class TreeTest_TestInterpolateTree_Test;
     friend class TreeTest_TestSearchImplicitTree_Test;
 };
 } // namespace quadtree
