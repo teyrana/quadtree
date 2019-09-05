@@ -98,21 +98,22 @@ TEST(BoundsTest, ContainPoints) {
     // x bounds -> [1, 3]
     // y bounds -> [2, 4]
 
-    EXPECT_TRUE(  b.contains(  2  , 3  ));
-    EXPECT_TRUE(  b.contains(  1.5, 2.5));
-    EXPECT_TRUE(  b.contains(  2.5, 2.5));
-    EXPECT_TRUE(  b.contains(  1.5, 3.5));
-    EXPECT_TRUE(  b.contains(  2.5, 3.5));
+    EXPECT_TRUE(  b.contains({  2  , 3  }));
+    EXPECT_TRUE(  b.contains({  1.5, 2.5}));
+    EXPECT_TRUE(  b.contains({  2.5, 2.5}));
+    EXPECT_TRUE(  b.contains({  1.5, 3.5}));
+    EXPECT_TRUE(  b.contains({  2.5, 3.5}));
     
-    EXPECT_FALSE( b.contains(  2.0, 2.0));
-    EXPECT_FALSE( b.contains(  1.0, 3.0));
+    // borders contain points _on_ the borders
+    EXPECT_TRUE( b.contains({2.0, 2.0}));
+    EXPECT_TRUE( b.contains({1.0, 3.0}));
 
-    EXPECT_FALSE( b.contains(  0  , 0  ));
-    EXPECT_FALSE( b.contains(  1.0, 1.0));
+    EXPECT_FALSE( b.contains({0  , 0  }));
+    EXPECT_FALSE( b.contains({1.0, 1.0}));
     
-    EXPECT_FALSE( b.contains(  2.0, 1.5));
-    EXPECT_FALSE( b.contains(  2.0, 4.5));
-    EXPECT_FALSE( b.contains(  0.5, 3.0));
-    EXPECT_FALSE( b.contains(  3.5, 3.0));
+    EXPECT_FALSE( b.contains({2.0, 1.5}));
+    EXPECT_FALSE( b.contains({2.0, 4.5}));
+    EXPECT_FALSE( b.contains({0.5, 3.0}));
+    EXPECT_FALSE( b.contains({3.5, 3.0}));
 
 }

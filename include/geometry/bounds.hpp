@@ -5,6 +5,7 @@
 #define _GEOMETRY_BOUNDS_HPP_
 
 #include <string>
+#include <iostream>
 
 #include "point.hpp"
 
@@ -15,10 +16,10 @@ public:
     Bounds(const Point& center, const double height, double width);
 
     void clear();
-    
-    bool contains(double x, double y) const;
 
-    void extend(const Point p);
+    bool contains(const Point& at) const;
+
+    void extend(const Point& p);
     void extend(double x, double y);
 
     double get_height() const;
@@ -38,5 +39,8 @@ public:
 
 
 };
+
+std::ostream& operator<<(std::ostream& sink, const Bounds& b);
+
 } // namespace geometry
 #endif

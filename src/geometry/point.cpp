@@ -2,11 +2,13 @@
 // (c) 2019 Daniel Williams
 
 #include <cmath>
+#include <iostream>
 
 #include "geometry/point.hpp"
 
 using std::acos;
 using std::sqrt;
+using std::ostream;
 
 using geometry::Point;
 
@@ -18,6 +20,11 @@ Point::Point() {
 Point::Point(double _x, double _y) {
     this->x = _x;
     this->y = _y;
+}
+
+Point::Point(const Point& other) {
+    this->x = other.x;
+    this->y = other.y;
 }
 
 double Point::angle(const Point * other) const {
@@ -105,6 +112,11 @@ bool Point::is_zero() const {
     return false;
 }
 
+Point Point::mult(const double factor) const{
+    return {x * factor,
+            y * factor};
+}
+
 bool Point::near(const Point& other) const {
     if(epsilon > (abs(this->x - other.x) + abs(this->y - other.y))){
         return true;
@@ -125,11 +137,16 @@ void Point::normalize() {
     }
 }
 
+std::ostream& geometry::operator<<( std::ostream& sink, const Point& p) {
+    sink << "( " << p.x << ", " << p.y << " )";
+    return sink;
+}
+
 void Point::set(double _x, double _y) {
     this->x = _x;
     this->y = _y;
 }
 
-Point Point::subtract(const Point * other) const {
-    return {this->x - other->x, this->y - other->y};
+Point Point::subtract(const Point& other) const {
+    return {this->x - other.x, this->y - other.y};
 }

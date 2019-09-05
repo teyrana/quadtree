@@ -23,44 +23,66 @@ enum NodeQuadrant {NW, NE, SW, SE};
 class Node {
 public:
     Node();
-    Node(const geometry::Point& _center, const double _width);
-    Node(const geometry::Point& _center, const double _height, const double _width);
+    Node(const geometry::Point& _center, const double _height, const node_value_t value);
     //Node(double cx, double cy, double _new_height, double h);  //alternate function signature
 
     ~Node();
 
-    const geometry::Bounds& get_bounds() const; 
+    bool contains(const geometry::Point& at) const;
+
+    const geometry::Bounds& get_bounds() const;
+    const geometry::Point& get_center() const;
+    double x() const;
+    double y() const;
     node_value_t get_value() const;
     Node* get_northeast();
     Node* get_northwest();
     Node* get_southeast();
     Node* get_southwest();
-    void load(nlohmann::json doc);
-
 
     /**
      * Performs the low-level interpolation between this node and another node, at the requested location
      *
-     * @param {quadtree::Node} the other node to interpolate
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
+     * @param {Point} the x,y coordinates to interpolate at.
+     * @param {quadtree::Node} n2 the other node to interpolate
      * @return {node_value_t} The resultant value
      */
-    node_value_t interpolate(const Node& other, const geometry::Point& at) const ;
+    node_value_t interpolate_linear(const geometry::Point& at, const Node& n2) const;
 
-    Node* search(double x, double y);
+    /** 
+     * Performs bilinear-interpolation: 
+     * http://en.wikipedia.org/wiki/Bilinear_Interpolation
+     * 
+     * @param {Point} the x,y coordinates to interpolate at.
+     * @param {quadtree::Node} xn x-neighbor node to interpolate with
+     * @param {quadtree::Node} dn diagonal-neighbor node to interpolate with
+     * @param {quadtree::Node} yn y-neighbor node to interpolate with
+     * @return {node_value_t} The resultant value
+     */
+    node_value_t interpolate_bilinear(const geometry::Point& at, 
+                             const Node& xn,
+                             const Node& dn,
+                             const Node& yn) const;
+
+    void load(nlohmann::json doc);
+
+    constexpr static double snap_center_distance = 0.5;
+    bool nearby(const geometry::Point& p) const;
+    bool nearby(const geometry::Point& p, const double threshold) const;
+
+    const Node& search(const geometry::Point& at);
 
     void split();
-    
+
     void reset();
-    
+
     bool is_leaf() const;
 
     void set_value(quadtree::node_value_t new_value);
 
     nlohmann::json to_json() const;
     std::string to_string() const;
-    
+
 private:
     // Important: this *should* be const -- that prevents this node
     // from effectively growing or shrinking, within the context of
@@ -70,28 +92,25 @@ private:
     // By design, any given node will only cantain (a) children or (b) a value.
     // => If the following uptr, `northeast` has a value, the union will contain pointers.
     // => if 'northeast' is empty / null => the union contains leaf-node-values
+    // defined in CCW order:  NE -> NW -> SW -> SE
     std::unique_ptr<Node> northeast; //ne;
-    union {
-        // Option A:
-        struct {
-	    // defined in CCW order:  NE -> NW -> SW -> SE
-            std::unique_ptr<Node> northwest; //nw;
-            std::unique_ptr<Node> southwest; //sw;
-            std::unique_ptr<Node> southeast; //se;
-        } quadrants;
+    std::unique_ptr<Node> northwest; //nw;
+    std::unique_ptr<Node> southwest; //sw;
+    std::unique_ptr<Node> southeast; //se;
 
-        // Option B:
-        quadtree::node_value_t value;
+    quadtree::node_value_t value;
 
-    };
-
+private:
+    friend std::ostream& operator<<(std::ostream& s, const Node& n);
 private:
     friend class NodeTest_ConstructDefault_Test;
     friend class NodeTest_ConstructByCenterAndSize_Test;
+    friend class NodeTest_SetGet_Test;
     friend class NodeTest_SplitNode_Test;
+    friend class NodeTest_InterpolateValue_Test;
 };
-    
-std::ostream& operator<<(std::ostream& sink, const Node& source);
+
+std::ostream& operator<<(std::ostream& sink, const Node& n);
 
 } // namespace quadtree
 #endif // _QUAD_TREE_NODE_HPP_

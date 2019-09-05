@@ -10,8 +10,9 @@
 #include "quadtree/tree.hpp"
 #include "geometry/point.hpp"
 
-using std::cout;
+using std::cerr;
 using std::endl;
+using std::string;
 using std::vector;
 
 using geometry::Point;
@@ -19,9 +20,19 @@ using geometry::Bounds;
 
 namespace quadtree {
 
+struct TestPoint{
+    double x;
+    double y;
+    double magnitude;
+    double heading;
+
+    TestPoint(double x, double y, double m, double h)
+        :x(x), y(y), magnitude(m), heading(h)
+    {}
+};
+
 TEST(TreeTest, ConstructDefault) {
     QuadTree tree;
-
     auto& bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(bounds.center.y,    0);
@@ -112,7 +123,7 @@ TEST( TreeTest, WriteLoadCycle){
     source_tree.root->split();
     source_tree.root->get_northeast()->split();
     source_tree.root->get_southwest()->split();
-    
+
     // write tree #1 to the serialization buffer
     std::stringstream buffer;
     source_tree.serialize(buffer);
@@ -121,7 +132,7 @@ TEST( TreeTest, WriteLoadCycle){
     QuadTree load_tree;
     buffer.seekg(0);
     load_tree.deserialize(buffer);
-    
+
     // // DEBUG
     // source_tree.draw(cout);
     // load_tree.draw(cout);
@@ -163,10 +174,10 @@ TEST( TreeTest, TestSearchExplicitTree) {
 
     node_value_t false_value = 5;
     node_value_t true_value = 14;
-    node_value_t default_value = -99;
+    node_value_t default_value = 99;
 
     // .... Out Of Bounds:
-    ASSERT_EQ(tree.search(150, 150, default_value), default_value);
+    ASSERT_EQ(tree.search(150, 150), default_value);
 
     // Set Quadrant I:
     tree.root->get_northeast()->set_value(true_value);
@@ -179,25 +190,81 @@ TEST( TreeTest, TestSearchExplicitTree) {
 
     // functional tests:
     // .... Quadrant I:
-    ASSERT_EQ(tree.search( 50,  50, -1), true_value);
+    ASSERT_EQ(tree.search( 50,  50), true_value);
     // .... Quadrant II:
-    ASSERT_EQ(tree.search(-50,  50, -1), false_value);
+    ASSERT_EQ(tree.search(-50,  50), false_value);
     // .... Quadrant III:
-    ASSERT_EQ(tree.search(-50, -50, -1), true_value);
+    ASSERT_EQ(tree.search(-50, -50), true_value);
     // .... Quadrant IV:
-    ASSERT_EQ(tree.search( 50, -50, -1), false_value);
-    
-    // .... Out Of Bounds:
-    ASSERT_TRUE(tree.search(150, 150, -1) == -1);
+    ASSERT_EQ(tree.search( 50, -50), false_value);
 }
 
-TEST( TreeTest, TestSearchImplicitTree){
-    QuadTree tree({1,1}, 256);
 
-    node_value_t default_value = -99;
+TEST( TreeTest, TestInterpolateTree){
+    QuadTree tree({1,1}, 64);
+
+    // Set Quadrant I:
+    tree.root->get_northeast()->set_value(0);
+    // Set Quadrdant II:
+    tree.root->get_northwest()->set_value(50);
+    // Set Quadrant III:
+    tree.root->get_southwest()->set_value(100);
+    // Set Quadrant IV:
+    tree.root->get_southeast()->set_value(50);
+
+    vector<TestPoint> test_cases;
+    test_cases.emplace_back( -35,    4,  99,  NAN);  // Start out of bounds
+    test_cases.emplace_back( -33,    4,  99,  NAN);
+    test_cases.emplace_back( -32,    4,  99,  NAN);
+    test_cases.emplace_back( -31,    4,  70,  NAN);
+    test_cases.emplace_back( -30.9,  4,  70,  NAN);  // border of tree
+    test_cases.emplace_back( -30,    4,  70,  NAN);
+    test_cases.emplace_back( -20,    4,  70,  NAN);
+    test_cases.emplace_back( -17,    4,  70,  NAN);
+    test_cases.emplace_back( -16,    4,  70,  NAN);
+    test_cases.emplace_back( -15.1,  4,  70,  NAN);
+    test_cases.emplace_back( -15.0,  4,  70,  NAN);  // breakpoint - center of outer cell
+    test_cases.emplace_back( -14.9,  4,  70,  NAN);
+    test_cases.emplace_back( -10,    4,  62,  NAN);
+    test_cases.emplace_back( - 5,    4,  54,  NAN);
+    test_cases.emplace_back(   0,    4,  47,  NAN);
+    test_cases.emplace_back(   1,    4,  45,  NAN);  // midpoint
+    test_cases.emplace_back(   2,    4,  43,  NAN);
+    test_cases.emplace_back(  10,    4,  31,  NAN);
+    test_cases.emplace_back(  14,    4,  25,  NAN);
+    test_cases.emplace_back(  15,    4,  23,  NAN);
+    test_cases.emplace_back(  16,    4,  22,  NAN);  // breakpoint - center of outer cell
+    test_cases.emplace_back(  17,    4,  20,  NAN);
+    test_cases.emplace_back(  20,    4,  20,  NAN);
+    test_cases.emplace_back(  30,    4,  20,  NAN);
+    test_cases.emplace_back(  31,    4,  20,  NAN);
+    test_cases.emplace_back(  32,    4,  20,  NAN);
+    test_cases.emplace_back(  33,    4,  20,  NAN);  // border of tree
+    test_cases.emplace_back(  34,    4,  99,  NAN);
+    test_cases.emplace_back(  35,    4,  99,  NAN);
+
+    // =====================================
+    for( const TestPoint& expect : test_cases){
+        const auto& actual = tree.interp({expect.x, expect.y});
+
+        std::ostringstream buf;
+        buf << "@@  x=" << expect.x << "  y=" << expect.y << "  v=" << expect.magnitude << endl;
+        // buf << "    =>    " << actual.magnitude << " \u2220 "<< actual.heading <<"\u00b0";
+
+        const double actual_magnitude = static_cast<double>(actual);
+
+        ASSERT_NEAR(actual_magnitude, expect.magnitude, 0.01) << buf.str();
+        // ASSERT_NEAR(actual.heading,   expect.heading, 0.1) << case_descriptor;
+    }
+}
+
+// TEST( TreeTest, TestSearchImplicitTree){
+//     QuadTree tree({1,1}, 256);
+
+//     node_value_t default_value = -99;
     
-    // .... Out Of Bounds:
-    ASSERT_EQ(tree.search(150, 150, default_value), default_value);
+//     // .... Out Of Bounds:
+//     ASSERT_EQ(tree.search(150, 150, default_value), default_value);
 
     // const vector<Point> input_polygon{
     //     {232000, 806410},
@@ -241,7 +308,7 @@ TEST( TreeTest, TestSearchImplicitTree){
     // .... Quadrant IV:
 //    ASSERT_EQ(tree.search( 50, -50, -1), false_value);
     
-}
+//}
 
 
 } // namespace quadtree

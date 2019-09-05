@@ -4,6 +4,8 @@
 #ifndef _GEOMETRY_POINT_HPP_
 #define _GEOMETRY_POINT_HPP_
 
+#include <iostream>
+
 namespace geometry {
 struct Point {
 public:
@@ -16,6 +18,7 @@ public:
 public:
     Point();
     Point(double x, double y);
+    Point(const Point& other);
 
     // calculates angle between these vectors in radians
     double angle(const Point * other) const;
@@ -66,6 +69,8 @@ public:
 
     bool is_zero() const;
 
+    Point mult(const double factor) const;
+
     bool near(const Point& other) const;
 
     double norm() const;
@@ -74,8 +79,10 @@ public:
 
     void set(double x, double y);
 
-    Point subtract(const Point * other) const;
-    
+    Point subtract(const Point& other) const;
+
 };
+std::ostream& operator<<( std::ostream& sink, const Point& p);
+
 } // namespace geometry
 #endif
