@@ -6,6 +6,7 @@
 
 #include "geometry/point.hpp"
 
+using std::abs;
 using std::acos;
 using std::sqrt;
 using std::ostream;
@@ -38,6 +39,9 @@ double Point::angle(const Point * other) const {
                  sqrt((other->x * other->x) + (other->y * other->y))));
 }
 
+Point geometry::average(const Point& p1, const Point& p2){
+    return Point((p1.x + p2.x)/2, (p1.y + p2.y)/2);
+}
 
 // double Point::headingRadians() const {
 //    return -atan2(y,x) + M_PI_2;
@@ -147,6 +151,6 @@ void Point::set(double _x, double _y) {
     this->y = _y;
 }
 
-Point Point::subtract(const Point& other) const {
+Point Point::sub(const Point& other) const {
     return {this->x - other.x, this->y - other.y};
 }

@@ -79,9 +79,12 @@ public:
 
     void set(double x, double y);
 
-    Point subtract(const Point& other) const;
+    Point sub(const Point& other) const;
 
 };
+
+Point average(const Point& p1, const Point& p2);
+
 std::ostream& operator<<( std::ostream& sink, const Point& p);
 
 } // namespace geometry

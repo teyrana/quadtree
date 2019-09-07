@@ -51,9 +51,7 @@ bool QuadTree::contains(const double x, const double y) const {
 
     const double cx = bounds.center.x;
     const double cy = bounds.center.y;
-    const double dim = bounds.half_height;
-
-    assert(bounds.half_height == bounds.half_width);
+    const double dim = bounds.half_width;
 
     if((x < (cx - dim)) || ((cx + dim) < x)){
         return false;
@@ -97,7 +95,7 @@ void QuadTree::deserialize(std::istream& source){
 void QuadTree::draw(std::ostream& sink) const{
     auto& bounds = get_bounds(); 
     sink << "====== Tree: ======\n";
-    sink << "@(" << bounds.center.x << ", " << bounds.center.y << ")   |" << bounds.half_height << "|\n";
+    sink << "@(" << bounds.center.x << ", " << bounds.center.y << ")   |" << bounds.half_width << "|\n";
 
     draw_quadrant(sink, "", root.get(), "RT");
     
@@ -129,7 +127,7 @@ node_value_t QuadTree::interp(const Point& at) const {
 
     const Point& cn = near.get_center();
     const double dx = std::copysign(1.0, (at.x - cn.x)) * 2 * near.get_bounds().half_width;
-    const double dy = std::copysign(1.0, (at.y - cn.y)) * 2 * near.get_bounds().half_height;
+    const double dy = std::copysign(1.0, (at.y - cn.y)) * 2 * near.get_bounds().half_width;
     const Node& n2 = root->search({cn.x + dx, cn.y     });
     const Node& n3 = root->search({cn.x + dx, cn.y + dy});
     const Node& n4 = root->search({cn.x     , cn.y + dy});

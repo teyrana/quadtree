@@ -48,14 +48,13 @@ TEST(PolygonTest, ExplicitConfigurationIrregular) {
 
     const auto& bounds = shape.bounds;
     ASSERT_NEAR(bounds.center.x,     7.5, 1e-6);
-    ASSERT_NEAR(bounds.half_width,   4.5, 1e-6);
     ASSERT_NEAR(bounds.center.y,     7.5, 1e-6);
-    ASSERT_NEAR(bounds.half_height,  3.5, 1e-6);
+    ASSERT_NEAR(bounds.half_width,   4.5, 1e-6);
 
     ASSERT_NEAR(bounds.get_x_max(), 12.0, 1e-6);
     ASSERT_NEAR(bounds.get_x_min(),  3.0, 1e-6);
-    ASSERT_NEAR(bounds.get_y_max(), 11.0, 1e-6);
-    ASSERT_NEAR(bounds.get_y_min(),  4.0, 1e-6);
+    ASSERT_NEAR(bounds.get_y_max(), 12.0, 1e-6);
+    ASSERT_NEAR(bounds.get_y_min(),  3.0, 1e-6);
 }
 
 
