@@ -17,12 +17,16 @@
 using geometry::Bounds;
 using geometry::Point;
 
+typedef std::vector<Point>::const_iterator cpiter;
+
 namespace geometry {
 class Polygon {
 public:
     Polygon();
     Polygon(std::string new_name);
     Polygon(std::string _name, std::initializer_list<Point> init);
+
+
 
     // clears the internal point vector
     void clear();
@@ -41,6 +45,12 @@ public:
     // \sidef
     bool load(const bool as_inclusive, std::vector<Point> source);
 
+    const std::vector<Point>& get_points() const { return points;}
+    
+    //std::vector<Point>& segments();
+    
+    size_t size() const;
+    
     // dumps the contains points to stderr
     // \param title - text to print in the output header
     // \param pts - set of points to dump

@@ -46,6 +46,7 @@ SET(LIB_HEADERS include/quadtree.hpp
                 include/geometry/bounds.hpp
                 include/geometry/point.hpp
                 include/geometry/polygon.hpp
+                include/quadtree/grid.hpp
                 include/quadtree/node.hpp
                 include/quadtree/tree.hpp)
 
@@ -53,6 +54,7 @@ SET(LIB_SOURCES
                 src/geometry/bounds.cpp
                 src/geometry/point.cpp
                 src/geometry/polygon.cpp
+                src/quadtree/grid.cpp
                 src/quadtree/node.cpp
                 src/quadtree/tree.cpp)
 
@@ -91,6 +93,7 @@ SET(TEST_EXE testtree)
 SET(TEST_SOURCES    test/geometry/bounds.cpp 
                     test/geometry/point.cpp 
                     test/geometry/polygon.cpp
+                    test/quadtree/grid.cpp
                     test/quadtree/node.cpp 
                     test/quadtree/tree.cpp) 
 
