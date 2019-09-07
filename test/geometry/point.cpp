@@ -31,7 +31,7 @@ TEST(PointTest, VectorSubtract) {
     Point p1(1.0, 1.0);
     Point p2(2.0, 2.0);
 
-    const Point diff = p2.subtract(p1);
+    const Point diff = p2.sub(p1);
 
     ASSERT_DOUBLE_EQ(diff.x, 1.0);
     ASSERT_DOUBLE_EQ(diff.y, 1.0);

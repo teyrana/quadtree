@@ -10,6 +10,8 @@
 #include "geometry/polygon.hpp"
 
 using std::cerr;
+using std::max;
+using std::min;
 using std::endl;
 using std::ostream;
 using std::string;
@@ -120,10 +122,19 @@ void Polygon::set_default(){
 
 void Polygon::update_bounds() {
     bounds.clear();
+
+    Point max(FLT_MIN, FLT_MIN);
+    Point min(FLT_MAX, FLT_MAX);
     for( uint i = 0; i < points.size(); ++i ){
         auto& p = points[i];
-        bounds.extend(p);
+        max.x = std::max(max.x, p.x);
+        max.y = std::max(max.y, p.y);
+        min.x = std::min(min.x, p.x);
+        min.y = std::min(min.y, p.y);
     }
+
+    bounds.center = geometry::average(min,max);
+    bounds.half_width = std::max(max.x - min.x, max.y - min.y)/2;
 }
 
 

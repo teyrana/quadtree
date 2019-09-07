@@ -36,7 +36,6 @@ TEST(TreeTest, ConstructDefault) {
     auto& bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(bounds.center.y,    0);
-    ASSERT_DOUBLE_EQ(bounds.half_height, 512);
     ASSERT_DOUBLE_EQ(bounds.half_width,  512);
 }
 
@@ -46,7 +45,6 @@ TEST( TreeTest, ConstructByCenterAndSize) {
     auto& bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(bounds.center.x,    1);
     ASSERT_DOUBLE_EQ(bounds.center.y,    1);
-    ASSERT_DOUBLE_EQ(bounds.half_height, 128);
     ASSERT_DOUBLE_EQ(bounds.half_width,  128);
 
     // functional tests:
@@ -69,7 +67,6 @@ TEST( TreeTest, LoadMalformedSource){
     auto & initial_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(initial_bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(initial_bounds.center.y,    0);
-    ASSERT_DOUBLE_EQ(initial_bounds.half_height, 512);
     ASSERT_DOUBLE_EQ(initial_bounds.half_width,  512);
 
     tree.deserialize(source);
@@ -78,7 +75,6 @@ TEST( TreeTest, LoadMalformedSource){
     auto & loaded_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(loaded_bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(loaded_bounds.center.y,    0);
-    ASSERT_DOUBLE_EQ(loaded_bounds.half_height, 512);
     ASSERT_DOUBLE_EQ(loaded_bounds.half_width,  512);
 }
 
@@ -91,7 +87,6 @@ TEST( TreeTest, LoadValidSource){
     auto & initial_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(initial_bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(initial_bounds.center.y,    0);
-    ASSERT_DOUBLE_EQ(initial_bounds.half_height, 512);
     ASSERT_DOUBLE_EQ(initial_bounds.half_width,  512);
 
     tree.deserialize(source);
@@ -100,7 +95,6 @@ TEST( TreeTest, LoadValidSource){
     auto & loaded_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(loaded_bounds.center.x,    100);
     ASSERT_DOUBLE_EQ(loaded_bounds.center.y,    100);
-    ASSERT_DOUBLE_EQ(loaded_bounds.half_height, 32);
     ASSERT_DOUBLE_EQ(loaded_bounds.half_width,  32);
 
     // test shape
@@ -111,7 +105,6 @@ TEST( TreeTest, LoadValidSource){
     const auto& northeast_bounds = tree.root->get_northeast()->get_bounds();
     ASSERT_DOUBLE_EQ(northeast_bounds.center.x,    116);
     ASSERT_DOUBLE_EQ(northeast_bounds.center.y,    116);
-    ASSERT_DOUBLE_EQ(northeast_bounds.half_height, 16);
     ASSERT_DOUBLE_EQ(northeast_bounds.half_width,  16);
 }
 
@@ -142,7 +135,6 @@ TEST( TreeTest, WriteLoadCycle){
         auto & bounds = load_tree.get_bounds();
         ASSERT_DOUBLE_EQ(bounds.center.x,    11);
         ASSERT_DOUBLE_EQ(bounds.center.y,    11);
-        ASSERT_DOUBLE_EQ(bounds.half_height, 1024);
         ASSERT_DOUBLE_EQ(bounds.half_width,  1024);
     }
     { // test tree shape
@@ -285,7 +277,6 @@ TEST( TreeTest, TestInterpolateTree){
     //     const auto & bounds = tree.get_bounds();
     //     ASSERT_DOUBLE_EQ(bounds.center.x,    491850);
     //     ASSERT_DOUBLE_EQ(bounds.center.y,    669000);
-    //     ASSERT_DOUBLE_EQ(bounds.half_height, 291000);
     //     ASSERT_DOUBLE_EQ(bounds.half_width,  291000);
     // }
 

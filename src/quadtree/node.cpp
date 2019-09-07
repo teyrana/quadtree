@@ -24,7 +24,7 @@ Node::Node():
 {}
 
 Node::Node(const Point& _center, const double _width, const node_value_t _value):
-    bounds(_center, _width, _width), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
+    bounds(_center, _width), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
 {}
 
 // QuadTreeNode::QuadTreeNode(double minx, double miny, double maxx, double maxy){
