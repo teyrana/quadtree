@@ -68,6 +68,14 @@ double Bounds::get_width() const {
     return half_width*2;
 }
 
+double Bounds::snapx( double x) const {
+    return std::max(get_x_min(), std::min(x, get_x_max()));
+}
+
+double Bounds::snapy( double y) const {
+    return std::max(get_y_min(), std::min(y, get_y_max()));
+}
+
 ostream& geometry::operator<<(ostream& sink, const Bounds& b){
     sink << " @" << b.center << " \u00B1" << b.half_width;
     return sink;

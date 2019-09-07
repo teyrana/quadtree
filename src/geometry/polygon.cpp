@@ -1,11 +1,12 @@
+#include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
 #include <iterator>
-#include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include "geometry/polygon.hpp"
 
@@ -135,9 +136,9 @@ ostream& operator<<(ostream& os, const Polygon& poly)
     return os;
 }
 
-#include <iostream>     // std::cout
-#include <algorithm>    // std::reverse
-#include <vector>       // std::vector
+size_t Polygon::size() const {
+    return points.size();
+}
 
 void Polygon::set_default(){
     points.clear();

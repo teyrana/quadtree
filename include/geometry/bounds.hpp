@@ -26,6 +26,9 @@ public:
     double get_y_min() const;
     double get_width() const;
 
+    double snapx( double x) const;
+    double snapy( double y) const;
+    
 public:
     Point center;
     // (defined in alphabetical order)
