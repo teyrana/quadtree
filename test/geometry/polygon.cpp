@@ -33,7 +33,7 @@ TEST(PolygonTest, DefaultConfiguration) {
     ASSERT_TRUE(shape.inclusive);
 }
 
-TEST(PolygonTest, ExplicitConfigurationIrregular) {
+TEST(PolygonTest, LoadList) {
     Polygon shape("ExpConfigPoly");
     
     // Note:  this polygen is configured as CW:
@@ -57,6 +57,22 @@ TEST(PolygonTest, ExplicitConfigurationIrregular) {
     ASSERT_NEAR(bounds.get_y_min(),  3.0, 1e-6);
 }
 
+
+TEST(PolygonTest, LoadInitializerList) {
+    Polygon shape("ExpConfigPoly", {{1,0},{0,1},{-1,0},{0,-1}});
+
+    ASSERT_TRUE(shape.inclusive);
+
+    const auto& bounds = shape.bounds;
+    ASSERT_NEAR(bounds.center.x,     0.0, 1e-6);
+    ASSERT_NEAR(bounds.center.y,     0.0, 1e-6);
+    ASSERT_NEAR(bounds.half_width,   1.0, 1e-6);
+
+    ASSERT_NEAR(bounds.get_x_max(),  1.0, 1e-6);
+    ASSERT_NEAR(bounds.get_x_min(), -1.0, 1e-6);
+    ASSERT_NEAR(bounds.get_y_max(),  1.0, 1e-6);
+    ASSERT_NEAR(bounds.get_y_min(), -1.0, 1e-6);
+}
 
 // TEST(BoundAreaTests, InBoundingBoxByX) {
 //     BoundaryPolygon bounds;

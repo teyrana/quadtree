@@ -34,6 +34,34 @@ Polygon::Polygon(string _name):
     set_default();
 }
 
+Polygon::Polygon(string _name, std::initializer_list<Point> init_list)
+{
+    // if the new polygon contains insufficient points, abort and clear.
+    if(4 > init_list.size()){
+        return;
+    }
+
+    this->inclusive = true;
+    for(const Point& p: init_list ){
+        points.emplace_back( p );
+    }
+
+    update_bounds();
+
+    // cerr << "====== ====== ====== " << endl;
+    // write_yaml(cerr, "    ");
+
+    enclose_polygon();
+    if(! is_right_handed()){
+        std::reverse(std::begin(points), std::end(points));
+    }
+
+    // cerr << "====== ====== ====== " << endl;
+    // write_yaml(cerr, "    ");
+
+    return;
+}
+
 bool Polygon::load(const bool as_inclusive, std::vector<Point> source){
     // if the new polygon contains insufficient points, abort and clear.
     if(4 > source.size()){

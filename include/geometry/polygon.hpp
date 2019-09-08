@@ -4,6 +4,7 @@
 #ifndef _GEOMETRY_POLYGON_HPP_
 #define _GEOMETRY_POLYGON_HPP_
 
+#include <initializer_list>
 #include <memory>
 #include <random>
 #include <sstream>
@@ -21,6 +22,7 @@ class Polygon {
 public:
     Polygon();
     Polygon(std::string new_name);
+    Polygon(std::string _name, std::initializer_list<Point> init);
 
     // clears the internal point vector
     void clear();
@@ -70,8 +72,8 @@ protected: // Configuration parameters
 
 private:
     friend class PolygonTest_DefaultConfiguration_Test;
-    friend class PolygonTest_ExplicitConfigurationSquare_Test;
-    friend class PolygonTest_ExplicitConfigurationIrregular_Test;
+    friend class PolygonTest_LoadList_Test;
+    friend class PolygonTest_LoadInitializerList_Test;
     
     // friend class PolygonTests_TestHandedness_Test;
     // friend class PolygonTests_InBoundingBoxByX_Test;
