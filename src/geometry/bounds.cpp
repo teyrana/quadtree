@@ -68,12 +68,25 @@ double Bounds::get_width() const {
     return half_width*2;
 }
 
+bool Bounds::operator!=(const Bounds& other) const {
+    return ! this->operator==(other);
+}
+
+bool Bounds::operator==(const Bounds& other) const {
+    return ( this->center.near(other.center)) &&
+           (Bounds::epsilon > std::abs(this->half_width - other.half_width));
+}
+
 double Bounds::snapx( double x) const {
     return std::max(get_x_min(), std::min(x, get_x_max()));
 }
 
 double Bounds::snapy( double y) const {
     return std::max(get_y_min(), std::min(y, get_y_max()));
+}
+
+double Bounds::width() const {
+    return 2*half_width;
 }
 
 ostream& geometry::operator<<(ostream& sink, const Bounds& b){

@@ -12,19 +12,26 @@ using nlohmann::json;
 #include "quadtree/node.hpp"
 
 using std::addressof;
-using std::cout;
+using std::cerr;
 using std::endl;
+using std::make_unique;
 using std::ostream;
+using std::string;
+using std::unique_ptr;
 
 using namespace geometry;
 using namespace quadtree;
 
-Node::Node():
-    Node({NAN, NAN}, NAN, 0)
-{}
+// Node::Node():
+//     Node({{NAN, NAN}, NAN}, 0)
+// {}
 
-Node::Node(const Point& _center, const double _width, const node_value_t _value):
-    bounds(_center, _width), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
+// Node::Node(const Point& _center, const double _width, const node_value_t _value):
+//     bounds(_center, _width), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
+// {}
+
+Node::Node(const Bounds& _bounds, const node_value_t _value):
+    bounds(_bounds), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
 {}
 
 // QuadTreeNode::QuadTreeNode(double minx, double miny, double maxx, double maxy){
@@ -34,8 +41,41 @@ Node::Node(const Point& _center, const double _width, const node_value_t _value)
 //   quadtree_bounds_extend(node->bounds, minx, miny);
 // }
 
+void Node::condense() {
+    if( is_leaf() ){
+        return;
+    }
+
+    get_northeast()->condense();
+    get_northwest()->condense();
+    get_southeast()->condense();
+    get_southwest()->condense();
+
+    auto nev = get_northeast()->get_value();
+    auto nwv = get_northwest()->get_value();
+    auto sev = get_southeast()->get_value();
+    auto swv = get_southwest()->get_value();
+
+    if( (nev == nwv) && (nwv == sev) && (sev == swv )){
+        reset();
+        set_value(nev);
+    }
+}
+
 bool Node::contains(const Point& at) const {
     return bounds.contains(at);
+}
+
+void Node::draw(std::ostream& sink, const string& prefix, const string& as) const {
+    sink << prefix << "[" << as << "]: " << get_value() << "     " << this << '\n';
+    if(!is_leaf()){
+        auto next_prefix = prefix + "    ";
+        get_northeast()->draw(sink, next_prefix, "NE");
+        get_northwest()->draw(sink, next_prefix, "NW");
+        get_southeast()->draw(sink, next_prefix, "SE");
+        get_southwest()->draw(sink, next_prefix, "SW");
+    }
+
 }
 
 const Bounds& Node::get_bounds() const {
@@ -46,32 +86,42 @@ const Point& Node::get_center() const {
     return bounds.center;
 }
 
-node_value_t Node::get_value() const {
+size_t Node::get_height() const {
     if(is_leaf()){
-	return this->value;
+        return 1;
+    }else{
+        const size_t ne_height = get_northeast()->get_height();
+        const size_t nw_height = get_northwest()->get_height(); 
+        const size_t se_height = get_southeast()->get_height(); 
+        const size_t sw_height = get_southwest()->get_height();
+        
+        const size_t max_height = std::max(ne_height, std::max(nw_height, std::max(se_height, sw_height)));
+        return max_height + 1;
     }
-
-    return 0.;
 }
 
-Node* Node::get_northeast(){
+Node* Node::get_northeast() const {
     return northeast.get();
 }
 
-Node* Node::get_northwest(){
+Node* Node::get_northwest() const {
     return northwest.get();
 }
 
-Node* Node::get_southeast(){
+Node* Node::get_southeast() const {
     return southeast.get();
 }
 
-Node* Node::get_southwest(){
+Node* Node::get_southwest() const {
     return southwest.get();
 }
     
 bool Node::is_leaf() const{
     return ! northeast;
+}
+
+node_value_t Node::get_value() const {
+    return this->value;
 }
 
 node_value_t Node::interpolate_linear(const Point& at, const Node& node2) const {
@@ -125,13 +175,13 @@ node_value_t Node::interpolate_bilinear(const Point& at,
 
     // calculate full bilinear interpolation:
     const Point upper_point(at.x, xn.y());
-    const Node upper_node(upper_point, 
-                          2*bounds.half_width,
+    const Node upper_node({upper_point, 
+                          2*bounds.half_width},
                           this->interpolate_linear(upper_point, xn));
 
     const Point lower_point(at.x, yn.y());
-    const Node lower_node(lower_point, 
-                          2*bounds.half_width,
+    const Node lower_node({lower_point, 
+                          2*bounds.half_width},
                           yn.interpolate_linear(lower_point, dn));
 
     // cout << "         >>(U): " << upper_node << "    = " << upper_node.get_value() << endl;
@@ -168,22 +218,22 @@ ostream& quadtree::operator<<(ostream& sink, const Node& n){
     return sink;
 }
 
-const Node& Node::search(const Point& p) {
+Node& Node::search(const Point& p) {
     if(is_leaf()){
         return *this;
     }
 
     if(p.x > bounds.center.x){
         if( p.y > bounds.center.y){
-            return *this->northeast.get();
+            return this->northeast->search(p);
         }else{
-            return *this->southeast.get();
+            return this->southeast->search(p);
         }
     }else{
         if( p.y > bounds.center.y){
-            return *this->northwest.get();
+            return this->northwest->search(p);
         }else{
-            return *this->southwest.get();
+            return this->southwest->search(p);
         }
     }
 }
@@ -201,20 +251,36 @@ void Node::reset(){
 
 void Node::split(){
     const Point& ctr = bounds.center;
-    const double& qw = bounds.half_width/2;
+    const double& qw = bounds.half_width/2; ///< quarter-width
 
-    this->northeast.reset(new Node({ctr.x + qw, ctr.y + qw}, bounds.half_width, value));
-    this->northwest.reset(new Node({ctr.x - qw, ctr.y + qw}, bounds.half_width, value));
-    this->southeast.reset(new Node({ctr.x + qw, ctr.y - qw}, bounds.half_width, value));
-    this->southwest.reset(new Node({ctr.x - qw, ctr.y - qw}, bounds.half_width, value));
+    value = NAN;
+
+    this->northeast = make_unique<Node>(Bounds({ctr.x + qw, ctr.y + qw}, bounds.half_width), value);
+    this->northwest = make_unique<Node>(Bounds({ctr.x - qw, ctr.y + qw}, bounds.half_width), value);
+    this->southeast = make_unique<Node>(Bounds({ctr.x + qw, ctr.y - qw}, bounds.half_width), value);
+    this->southwest = make_unique<Node>(Bounds({ctr.x - qw, ctr.y - qw}, bounds.half_width), value);
+}
+
+void Node::split(const double precision){
+    if(2 * bounds.half_width <= precision){
+        return;
+    }
+    
+    if(is_leaf()){
+        split();
+    }
+
+    this->northeast->split(precision);
+    this->northwest->split(precision);
+    this->southeast->split(precision);
+    this->southwest->split(precision);
 }
 
 nlohmann::json Node::to_json() const {
     nlohmann::json doc;
 
     if(is_leaf()){
-	doc = json({1.0}, false, json::value_t::number_integer)[0];
-        //this->value;
+        doc = json({this->value}, false, json::value_t::number_integer)[0];
     }else{
         assert(northeast);
         assert(northwest);

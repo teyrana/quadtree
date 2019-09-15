@@ -25,7 +25,7 @@ using geometry::Point;
 using geometry::Polygon;
 
 namespace quadtree {
-    
+
 class Grid {
 public:
     /**
@@ -84,10 +84,8 @@ public:
      *                   +---+---+     +---+---+
      *                   |                     |
      * Coordinate:     (center - w/2)       (center + w/2)
-     * 
      */
     grid_value_t get(size_t xi, size_t yi) const;
-
 
     /**
      * Sets the value of an (x, y) point within the quad-tree.

@@ -8,24 +8,8 @@ using std::isnan;
 
 namespace quadtree {
 
-TEST(NodeTest, ConstructDefault) {
-    Node n;
-
-    EXPECT_TRUE( isnan(n.x()) );
-    EXPECT_TRUE( isnan(n.y()) );
-    EXPECT_TRUE( isnan(n.get_bounds().half_width) );
-
-    ASSERT_TRUE( n.is_leaf() );
-    ASSERT_EQ( n.northeast.get(), nullptr);
-    ASSERT_EQ( n.northwest.get(), nullptr);
-    ASSERT_EQ( n.southwest.get(), nullptr);
-    ASSERT_EQ( n.southeast.get(), nullptr);
-
-    ASSERT_EQ( n.get_value(), 0);
-}
-
 TEST(NodeTest, ConstructByCenterAndSize) {
-    Node n({1.0, 2.0}, 3.0, 0);
+    Node n({{1.0, 2.0}, 3.0}, 0);
     
     ASSERT_DOUBLE_EQ(n.bounds.center.x,    1.0);
     ASSERT_DOUBLE_EQ(n.bounds.center.y,    2.0);
@@ -41,7 +25,7 @@ TEST(NodeTest, ConstructByCenterAndSize) {
 }
 
 TEST(NodeTest, SetGet) {
-    Node n({1.0, 2.0}, 5.0, 22);
+    Node n({{1.0, 2.0}, 5.0}, 22);
     ASSERT_TRUE( n.is_leaf() );
     ASSERT_EQ(n.get_value(), 22);
 
@@ -58,7 +42,7 @@ TEST(NodeTest, SetGet) {
 }
 
 TEST(NodeTest, SplitNode){
-    Node n({10.0, 20.0}, 4.0, NAN);
+    Node n({{10.0, 20.0}, 4.0}, NAN);
 
     ASSERT_TRUE(n.is_leaf());
     n.split();
@@ -90,8 +74,8 @@ TEST(NodeTest, SplitNode){
 }
 
 TEST(NodeTest, InterpolateValueBetween) {
-    Node n1({0.0, 0.0},   5.0,  0);
-    Node n2({10.0, 10.0}, 5.0, 50);
+    Node n1({{0.0, 0.0},   5.0},  0);
+    Node n2({{10.0, 10.0}, 5.0}, 50);
     
     ASSERT_TRUE( n1.is_leaf() );
     ASSERT_TRUE( n2.is_leaf() );
@@ -112,8 +96,8 @@ TEST(NodeTest, InterpolateValueBetween) {
 }
 
 TEST(NodeTest, InterpolateValueOffset) {
-    Node n1({-15.0, -15.0}, 16.0, 100);
-    Node n2({ 17.0, -15.0}, 16.0,  50);
+    Node n1({{-15.0, -15.0}, 16.0}, 100);
+    Node n2({{ 17.0, -15.0}, 16.0},  50);
     
     ASSERT_TRUE( n1.is_leaf() );
     ASSERT_TRUE( n2.is_leaf() );

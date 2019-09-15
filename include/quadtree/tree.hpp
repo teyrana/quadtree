@@ -12,19 +12,22 @@
 
 #include <cmath>
 #include <memory>
-using std::unique_ptr;
+
+#include <nlohmann/json/json_fwd.hpp>
 
 #include "geometry/bounds.hpp"
 #include "geometry/point.hpp"
 #include "node.hpp"
 #include "node_value.hpp"
 
+using std::unique_ptr;
+
 using quadtree::node_value_t;
 using geometry::Bounds;
 using geometry::Point;
 
 namespace quadtree {
-    
+
 /**
  * Datastructure: A point Quad Tree for representing 2D data. Each
  * region has the same ratio as the bounds for the tree.
@@ -65,15 +68,6 @@ public:
     bool contains(const double x, const double y) const;
 
     /**
-     * Loads a representation of a tree from the data source.  The the form source is assumed to
-     * contain a serialization of a tree, as represented in valid json.  That is, in the same
-     * format as QuadTree::serialize(...).
-     *
-     * @param {std::istream} input stream containing the serialization text
-     */
-    void deserialize(std::istream& source);
-
-    /**
      * Draws a simple debug representation of this tree to the given
      * output stream. 
      *
@@ -91,14 +85,38 @@ public:
      */
     node_value_t interp(const Point& at) const;
 
+    void grow(const double precision);
+
+    size_t height() const;
+
     /**
-     * Sets the value of an (x, y) point within the quad-tree.
+     * Loads a representation of a tree from the data source.  The the form source is assumed to
+     * contain a serialization of a tree, as represented in valid json.  That is, in the same
+     * format as QuadTree::serialize(...).
      *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @param {V} value The value associated with the point.
+     * @param {std::istream} input stream containing the serialization text
      */
-    void set(const double x, const double y, const node_value_t new_value);
+    void load(std::istream& source);
+
+    /**
+     * Loads the vector of points as a CCW polygon.
+     *
+     * @param {std::istream} input stream containing the serialization text
+     */
+    void load(const std::vector<Point>& source);
+
+    void load_grid(nlohmann::json& grid);
+
+    void set(const Bounds bounds);
+
+    // /**
+    //  * Sets the value of an (x, y) point within the quad-tree.
+    //  *
+    //  * @param {double} x The x-coordinate.
+    //  * @param {double} y The y-coordinate.
+    //  * @param {V} value The value associated with the point.
+    //  */
+    // void set(const double x, const double y, const node_value_t new_value);
 
     /**
      * Gets the value of the point at (x, y) or null if the point is empty.
@@ -121,13 +139,6 @@ public:
     node_value_t get_default_value(const Point& at) const;
 
     /**
-     * Loads the vector of points as a CCW polygon.
-     *
-     * @param {std::istream} input stream containing the serialization text
-     */
-    void load(const std::vector<Point>& source);
-
-    /**
      * Removes a point from (x, y) if it exists.
      *
      * @param {double} x The x-coordinate.
@@ -147,11 +158,9 @@ public:
      *
      * @param {std::ostream&} destination for the serialization string
      */
-    void serialize(std::ostream& sink) const;
+    void write_json(std::ostream& sink) const;
 
 private:
-    void draw_quadrant(std::ostream& sink, const std::string& prefix, Node* at, const std::string& as) const;
-    
     static bool is_perimeter_cell(const Bounds& root_bounds, const Bounds& near_bounds);
     
     // /**
@@ -182,11 +191,13 @@ private:
     unique_ptr<Node> root;
 
 private:
-    friend class TreeTest_LoadValidSource_Test;
+    friend class TreeTest_LoadValidTree_Test;
+    friend class TreeTest_LoadValidGrid_Test;
     friend class TreeTest_WriteLoadCycle_Test;
     friend class TreeTest_TestSearchExplicitTree_Test;
     friend class TreeTest_TestInterpolateTree_Test;
     friend class TreeTest_TestSearchImplicitTree_Test;
+
 };
 } // namespace quadtree
 
