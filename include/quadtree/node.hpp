@@ -5,6 +5,7 @@
 #define _QUAD_TREE_NODE_HPP_
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <memory>
 
@@ -22,23 +23,33 @@ enum NodeQuadrant {NW, NE, SW, SE};
 
 class Node {
 public:
-    Node();
-    Node(const geometry::Point& _center, const double _height, const node_value_t value);
+    Node() = delete;
+    // Node(const geometry::Point& _center, const double _height);
+    Node(const geometry::Bounds& _bounds, const node_value_t value);
+
     //Node(double cx, double cy, double _new_height, double h);  //alternate function signature
 
     ~Node();
 
+    /**
+     * Condense groups of leaf nodes with identice values (for some value of "identical")
+     */
+    void condense();
+
     bool contains(const geometry::Point& at) const;
+
+    void draw(std::ostream& sink, const std::string& prefix, const std::string& as) const ;
 
     const geometry::Bounds& get_bounds() const;
     const geometry::Point& get_center() const;
     double x() const;
     double y() const;
+    size_t get_height() const;
+    Node* get_northeast() const;
+    Node* get_northwest() const;
+    Node* get_southeast() const;
+    Node* get_southwest() const;
     node_value_t get_value() const;
-    Node* get_northeast();
-    Node* get_northwest();
-    Node* get_southeast();
-    Node* get_southwest();
 
     /**
      * Performs the low-level interpolation between this node and another node, at the requested location
@@ -70,9 +81,11 @@ public:
     bool nearby(const geometry::Point& p) const;
     bool nearby(const geometry::Point& p, const double threshold) const;
 
-    const Node& search(const geometry::Point& at);
+    Node& search(const geometry::Point& at);
 
     void split();
+
+    void split(const double precision);
 
     void reset();
 

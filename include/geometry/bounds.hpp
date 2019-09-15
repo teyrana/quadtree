@@ -19,6 +19,9 @@ public:
 
     bool contains(const Point& at) const;
 
+    bool operator!=(const Bounds& other) const;
+    bool operator==(const Bounds& other) const;
+
     double get_size() const;
     double get_x_max() const;
     double get_x_min() const;
@@ -29,7 +32,12 @@ public:
     double snapx( double x) const;
     double snapy( double y) const;
     
+    double width() const;
+    
 public:
+    // used for comparisons
+    constexpr static double epsilon = 1e-6;
+
     Point center;
     // (defined in alphabetical order)
     double half_width;

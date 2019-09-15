@@ -36,7 +36,7 @@ TEST(TreeTest, ConstructDefault) {
     auto& bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(bounds.center.y,    0);
-    ASSERT_DOUBLE_EQ(bounds.half_width,  512);
+    ASSERT_DOUBLE_EQ(bounds.width(),  1024);
 }
 
 TEST( TreeTest, ConstructByCenterAndSize) {
@@ -45,7 +45,7 @@ TEST( TreeTest, ConstructByCenterAndSize) {
     auto& bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(bounds.center.x,    1);
     ASSERT_DOUBLE_EQ(bounds.center.y,    1);
-    ASSERT_DOUBLE_EQ(bounds.half_width,  128);
+    ASSERT_DOUBLE_EQ(bounds.width(),   256);
 
     // functional tests:
     // (1) in bounds
@@ -58,8 +58,24 @@ TEST( TreeTest, ConstructByCenterAndSize) {
     ASSERT_FALSE(tree.contains(130,130));  
 }
 
+
+TEST( TreeTest, ConstructAndSetBounds) {
+    QuadTree tree({5,3}, 17);
+
+    auto& init_bounds = tree.get_bounds();
+    ASSERT_DOUBLE_EQ(init_bounds.center.x,    5);
+    ASSERT_DOUBLE_EQ(init_bounds.center.y,    3);
+    ASSERT_DOUBLE_EQ(init_bounds.width(),    17);
+
+    tree.set(Bounds(Point(1.,1.), 256));
+    auto& reset_bounds = tree.get_bounds();
+    ASSERT_DOUBLE_EQ(reset_bounds.center.x,    1);
+    ASSERT_DOUBLE_EQ(reset_bounds.center.y,    1);
+    ASSERT_DOUBLE_EQ(reset_bounds.width(),  256);
+}
+
 TEST( TreeTest, LoadMalformedSource){
-    std::string document(R"({"bounds": {"x": 100, "y": 100, "width": 64}, )");
+    std::string document(R"({"bounds": {"x": 100, "y": 100, "width": )");
 
     std::istringstream source(document);
     
@@ -67,19 +83,39 @@ TEST( TreeTest, LoadMalformedSource){
     auto & initial_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(initial_bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(initial_bounds.center.y,    0);
-    ASSERT_DOUBLE_EQ(initial_bounds.half_width,  512);
+    ASSERT_DOUBLE_EQ(initial_bounds.width(),   1024);
 
-    tree.deserialize(source);
+    tree.load(source);
 
     // these tests should be *exactly* the same as before the 'load' call
     auto & loaded_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(loaded_bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(loaded_bounds.center.y,    0);
-    ASSERT_DOUBLE_EQ(loaded_bounds.half_width,  512);
+    ASSERT_DOUBLE_EQ(loaded_bounds.width(),  1024);
 }
 
-TEST( TreeTest, LoadValidSource){
-    std::string document(R"({"bounds": {"x": 100, "y": 100, "width": 64},  "NE":{"NE":0.0, "NW": 0.0, "SE":0.0, "SW":0.0},"NW":0.0, "SE":0.0,"SW":0.0 })");
+TEST( TreeTest, LoadBoundsOnly){
+    std::string document(R"({"bounds": {"x": 100, "y": 100, "width": 64}} )");
+
+    std::istringstream source(document);
+    
+    QuadTree tree;
+    auto & initial_bounds = tree.get_bounds();
+    ASSERT_DOUBLE_EQ(initial_bounds.center.x,    0);
+    ASSERT_DOUBLE_EQ(initial_bounds.center.y,    0);
+    ASSERT_DOUBLE_EQ(initial_bounds.width(),  1024);
+
+    tree.load(source);
+
+    // these tests should be *exactly* the same as before the 'load' call
+    auto & loaded_bounds = tree.get_bounds();
+    ASSERT_DOUBLE_EQ(loaded_bounds.center.x,    100);
+    ASSERT_DOUBLE_EQ(loaded_bounds.center.y,    100);
+    ASSERT_DOUBLE_EQ(loaded_bounds.width(),      64);
+}
+
+TEST( TreeTest, LoadValidTree){
+    std::string document(R"({"bounds": {"x": 100, "y": 100, "width": 64},  "tree":{"NE":{"NE":0.0, "NW": 0.0, "SE":0.0, "SW":0.0},"NW":0.0, "SE":0.0,"SW":0.0 }})");
     std::istringstream source(document);
     
     QuadTree tree;
@@ -87,15 +123,15 @@ TEST( TreeTest, LoadValidSource){
     auto & initial_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(initial_bounds.center.x,    0);
     ASSERT_DOUBLE_EQ(initial_bounds.center.y,    0);
-    ASSERT_DOUBLE_EQ(initial_bounds.half_width,  512);
+    ASSERT_DOUBLE_EQ(initial_bounds.width(),  1024);
 
-    tree.deserialize(source);
+    tree.load(source);
 
     // test bounds
     auto & loaded_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(loaded_bounds.center.x,    100);
     ASSERT_DOUBLE_EQ(loaded_bounds.center.y,    100);
-    ASSERT_DOUBLE_EQ(loaded_bounds.half_width,  32);
+    ASSERT_DOUBLE_EQ(loaded_bounds.width(),      64);
 
     // test shape
     ASSERT_FALSE(tree.root->is_leaf());
@@ -105,7 +141,49 @@ TEST( TreeTest, LoadValidSource){
     const auto& northeast_bounds = tree.root->get_northeast()->get_bounds();
     ASSERT_DOUBLE_EQ(northeast_bounds.center.x,    116);
     ASSERT_DOUBLE_EQ(northeast_bounds.center.y,    116);
-    ASSERT_DOUBLE_EQ(northeast_bounds.half_width,  16);
+    ASSERT_DOUBLE_EQ(northeast_bounds.width(),      32);
+}
+
+TEST( TreeTest, LoadValidGrid){
+    QuadTree tree;
+
+    std::string document(R"({ "bounds": {"x": 1, "y": 1, "width": 256}, 
+        "grid":[[ 5,  5, 10, 15],
+                [ 5,  5, 15, 20],
+                [10, 15, 20, 20],
+                [15, 20, 20, 20]] })");
+    std::istringstream source(document);
+
+    // test target
+    tree.load(source);
+
+    // // DEBUG
+    // tree.draw(cerr);
+
+    auto& bounds = tree.get_bounds();
+    ASSERT_DOUBLE_EQ(bounds.center.x,    1);
+    ASSERT_DOUBLE_EQ(bounds.center.y,    1);
+    ASSERT_DOUBLE_EQ(bounds.width(),   256);
+
+    // test shape
+    EXPECT_EQ(tree.height(), 3);
+    EXPECT_FALSE(tree.root->is_leaf());
+
+    // spot check #3: leaf-leaf-quadrant
+    const auto* northeast = tree.root->get_northeast()->get_southwest();
+    ASSERT_DOUBLE_EQ(northeast->get_value(), 15);
+    auto& northeast_bounds = northeast->get_bounds();
+    ASSERT_DOUBLE_EQ(northeast_bounds.center.x,  33);
+    ASSERT_DOUBLE_EQ(northeast_bounds.center.y,  33);
+    ASSERT_DOUBLE_EQ(northeast_bounds.width(),   64);
+
+    // spot check #2: condensed quadrant
+    const auto* northwest = tree.root->get_northwest();
+    ASSERT_TRUE(northwest->is_leaf());
+    ASSERT_DOUBLE_EQ(northwest->get_value(), 5);
+    ASSERT_DOUBLE_EQ(northwest->get_bounds().center.x,  -63);
+    ASSERT_DOUBLE_EQ(northwest->get_bounds().center.y,   65);
+    ASSERT_DOUBLE_EQ(northwest->get_bounds().width(),   128);
 }
 
 TEST( TreeTest, WriteLoadCycle){
@@ -119,12 +197,12 @@ TEST( TreeTest, WriteLoadCycle){
 
     // write tree #1 to the serialization buffer
     std::stringstream buffer;
-    source_tree.serialize(buffer);
+    source_tree.write_json(buffer);
 
     // load contents into another tree
     QuadTree load_tree;
     buffer.seekg(0);
-    load_tree.deserialize(buffer);
+    load_tree.load(buffer);
 
     // // DEBUG
     // source_tree.draw(cout);
@@ -135,7 +213,7 @@ TEST( TreeTest, WriteLoadCycle){
         auto & bounds = load_tree.get_bounds();
         ASSERT_DOUBLE_EQ(bounds.center.x,    11);
         ASSERT_DOUBLE_EQ(bounds.center.y,    11);
-        ASSERT_DOUBLE_EQ(bounds.half_width,  1024);
+        ASSERT_DOUBLE_EQ(bounds.width(),  2048);
     }
     { // test tree shape
         auto & root = load_tree.root;
@@ -277,7 +355,7 @@ TEST( TreeTest, TestInterpolateTree){
     //     const auto & bounds = tree.get_bounds();
     //     ASSERT_DOUBLE_EQ(bounds.center.x,    491850);
     //     ASSERT_DOUBLE_EQ(bounds.center.y,    669000);
-    //     ASSERT_DOUBLE_EQ(bounds.half_width,  291000);
+    //     ASSERT_DOUBLE_EQ(bounds.width(),  291000);
     // }
 
     // Set Quadrant I:
