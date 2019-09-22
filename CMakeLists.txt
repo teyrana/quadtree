@@ -26,14 +26,21 @@ IF(WALL_ON)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" -C++11)
 ENDIF( WALL_ON)
 
-SET(LIBRARY_LINKAGE "")
+
+# ============= libpng =================
+# (Enables output of graph to images)
+SET(LIBPNG_LINKAGE "/usr/local/Cellar/libpng/1.6.37/lib/libpng.dylib")
+ADD_DEFINITIONS(-DENABLE_LIBPNG)
+
+
+SET(LIBRARY_LINKAGE ${LIBPNG_LINKAGE})
 
 # ============= GDal =================
 # (Enables loading *.shp shapefiles)
 # >> assumes that you're just installing shapelib from you OS's packaging system...
 
 
-SET(SHAPE_LIB_LINKAGE /usr/local/Cellar/shapelib/1.5.0/lib/libshp.1.5.0.dylib)
+SET(SHAPE_LIB_LINKAGE   /usr/local/Cellar/shapelib/1.5.0/lib/libshp.1.5.0.dylib)
 
 MESSAGE( STATUS "Configured Shapelib...")
 MESSAGE( STATUS "    with name: ${SHAPE_LIB_LINKAGE}")
