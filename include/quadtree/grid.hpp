@@ -5,12 +5,11 @@
 #define _GRID_HPP_
 
 #include <array>
+#include <cmath>
+#include <memory>
 #include <cstdlib>
 #include <string>
 #include <iostream>
-
-#include <cmath>
-#include <memory>
 
 #include "geometry/bounds.hpp"
 #include "geometry/point.hpp"
@@ -150,6 +149,9 @@ public:
     void serialize(std::ostream& sink) const;
 
     size_t size() const {return dimension*dimension;}
+
+    bool to_png(const std::string filename) const;
+
     size_t width() const {return dimension;}
 
 private:
@@ -168,7 +170,7 @@ public:
     const double spacing;
 
     // raw array:  2D addressing is performed through the class methods
-    const std::unique_ptr<grid_value_t> storage;
+    const std::unique_ptr<grid_value_t[]> storage;
 
 private:
     friend class GridTest_XYToIndex_Test;
