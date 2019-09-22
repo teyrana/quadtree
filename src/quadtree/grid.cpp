@@ -21,6 +21,11 @@ using std::unique_ptr;
 
 #include <nlohmann/json/json.hpp>
 
+#ifdef ENABLE_LIBPNG
+#include <png.h>
+#include <zlib.h>
+#endif
+
 #include "quadtree/grid.hpp"
 
 using geometry::Bounds;
@@ -74,6 +79,10 @@ const Bounds& Grid::get_bounds() const {
 
 grid_value_t Grid::get_default_value(const Point& at) const {
     return 99;
+}
+
+size_t Grid::grid_to_storage(size_t xi, size_t yi) const {
+    return yi*dimension + xi;
 }
 
 void Grid::load_grid(std::istream& input){
@@ -211,8 +220,98 @@ void Grid::serialize(std::ostream& sink) const {
     sink << doc;
 }
 
-size_t Grid::grid_to_storage(size_t xi, size_t yi) const {
-    return yi*dimension + xi;
+bool Grid::to_png(const std::string filename) const {
+#ifdef ENABLE_LIBPNG
+    // from: < http://www.libpng.org/pub/png/libpng-manual.txt >
+    // from: < https://dev.w3.org/Amaya/libpng/example.c >
+    // (search for 'write_png' function near the end)
+    
+    FILE* fp = fopen(filename.c_str(), "wb");
+    if(nullptr == fp){
+        cerr << "could not open destination png file for reading." << endl;
+        return false;
+    }
+
+    png_structp png_ptr;
+    png_infop  info_ptr;
+    //png_colorp palette;
+
+    // Allocate and initialize libpng structures:
+    {
+        // the nulls at the end indicate we are using 'standard' error handling:
+        //     i.e. 'setjmp' and 'png_jmpbuf'
+        png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,NULL, NULL, NULL);
+        if (!png_ptr){
+            cerr << "[Grid::to_png] png_create_write_struct failed" << endl;
+            fclose(fp);
+            return false;
+        }
+
+        info_ptr = png_create_info_struct(png_ptr);
+        if (!info_ptr){
+            cerr << "[Grid::to_png] png_create_info_struct failed" << endl;
+            fclose(fp);
+            png_destroy_write_struct(&png_ptr,  NULL);
+            return false;
+        }
+
+        // Associated this structure with our file pointer:
+        png_init_io(png_ptr, fp);
+        if (setjmp(png_jmpbuf(png_ptr))){
+            cerr << "[Grid::to_png] Error during init_io" << endl;
+            fclose(fp);
+            png_destroy_write_struct(&png_ptr, &info_ptr);
+            return false;
+       }
+    }
+
+    // Write Header:
+    // Output is 8-bit depth, grayscale, alpha-less format.
+    png_set_IHDR(png_ptr, info_ptr,
+        this->dimension, this->dimension,
+        8, PNG_COLOR_TYPE_GRAY,
+        PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+        PNG_FILTER_TYPE_DEFAULT);
+    png_write_info(png_ptr, info_ptr);
+    if (setjmp(png_jmpbuf(png_ptr))){
+        cerr << "[Grid:to_png] Error while writing header info" << endl;
+        return false;
+    }
+    
+    // The easiest way to write the image (you may have a different memory
+    // layout, however, so choose what fits your needs best).  You need to
+    // use the first method if you aren't handling interlacing yourself.
+    const png_uint_32 height = this->dimension;
+    const png_uint_32 width = this->dimension;
+    png_bytep image = this->storage.get();
+    unique_ptr<png_bytep[]> row_pointers(new png_bytep[height]);
+    for (uint32_t i=0; i < height; ++i){
+        row_pointers[height - 1 - i] = image + i*width*sizeof(grid_value_t);
+    }
+
+    // write out the entire image data in one call
+    png_write_image(png_ptr, row_pointers.get());
+    // error during write
+    if (setjmp(png_jmpbuf(png_ptr))){
+        cerr << "[Grid::to_png] Error during end of write" << endl;
+        fclose(fp);
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        return false;
+    }
+    
+    png_write_end(png_ptr, info_ptr);
+
+    // clean up libpng structs
+    if (png_ptr && info_ptr)
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+
+    fclose(fp); // close file
+
+    return true;
+#else
+    cerr << "libpng is disabled!! Could not save."
+    return false;
+#endif //#ifdef ENABLE_LIBPNG
 }
 
 size_t Grid::x_to_index(double x) const {

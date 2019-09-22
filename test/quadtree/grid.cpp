@@ -14,27 +14,12 @@ using std::string;
 
 namespace quadtree {
 
-void fill_slope(quadtree::Grid& g, uint8_t min_value, uint8_t max_value){
-    assert( min_value < max_value );
-    // note: quantization to integers may cause some loss in "expected" precision, here
-    const int value_span = static_cast<int>(max_value) - static_cast<int>(min_value);
-    const int x_incr = value_span/2 / g.dimension;
-    const int y_incr = value_span/2 / g.dimension;
-
-    for( int yi = g.dimension-1; 0 <= yi; --yi){
-        for( int xi = g.dimension-1; 0 <= xi; --xi){
-            g(xi,yi) = min_value + xi*x_incr + yi*y_incr;
-        }
-    }
-}
-
-    //                   +-----+-----+-----+-----+
-    // Index:            |  0  |  1  |  2  |  3  |
-    //                   +-----+-----+-----+-----+
-    //                   1     2     3     4     5
-    // Coordinate:                           
-    //
-
+//                   +-----+-----+-----+-----+
+// Index:            |  0  |  1  |  2  |  3  |
+//                   +-----+-----+-----+-----+
+//                   1     2     3     4     5
+// Coordinate:                           
+//
 TEST(GridTest, ConstructWithSizeSpacingCenter) {
     quadtree::Grid g(4., 1., {3.,3.});
 
@@ -167,6 +152,8 @@ TEST(GridTest, LoadPolygonFromVector) {
     // // DEBUG
     // g.draw(cerr);
 
+    g.to_png("gridtest.png");
+
     ASSERT_EQ( g(4,15), 99);
     ASSERT_EQ( g(4,14), 99);
     ASSERT_EQ( g(4,13), 99);
@@ -201,45 +188,77 @@ TEST(GridTest, LoadPolygonFromVector) {
     ASSERT_EQ( g(15, 5), 99);
 }
 
-TEST(GridTest, FillSlope) {
-    quadtree::Grid g(8, 1., {8.,8.});
+TEST(GridTest, SavePNG) {
+    quadtree::Grid g(9., 1., {4.5,4.5});
 
-    EXPECT_EQ( g.size(), 64);
-    EXPECT_EQ( g.width(), 8);
+    EXPECT_EQ( g.size(), 81);
+    EXPECT_EQ( g.width(), 9);
     EXPECT_DOUBLE_EQ( g.spacing, 1.0);
-    EXPECT_DOUBLE_EQ( g.bounds.center.x,    8.);
-    EXPECT_DOUBLE_EQ( g.bounds.center.y,    8.);
-    EXPECT_DOUBLE_EQ( g.bounds.half_width,  4.);
+    EXPECT_DOUBLE_EQ( g.bounds.center.x,    4.5);
+    EXPECT_DOUBLE_EQ( g.bounds.center.y,    4.5);
+    EXPECT_DOUBLE_EQ( g.bounds.half_width,  4.5);
 
-    EXPECT_DOUBLE_EQ( g.bounds.get_x_min(),   4.);
-    EXPECT_DOUBLE_EQ( g.bounds.get_y_min(),   4.);
-    EXPECT_DOUBLE_EQ( g.bounds.get_x_max(),  12.);
-    EXPECT_DOUBLE_EQ( g.bounds.get_y_max(),  12.);
+    EXPECT_DOUBLE_EQ( g.bounds.get_x_min(), 0.0);
+    EXPECT_DOUBLE_EQ( g.bounds.get_y_min(), 0.0);
+    EXPECT_DOUBLE_EQ( g.bounds.get_x_max(), 9.0);
+    EXPECT_DOUBLE_EQ( g.bounds.get_y_max(), 9.0);
+    
+    string arrow_csv = "242, 242, 242, 242,  0, 242, 242, 242, 242,\n\
+                        242, 242, 242,   0,  0,   0, 242, 242, 242,\n\
+                        242, 242,   0,   0,  0,   0,   0, 242, 242,\n\
+                        242,   0,   0,   0,  0,   0,   0,   0, 242,\n\
+                          0,   0,   0,   0,  0,   0,   0,   0,   0,\n\
+                        242,   0,   0,   0,  0, 242, 242, 242, 242,\n\
+                        242, 242,   0,   0,  0, 242, 242, 242, 242,\n\
+                        242, 242, 242,   0,  0, 242, 242, 242, 242,\n\
+                        242, 242, 242, 242,  0, 242, 242, 242, 242,\n";
+    std::istringstream source(arrow_csv);
+    g.load_grid(source);
+    
+    // DEBUG
+    g.draw(cerr);
+
+    // // because this manually tested, turn off by default.
+    g.to_png("gridtest.png");
+}
+
+void fill_gradient(quadtree::Grid& g, uint8_t min_value, uint8_t max_value){
+    assert( min_value < max_value );
+    // note: quantization to integers may cause some loss in "expected" precision, here
+    const int value_span = static_cast<int>(max_value) - static_cast<int>(min_value);
+    const double x_incr = static_cast<double>(value_span) /2 /g.dimension;
+    const double y_incr = static_cast<double>(value_span) /2 /g.dimension;
+    
+    for( int yi = g.dimension-1; 0 <= yi; --yi){
+        for( int xi = g.dimension-1; 0 <= xi; --xi){
+            g(xi,yi) = min_value + xi*x_incr + yi*y_incr;
+        }
+    }
+}
+    
+TEST(GridTest, FillGradient) {
+    quadtree::Grid g(256., 0.5, {0.,0.});
+
+    EXPECT_EQ( g.size(), 512*512);
+    EXPECT_EQ( g.width(), 512);
+    EXPECT_DOUBLE_EQ( g.spacing, 0.5);
+    EXPECT_DOUBLE_EQ( g.bounds.center.x,      0.);
+    EXPECT_DOUBLE_EQ( g.bounds.center.y,      0.);
+    EXPECT_DOUBLE_EQ( g.bounds.half_width,  128.);
+
+    EXPECT_DOUBLE_EQ( g.bounds.get_x_min(), -128.);
+    EXPECT_DOUBLE_EQ( g.bounds.get_y_min(), -128.);
+    EXPECT_DOUBLE_EQ( g.bounds.get_x_max(),  128.);
+    EXPECT_DOUBLE_EQ( g.bounds.get_y_max(),  128.);
 
     const uint8_t min_value = 0;
     const uint8_t max_value = 255;
-    fill_slope(g, min_value, max_value);
+    fill_gradient(g, min_value, max_value);
 
     // // DEBUG
     // g.draw(cerr);
-
-    ASSERT_EQ( g(2,7), 0x87);
-    ASSERT_EQ( g(2,6), 0x78);
-    ASSERT_EQ( g(2,5), 0x69);
-    ASSERT_EQ( g(2,4), 0x5a);
-    ASSERT_EQ( g(2,3), 0x4b);
-    ASSERT_EQ( g(2,2), 0x3c);
-    ASSERT_EQ( g(2,1), 0x2d);
-    ASSERT_EQ( g(2,0), 0x1e);
-
-    ASSERT_EQ( g(0,3), 0x2d);
-    ASSERT_EQ( g(1,3), 0x3c);
-    ASSERT_EQ( g(2,3), 0x4b);
-    ASSERT_EQ( g(3,3), 0x5a);
-    ASSERT_EQ( g(4,3), 0x69);
-    ASSERT_EQ( g(5,3), 0x78);
-    ASSERT_EQ( g(6,3), 0x87);
-    ASSERT_EQ( g(7,3), 0x96);
+    
+    g.to_png("gridtest.png");
 }
 
 };
