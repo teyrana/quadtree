@@ -50,7 +50,7 @@ public:
      * @param {Point} x, y coordinates of tree's center point.
      * @param {double} tree width.  Tree is square. (i.e. height === width)
      */
-    QuadTree(Point center, double width);
+    QuadTree(Bounds bounds, double precision);
     
     /**
      *  Releases all memory associated with this quad tree.
@@ -66,15 +66,6 @@ public:
      * @return {bool} Whether the tree contains a point at (x, y).
      */
     bool contains(const double x, const double y) const;
-
-    /**
-     * Draws a simple debug representation of this tree to the given
-     * output stream. 
-     *
-     * @param {std::ostream&} output stream to write data to
-     */
-    void draw(std::ostream& sink) const;
-    
 
     /**
      * Gets the value of the point at (x, y).  If the point is not close to the center of a node, this function interpolates or extrapolates an appropriate value.
@@ -127,7 +118,7 @@ public:
      *                 exist.
      * @return {node_value_t} The value of the node, if available; or the default value.
      */
-    node_value_t search(const double x, const double y);
+    node_value_t search(const double x, const double y) const;
 
     /**
      * Get the overall bounds of this tree
@@ -154,11 +145,21 @@ public:
     void reset();
 
     /**
+     * Draws a simple debug representation of this tree to the given
+     * output stream. 
+     *
+     * @param {std::ostream&} output stream to write data to
+     */
+    bool write_tree(std::ostream& sink) const;
+
+    /**
      * Writes a json-serialization of the tree to the given out-stream
      *
      * @param {std::ostream&} destination for the serialization string
      */
-    void write_json(std::ostream& sink) const;
+    bool write_json(std::ostream& sink) const;
+
+    bool write_png(const std::string filename) const;
 
 private:
     static bool is_perimeter_cell(const Bounds& root_bounds, const Bounds& near_bounds);
@@ -189,6 +190,7 @@ private:
 
 private:
     unique_ptr<Node> root;
+    double precision;
 
 private:
     friend class TreeTest_LoadValidTree_Test;

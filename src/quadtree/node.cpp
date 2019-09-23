@@ -41,15 +41,15 @@ Node::Node(const Bounds& _bounds, const node_value_t _value):
 //   quadtree_bounds_extend(node->bounds, minx, miny);
 // }
 
-void Node::condense() {
+void Node::cull() {
     if( is_leaf() ){
         return;
     }
 
-    get_northeast()->condense();
-    get_northwest()->condense();
-    get_southeast()->condense();
-    get_southwest()->condense();
+    get_northeast()->cull();
+    get_northwest()->cull();
+    get_southeast()->cull();
+    get_southwest()->cull();
 
     auto nev = get_northeast()->get_value();
     auto nwv = get_northwest()->get_value();
@@ -67,7 +67,7 @@ bool Node::contains(const Point& at) const {
 }
 
 void Node::draw(std::ostream& sink, const string& prefix, const string& as) const {
-    sink << prefix << "[" << as << "]: " << get_value() << "     " << this << '\n';
+    sink << prefix << "[" << as << "]: " << get_value() << '\n'; //"     " << this << '\n';
     if(!is_leaf()){
         auto next_prefix = prefix + "    ";
         get_northeast()->draw(sink, next_prefix, "NE");

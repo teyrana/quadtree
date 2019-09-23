@@ -34,7 +34,7 @@ public:
     /**
      * Condense groups of leaf nodes with identice values (for some value of "identical")
      */
-    void condense();
+    void cull();
 
     bool contains(const geometry::Point& at) const;
 
