@@ -9,6 +9,7 @@
 
 #include "quadtree/tree.hpp"
 #include "geometry/point.hpp"
+#include "geometry/polygon.hpp"
 
 using std::cerr;
 using std::endl;
@@ -40,7 +41,7 @@ TEST(TreeTest, ConstructDefault) {
 }
 
 TEST( TreeTest, ConstructByCenterAndSize) {
-    QuadTree tree({1,1}, 256);
+    QuadTree tree({{1,1}, 256}, 1.0);
 
     auto& bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(bounds.center.x,    1);
@@ -60,7 +61,7 @@ TEST( TreeTest, ConstructByCenterAndSize) {
 
 
 TEST( TreeTest, ConstructAndSetBounds) {
-    QuadTree tree({5,3}, 17);
+    QuadTree tree({{5,3}, 17}, 1.);
 
     auto& init_bounds = tree.get_bounds();
     ASSERT_DOUBLE_EQ(init_bounds.center.x,    5);
@@ -188,7 +189,7 @@ TEST( TreeTest, LoadValidGrid){
 
 TEST( TreeTest, WriteLoadCycle){
 
-    QuadTree source_tree({11,11}, 2048);
+    QuadTree source_tree({{11,11}, 2048}, 1.0);
 
     // modify tree in a characteristic way
     source_tree.root->split();
@@ -240,7 +241,7 @@ TEST( TreeTest, WriteLoadCycle){
 }
     
 TEST( TreeTest, TestSearchExplicitTree) {
-    QuadTree tree({1,1}, 256);
+    QuadTree tree({{1,1}, 256}, 1.0);
 
     node_value_t false_value = 5;
     node_value_t true_value = 14;
@@ -271,7 +272,7 @@ TEST( TreeTest, TestSearchExplicitTree) {
 
 
 TEST( TreeTest, TestInterpolateTree){
-    QuadTree tree({1,1}, 64);
+    QuadTree tree({{1,1}, 64}, 1.0);
 
     // Set Quadrant I:
     tree.root->get_northeast()->set_value(0);
@@ -326,6 +327,45 @@ TEST( TreeTest, TestInterpolateTree){
         ASSERT_NEAR(actual_magnitude, expect.magnitude, 0.01) << buf.str();
         // ASSERT_NEAR(actual.heading,   expect.heading, 0.1) << case_descriptor;
     }
+}
+
+TEST(TreeTest, SavePNG) {
+    QuadTree tree({{0,0}, 256}, 0.5);
+
+    // load grid:
+    std::string document(R"({ "bounds": {"x": 0, "y": 0, "width": 256}, 
+                              "grid":[[  5,   5,  96, 128],
+                                      [  5,   5, 128, 196],
+                                      [ 96, 128, 242, 242],
+                                      [128, 196, 242, 242]] })");
+    std::istringstream source(document);
+    tree.load(source);
+
+    auto& b = tree.get_bounds();
+    EXPECT_DOUBLE_EQ( b.center.x,       0.);
+    EXPECT_DOUBLE_EQ( b.center.y,       0.);
+    EXPECT_DOUBLE_EQ( b.width(),      256.);
+
+    EXPECT_DOUBLE_EQ( b.get_x_min(), -128.);
+    EXPECT_DOUBLE_EQ( b.get_y_min(), -128.);
+    EXPECT_DOUBLE_EQ( b.get_x_max(),  128.);
+    EXPECT_DOUBLE_EQ( b.get_y_max(),  128.);
+
+    // // DEBUG
+    // reset grid
+    //g.fill(128);
+    // geometry::Polygon diamond("ExpConfigPoly", {{ 100.,   0.},
+    //                                            {   0., 100.},
+    //                                            {-100.,   0.},
+    //                                            {   0.,-100.}});
+    // // this method is not-yet-implemented :(
+    // tree.fill(diamond, 32);
+
+    // // DEBUG
+    // tree.write_tree(cerr);
+
+    // // because this manually tested, turn off by default.
+    tree.write_png("tree.test.png");
 }
 
 // TEST( TreeTest, TestSearchImplicitTree){
