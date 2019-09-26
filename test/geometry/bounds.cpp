@@ -5,7 +5,7 @@
 #include "geometry/bounds.hpp"
 
 using std::isnan;
-using geometry::Bounds;
+using terrain::geometry::Bounds;
 
 TEST(BoundsTest, ConstructDefault) {
     Bounds bounds;

@@ -5,7 +5,7 @@
 #include "geometry/point.hpp"
 
 using std::isnan;
-using geometry::Point;
+using terrain::geometry::Point;
 
 
 TEST(PointTest, ConstructDefault) {

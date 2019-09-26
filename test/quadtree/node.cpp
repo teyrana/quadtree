@@ -6,7 +6,7 @@
 
 using std::isnan;
 
-namespace quadtree {
+namespace terrain::quadtree {
 
 TEST(NodeTest, ConstructByCenterAndSize) {
     Node n({{1.0, 2.0}, 3.0}, 0);

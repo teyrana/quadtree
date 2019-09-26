@@ -1,29 +1,28 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+#include "nlohmann/json/json.hpp"
 
 #include "geometry/point.hpp"
 #include "geometry/bounds.hpp"
 
-using std::ostream;
 using std::abs;
 using std::cerr;
 using std::endl;
 using std::max;
+using std::string;
 
-using geometry::Point;
-using geometry::Bounds;
+using terrain::geometry::Point;
+using terrain::geometry::Bounds;
 
-
-Bounds::Bounds():
-    half_width(NAN)
-{}
-
-Bounds::Bounds( const Point& _center, const double _width):
-    center(_center),  half_width(_width/2)
-{}
+Bounds::Bounds(nlohmann::json& doc){
+    /* bool result = */ load(doc);
+}
 
 void Bounds::clear() {
     center.clear();
@@ -68,6 +67,26 @@ double Bounds::get_width() const {
     return half_width*2;
 }
 
+bool Bounds::load(nlohmann::json& doc) {
+    const string x_key("x");
+    const string y_key("y");
+    const string width_key("width");
+
+    if(!doc.contains(x_key) || !doc[x_key].is_number()){
+        return false;
+    }else if(!doc.contains(y_key) || !doc[y_key].is_number()){
+        return false;
+    }else if(!doc.contains(width_key) || !doc[width_key].is_number()){
+        return false;
+    }
+
+    center.x = doc[x_key].get<double>();
+    center.y = doc[y_key].get<double>();
+    half_width = doc[width_key].get<double>() * 0.5;
+
+    return true;
+}
+
 bool Bounds::operator!=(const Bounds& other) const {
     return ! this->operator==(other);
 }
@@ -85,11 +104,20 @@ double Bounds::snapy( double y) const {
     return std::max(get_y_min(), std::min(y, get_y_max()));
 }
 
-double Bounds::width() const {
-    return 2*half_width;
+string Bounds::str() const {
+    std::ostringstream sink; 
+    sink << "@" << center.str() << " \u00B1" << half_width;
+    return sink.str();
 }
 
-ostream& geometry::operator<<(ostream& sink, const Bounds& b){
-    sink << " @" << b.center << " \u00B1" << b.half_width;
-    return sink;
+nlohmann::json Bounds::to_json() const {
+    nlohmann::json buf; 
+    buf["x"] = center.x;
+    buf["y"] = center.y;
+    buf["width"] = half_width * 2.0;
+    return buf;
+}
+
+double Bounds::width() const {
+    return 2*half_width;
 }

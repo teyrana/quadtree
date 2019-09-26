@@ -7,14 +7,14 @@
 
 using std::vector;
 
-using geometry::Point;
-using geometry::Polygon;
+using terrain::geometry::Point;
+using terrain::geometry::Polygon;
 
 
-namespace geometry {
+namespace terrain::geometry {
 
 TEST(PolygonTest, DefaultConfiguration) {
-    const Polygon shape("DefConfpoly");
+    const Polygon shape;
 
     const auto& bounds = shape.get_bounds();
     EXPECT_DOUBLE_EQ(bounds.center.x,    0.5);
@@ -29,22 +29,16 @@ TEST(PolygonTest, DefaultConfiguration) {
     ASSERT_TRUE(points[1].near({1,0}));
     ASSERT_TRUE(points[2].near({1,1}));
     ASSERT_TRUE(points[3].near({0,1}));
-
-    ASSERT_TRUE(shape.inclusive);
 }
 
 TEST(PolygonTest, LoadList) {
-    Polygon shape("ExpConfigPoly");
-    
     // Note:  this polygen is configured as CW:
     //    it will be enclosed, and reversed, internally
-    shape.load(true, {{ 3, 4},
-                      { 5,11},
-                      {12, 8},
-                      { 9, 5},
-                      { 5, 6}});
-
-    ASSERT_TRUE(shape.inclusive);
+    Polygon shape( {{ 3, 4},
+                    { 5,11},
+                    {12, 8},
+                    { 9, 5},
+                    { 5, 6}});
 
     const auto& bounds = shape.bounds;
     ASSERT_NEAR(bounds.center.x,     7.5, 1e-6);
@@ -59,9 +53,7 @@ TEST(PolygonTest, LoadList) {
 
 
 TEST(PolygonTest, LoadInitializerList) {
-    Polygon shape("ExpConfigPoly", {{1,0},{0,1},{-1,0},{0,-1}});
-
-    ASSERT_TRUE(shape.inclusive);
+    Polygon shape({{1,0},{0,1},{-1,0},{0,-1}});
 
     const auto& bounds = shape.bounds;
     ASSERT_NEAR(bounds.center.x,     0.0, 1e-6);
@@ -131,4 +123,4 @@ TEST(PolygonTest, LoadInitializerList) {
 
 
 
-};  // namespace geometry
+};  // namespace terrain::geometry

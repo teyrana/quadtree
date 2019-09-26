@@ -1,27 +1,30 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#ifndef _GRID_HPP_
-#define _GRID_HPP_
+#ifndef _GRID_GRID_HPP_
+#define _GRID_GRID_HPP_
 
-#include <array>
 #include <cmath>
 #include <memory>
 #include <cstdlib>
 #include <string>
-#include <iostream>
+#include <vector>
+
+#include "nlohmann/json/json.hpp"
 
 #include "geometry/bounds.hpp"
 #include "geometry/point.hpp"
 #include "geometry/polygon.hpp"
 
-typedef uint8_t grid_value_t;
+#include "cell_value.hpp"
 
-using geometry::Bounds;
-using geometry::Point;
-using geometry::Polygon;
+using terrain::geometry::Bounds;
+using terrain::geometry::Point;
+using terrain::geometry::Polygon;
 
-namespace grid {
+using terrain::cell_value_t;
+
+namespace terrain::grid {
 
 class Grid {
 public:
@@ -30,7 +33,7 @@ public:
      * 
      * Use this constructor if the tree will be loaded from a config file, and the initialization values do not matter.
      */
-    Grid() = delete;
+    Grid();
     
     /**
      * Constructs a new 2d square grid
@@ -38,15 +41,15 @@ public:
      * @param {_dim} number of cells along each dimensions of this grid
      * @param {_bounds} bounds which this grid will represent
      */
-    Grid(double size, double spacing, const Point center);
-    
+    Grid(const Bounds& _bounds, double precision);
+
     /**
      *  Releases all memory associated with this quad tree.
      */
     ~Grid(){};
 
-
     const Point anchor() const;
+
 
     /**
      * Returns true if the point at (x, y) exists in the tree.
@@ -56,24 +59,20 @@ public:
      */
     bool contains(const Point& p) const;
 
+    ///! \brief Draws a simple debug representation of this grid to stderr
+    void debug() const;
 
-    /**
-     * Draws a simple debug representation of this tree to the given
-     * output stream. 
-     *
-     * @param {std::ostream&} output stream to write data to
-     */
-    void draw(std::ostream& ) const;
+    size_t dimension() const;
 
-    // sets grid to all zeros
-    void fill(const grid_value_t _value);
+    ///! \brief sets the entire grid to the given value
+    ///! \param fill_value - fill value for entire grid
+    void fill(const cell_value_t fill_value);
 
-    /**
-     * Loads the vector of points as a CCW polygon.
-     *
-     * @param {std::istream} input stream containing the serialization text
-     */
-    void fill(const Polygon& source, const grid_value_t fill_value);
+    ///! \brief Fills the _interior_ of the given polygon with the given value.
+    ///! 
+    ///! @param source - polygon defining the fill araea. Assumed to be closed, CCW, and non-intersecting
+    ///! @param fill_value -fill value for area
+    void fill(const Polygon& source, const cell_value_t fill_value);
 
     /** 
      *                   +---+---+     +---+---+
@@ -81,29 +80,12 @@ public:
      *                   +---+---+     +---+---+
      *                   |                     |
      * Coordinate:     (center - w/2)       (center + w/2)
-     */
-    grid_value_t get(size_t xi, size_t yi) const;
 
-    /**
-     * Sets the value of an (x, y) point within the quad-tree.
-     *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @param {V} value The value associated with the point.
+    ///! \warning !! DOES NOT CHECK BOUNDS !!
      */
-    void set(const double x, const double y, const grid_value_t new_value);
-
-    /**
-     * Gets the value of the point at (x, y) or null if the point is empty.
-     *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @param {grid_value_t} opt_default The default value to return if the node doesn't
-     *                 exist.
-     * @return {grid_value_t} The value of the node, if available; or the default value.
-     */
-    grid_value_t search(const Point& p);
-
+    cell_value_t& get_cell(const size_t xi, const size_t yi);
+    cell_value_t get_cell(const size_t xi, const size_t yi) const ;
+   
     /**
      * Get the overall bounds of this tree
      *
@@ -111,69 +93,58 @@ public:
      */
     const Bounds& get_bounds() const;
 
-    grid_value_t get_default_value(const Point& at) const;
+    double get_precision() const;
+
+    bool load_grid(nlohmann::json& doc);
+
+    void reset();
+    void reset(const Bounds bounds, const double new_precision);
 
     /**
-     * Loads a representation of a tree from the data source.  The the form source is assumed to
-     * contain a serialization of a tree, as represented in valid json.  That is, in the same
-     * format as QuadTree::serialize(...).
-     *
-     * @param {std::istream} input stream containing the serialization text
-     */
-    void load_grid(std::istream& source);
-
-    grid_value_t& operator()(size_t xi, size_t yi);
-
-    /**
-     * Removes a point from (x, y) if it exists.
+     * Sets the value at an (x, y) point
      *
      * @param {double} x The x-coordinate.
      * @param {double} y The y-coordinate.
-     * @return {V} The value of the node that was removed, or null if the
-     *         node doesn't exist.
+     * @param {V} value The value associated with the point.
      */
-    bool remove(double x, double y);
+    void set(const double x, const double y, const cell_value_t new_value);
 
-    /**
-     * Performs a deep reset of all tree data.
-     */
-    void reset();
+    ///! \brief Access the value at an (x, y) point
+    ///!
+    ///! \param point - the x,y coordinates to search at:
+    ///! \return reference to the cell value
+    cell_value_t& search(const Point& p);
 
-    /**
-     * Writes a json-serialization of the tree to the given out-stream
-     *
-     * @param {std::ostream&} destination for the serialization string
-     */
-    void serialize(std::ostream& sink) const;
-
-    size_t size() const {return dimension*dimension;}
+    size_t size() const;
 
     bool to_png(const std::string filename) const;
 
-    size_t width() const {return dimension;}
+    double width() const {return bounds.width();}
 
 private:
-    size_t grid_to_storage(size_t xi, size_t yi) const;
+    static double snap_precision(const double width, const double precision);
     size_t x_to_index(const double x) const;
     size_t y_to_index(const double y) const;
 
 public:
     ///! the bounds that this grid covers
-    const geometry::Bounds bounds;
+    Bounds bounds;
 
-    // number of cells in each dimension of the square grid
-    const size_t dimension;
+    constexpr static double epsilon = 1e-6;
+    constexpr static Bounds default_bounds = {{0,0}, 32};
 
-    ///! the spacing of each cell. === center-to-center distance. === cell-width.
-    const double spacing;
+    ///! the spacing of each cell === center-to-center distance. === cell-width.
+    double precision;
 
     // raw array:  2D addressing is performed through the class methods
-    const std::unique_ptr<grid_value_t[]> storage;
+    std::vector<cell_value_t> storage;
 
 private:
+    friend class GridTest_SnapPrecision_Test;
     friend class GridTest_XYToIndex_Test;
 
 };
-} // namespace quadtree
 
-#endif // _QUAD_TREE_HPP_
+}; // namespace terrain::grid
+
+#endif // _GRID_HPP_

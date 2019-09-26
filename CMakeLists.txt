@@ -49,7 +49,7 @@ MESSAGE( STATUS "    with name: ${SHAPE_LIB_LINKAGE}")
 # Add Subdirectories
 #=============================================================================
 include_directories(include)
-SET(LIB_HEADERS include/quadtree.hpp
+SET(LIB_HEADERS include/terrain.hpp include/terrain.cpp
                 include/geometry/bounds.hpp
                 include/geometry/point.hpp
                 include/geometry/polygon.hpp
@@ -57,7 +57,7 @@ SET(LIB_HEADERS include/quadtree.hpp
                 include/quadtree/node.hpp
                 include/quadtree/tree.hpp)
 
-SET(LIB_SOURCES
+SET(LIB_SOURCES 
                 src/geometry/bounds.cpp
                 src/geometry/point.cpp
                 src/geometry/polygon.cpp

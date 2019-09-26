@@ -1,8 +1,8 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#ifndef _QUAD_TREE_NODE_HPP_
-#define _QUAD_TREE_NODE_HPP_
+#ifndef _QUADTREE_NODE_HPP_
+#define _QUADTREE_NODE_HPP_
 
 #include <cstdint>
 #include <iostream>
@@ -11,12 +11,13 @@
 
 #include <nlohmann/json/json_fwd.hpp>
 
+#include "cell_value.hpp"
 #include "geometry/bounds.hpp"
 #include "geometry/point.hpp"
-#include "node_value.hpp"
 
+using terrain::cell_value_t;
 
-namespace quadtree {
+namespace terrain::quadtree {
 
 enum NodeType { EMPTY, LEAF, BRANCH };
 enum NodeQuadrant {NW, NE, SW, SE};
@@ -25,7 +26,7 @@ class Node {
 public:
     Node() = delete;
     // Node(const geometry::Point& _center, const double _height);
-    Node(const geometry::Bounds& _bounds, const node_value_t value);
+    Node(const geometry::Bounds& _bounds, const cell_value_t value);
 
     //Node(double cx, double cy, double _new_height, double h);  //alternate function signature
 
@@ -40,6 +41,8 @@ public:
 
     void draw(std::ostream& sink, const std::string& prefix, const std::string& as) const ;
 
+    void fill(const cell_value_t fill_value);
+
     const geometry::Bounds& get_bounds() const;
     const geometry::Point& get_center() const;
     double x() const;
@@ -49,16 +52,18 @@ public:
     Node* get_northwest() const;
     Node* get_southeast() const;
     Node* get_southwest() const;
-    node_value_t get_value() const;
+
+    cell_value_t& get_value();
+    cell_value_t get_value() const;
 
     /**
      * Performs the low-level interpolation between this node and another node, at the requested location
      *
      * @param {Point} the x,y coordinates to interpolate at.
      * @param {quadtree::Node} n2 the other node to interpolate
-     * @return {node_value_t} The resultant value
+     * @return {cell_value_t} The resultant value
      */
-    node_value_t interpolate_linear(const geometry::Point& at, const Node& n2) const;
+    cell_value_t interpolate_linear(const geometry::Point& at, const Node& n2) const;
 
     /** 
      * Performs bilinear-interpolation: 
@@ -68,14 +73,14 @@ public:
      * @param {quadtree::Node} xn x-neighbor node to interpolate with
      * @param {quadtree::Node} dn diagonal-neighbor node to interpolate with
      * @param {quadtree::Node} yn y-neighbor node to interpolate with
-     * @return {node_value_t} The resultant value
+     * @return {cell_value_t} The resultant value
      */
-    node_value_t interpolate_bilinear(const geometry::Point& at, 
+    cell_value_t interpolate_bilinear(const geometry::Point& at, 
                              const Node& xn,
                              const Node& dn,
                              const Node& yn) const;
 
-    void load(nlohmann::json doc);
+    bool load(nlohmann::json doc);
 
     constexpr static double snap_center_distance = 0.5;
     bool nearby(const geometry::Point& p) const;
@@ -91,7 +96,7 @@ public:
 
     bool is_leaf() const;
 
-    void set_value(quadtree::node_value_t new_value);
+    void set_value(cell_value_t new_value);
 
     nlohmann::json to_json() const;
     std::string to_string() const;
@@ -111,7 +116,7 @@ private:
     std::unique_ptr<Node> southwest; //sw;
     std::unique_ptr<Node> southeast; //se;
 
-    quadtree::node_value_t value;
+    cell_value_t value;
 
 private:
     friend std::ostream& operator<<(std::ostream& s, const Node& n);
@@ -123,7 +128,6 @@ private:
     friend class NodeTest_InterpolateValue_Test;
 };
 
-std::ostream& operator<<(std::ostream& sink, const Node& n);
+} // namespace terrain::quadtree
 
-} // namespace quadtree
-#endif // _QUAD_TREE_NODE_HPP_
+#endif // #ifndef _QUADTREE_NODE_HPP_
