@@ -4,16 +4,22 @@
 #ifndef _GEOMETRY_BOUNDS_HPP_
 #define _GEOMETRY_BOUNDS_HPP_
 
-#include <string>
 #include <iostream>
+#include <string>
+
+#include "nlohmann/json/json_fwd.hpp"
 
 #include "point.hpp"
 
-namespace geometry {
+namespace terrain::geometry {
 class Bounds {
 public:
-    Bounds();
-    Bounds(const Point& center, const double width);
+    constexpr Bounds() :center(NAN,NAN),half_width(NAN) {}
+    constexpr Bounds(const Point& _center, const double _width):
+        center(_center), half_width(_width/2) {}
+
+    // definitely _not_ constexpr ;)
+    Bounds(nlohmann::json& doc);
 
     void clear();
 
@@ -29,9 +35,15 @@ public:
     double get_y_min() const;
     double get_width() const;
 
+    bool load(nlohmann::json& doc);
+
     double snapx( double x) const;
     double snapy( double y) const;
-    
+
+    std::string str() const;
+
+    nlohmann::json to_json() const;
+
     double width() const;
     
 public:
@@ -42,12 +54,8 @@ public:
     // (defined in alphabetical order)
     double half_width;
 
-    // all other quantities are derived from the above
-
-
 };
 
-std::ostream& operator<<(std::ostream& sink, const Bounds& b);
+} // namespace terrain::geometry
 
-} // namespace geometry
-#endif
+#endif // #ifdef _GEOMETRY_BOUNDS_HPP_

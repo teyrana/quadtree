@@ -8,6 +8,8 @@
 #include <iostream>
 #include <vector>
 
+#include <nlohmann/json/json.hpp>
+
 #include "geometry/polygon.hpp"
 
 using std::cerr;
@@ -16,80 +18,57 @@ using std::min;
 using std::endl;
 using std::ostream;
 using std::string;
-using std::setw;
 
-using geometry::Point;
-using geometry::Polygon;
+using terrain::geometry::Point;
+using terrain::geometry::Polygon;
 
 //---------------------------------------------------------------
 // Constructor
 //
-Polygon::Polygon():
-    Polygon("<unnamed>")
-{}
+Polygon::Polygon(){
+    set_default();
+}
 
-Polygon::Polygon(string _name):
-    name(_name),
-    inclusive(true)
+Polygon::Polygon(const size_t initial_capacity):
+    points(initial_capacity)
 {
     set_default();
 }
 
-Polygon::Polygon(string _name, std::initializer_list<Point> init_list)
-{
-    // if the new polygon contains insufficient points, abort and clear.
-    if(4 > init_list.size()){
-        return;
-    }
-
-    this->inclusive = true;
-    for(const Point& p: init_list ){
-        points.emplace_back( p );
-    }
-
-    update_bounds();
-
-    // cerr << "====== ====== ====== " << endl;
-    // write_yaml(cerr, "    ");
-
-    enclose_polygon();
-    if(! is_right_handed()){
-        std::reverse(std::begin(points), std::end(points));
-    }
-
-    // cerr << "====== ====== ====== " << endl;
-    // write_yaml(cerr, "    ");
-
-    return;
+Polygon::Polygon(nlohmann::json doc){
+    load(doc);
 }
 
-bool Polygon::load(const bool as_inclusive, std::vector<Point> source){
-    // if the new polygon contains insufficient points, abort and clear.
-    if(4 > source.size()){
-        return false;
-    }
+Polygon::Polygon(std::vector<Point>& init){
+    load(init);
+}
 
-    this->inclusive = as_inclusive;
-    points = std::move(source);
-    update_bounds();
+Polygon::Polygon(std::initializer_list<Point> init_list)
+{
+    std::vector<Point> pts = init_list;
 
-    // cerr << "====== ====== ====== " << endl;
-    // write_yaml(cerr, "    ");
-
-    enclose_polygon();
-    if(! is_right_handed()){
-        std::reverse(std::begin(points), std::end(points));
-    }
-
-    // cerr << "====== ====== ====== " << endl;
-    // write_yaml(cerr, "    ");
-
-    return true;
+    load(pts);
 }
 
 void Polygon::clear(){
     points.clear();
     bounds.clear();
+}
+
+void Polygon::complete(){
+    update_bounds();
+
+    // cerr << "====== ====== ====== " << endl;
+    // write_yaml(cerr, "    ");
+
+    enclose_polygon();
+    if(! is_right_handed()){
+        std::reverse(std::begin(points), std::end(points));
+    }
+}
+
+void Polygon::emplace(const Point p){  
+    points.emplace_back(p);
 }
 
 void Polygon::enclose_polygon(){
@@ -101,6 +80,7 @@ void Polygon::enclose_polygon(){
         points.emplace_back(first_point);
     }
 }
+
 
 const Bounds& Polygon::get_bounds() const {
     return bounds;
@@ -130,10 +110,45 @@ bool Polygon::is_right_handed() const {
     }
 }
 
-ostream& operator<<(ostream& os, const Polygon& poly)
-{
-    poly.write_yaml(os);
-    return os;
+bool Polygon::load(std::vector<Point> source){
+    // if the new polygon contains insufficient points, abort and clear.
+    if(4 > source.size()){
+        return false;
+    }
+
+    points = std::move(source);
+    
+    complete();
+
+    return true;
+}
+
+bool Polygon::load(nlohmann::json doc){
+    if(doc.is_array() && doc[0].is_array() && (4 <= doc.size()) ){
+        clear();
+        points.resize(doc.size());
+
+        size_t pair_index = 0;
+        for( auto& pair : doc){
+            Point p(pair[0].get<double>(), pair[1].get<double>());
+            points[pair_index] = p;
+            ++pair_index;
+        }
+
+        complete(); 
+
+        return true;
+    }
+
+    return false;
+}
+
+Point& Polygon::operator[](const size_t index){
+    return points[index];
+}
+
+const Point& Polygon::operator[](const size_t index) const {
+    return points[index];
 }
 
 size_t Polygon::size() const {
@@ -162,15 +177,12 @@ void Polygon::update_bounds() {
         min.y = std::min(min.y, p.y);
     }
 
-    bounds.center = geometry::average(min,max);
+    bounds.center = Point::average(min,max);
     bounds.half_width = std::max(max.x - min.x, max.y - min.y)/2;
 }
 
 
 void Polygon::write_yaml(std::ostream& sink, string indent) const {
-    sink << indent << "name: " << name << '\n';
-    sink << indent << "inclusive: " << inclusive << '\n';
-
     sink << indent << "points: \n";
     for( uint i = 0; i < points.size(); ++i ){
         auto& p = points[i];

@@ -9,6 +9,7 @@
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
 
+#include "cell_value.hpp"
 #include "quadtree/node.hpp"
 
 using std::addressof;
@@ -19,18 +20,18 @@ using std::ostream;
 using std::string;
 using std::unique_ptr;
 
-using namespace geometry;
-using namespace quadtree;
+using namespace terrain::geometry;
+using terrain::quadtree::Node;
 
 // Node::Node():
 //     Node({{NAN, NAN}, NAN}, 0)
 // {}
 
-// Node::Node(const Point& _center, const double _width, const node_value_t _value):
+// Node::Node(const Point& _center, const double _width, const cell_value_t _value):
 //     bounds(_center, _width), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
 // {}
 
-Node::Node(const Bounds& _bounds, const node_value_t _value):
+Node::Node(const Bounds& _bounds, const cell_value_t _value):
     bounds(_bounds), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
 {}
 
@@ -67,15 +68,31 @@ bool Node::contains(const Point& at) const {
 }
 
 void Node::draw(std::ostream& sink, const string& prefix, const string& as) const {
-    sink << prefix << "[" << as << "]: " << get_value() << '\n'; //"     " << this << '\n';
+    sink << prefix << "[" << as << "]: ";
+    if(is_leaf()){
+        sink << static_cast<int>(get_value());
+    }
+    //sink << ' ' << bounds.str();
+    sink << endl;
+    
     if(!is_leaf()){
         auto next_prefix = prefix + "    ";
-        get_northeast()->draw(sink, next_prefix, "NE");
-        get_northwest()->draw(sink, next_prefix, "NW");
-        get_southeast()->draw(sink, next_prefix, "SE");
-        get_southwest()->draw(sink, next_prefix, "SW");
+        northeast->draw(sink, next_prefix, "NE");
+        northwest->draw(sink, next_prefix, "NW");
+        southeast->draw(sink, next_prefix, "SE");
+        southwest->draw(sink, next_prefix, "SW");
     }
+}
 
+void Node::fill(const cell_value_t fill_value){
+    if(is_leaf()){
+        set_value(fill_value);
+    }else{
+        northeast->fill(fill_value);
+        northwest->fill(fill_value);
+        southeast->fill(fill_value);
+        southwest->fill(fill_value);
+    }
 }
 
 const Bounds& Node::get_bounds() const {
@@ -90,10 +107,10 @@ size_t Node::get_height() const {
     if(is_leaf()){
         return 1;
     }else{
-        const size_t ne_height = get_northeast()->get_height();
-        const size_t nw_height = get_northwest()->get_height(); 
-        const size_t se_height = get_southeast()->get_height(); 
-        const size_t sw_height = get_southwest()->get_height();
+        const size_t ne_height = northeast->get_height();
+        const size_t nw_height = northwest->get_height();
+        const size_t se_height = southeast->get_height();
+        const size_t sw_height = southwest->get_height();
         
         const size_t max_height = std::max(ne_height, std::max(nw_height, std::max(se_height, sw_height)));
         return max_height + 1;
@@ -120,11 +137,15 @@ bool Node::is_leaf() const{
     return ! northeast;
 }
 
-node_value_t Node::get_value() const {
+cell_value_t& Node::get_value() {
     return this->value;
 }
 
-node_value_t Node::interpolate_linear(const Point& at, const Node& node2) const {
+cell_value_t Node::get_value() const {
+    return this->value;
+}
+
+cell_value_t Node::interpolate_linear(const Point& at, const Node& node2) const {
     if(this == &node2){
         return this->get_value();
     }
@@ -153,7 +174,7 @@ node_value_t Node::interpolate_linear(const Point& at, const Node& node2) const 
 }
 
 
-node_value_t Node::interpolate_bilinear(const Point& at, 
+cell_value_t Node::interpolate_bilinear(const Point& at, 
                                         const Node& xn,
                                         const Node& dn,
                                         const Node& yn) const 
@@ -176,13 +197,13 @@ node_value_t Node::interpolate_bilinear(const Point& at,
     // calculate full bilinear interpolation:
     const Point upper_point(at.x, xn.y());
     const Node upper_node({upper_point, 
-                          2*bounds.half_width},
-                          this->interpolate_linear(upper_point, xn));
+                               2*bounds.half_width},
+                               this->interpolate_linear(upper_point, xn));
 
     const Point lower_point(at.x, yn.y());
     const Node lower_node({lower_point, 
-                          2*bounds.half_width},
-                          yn.interpolate_linear(lower_point, dn));
+                               2*bounds.half_width},
+                               yn.interpolate_linear(lower_point, dn));
 
     // cout << "         >>(U): " << upper_node << "    = " << upper_node.get_value() << endl;
     // cout << "         >>(L): " << lower_node << "    = " << lower_node.get_value() << endl;
@@ -190,7 +211,7 @@ node_value_t Node::interpolate_bilinear(const Point& at,
     return upper_node.interpolate_linear(at, lower_node);
 }
 
-void Node::load(nlohmann::json doc){
+bool Node::load(nlohmann::json doc){
     reset();
     if(doc.is_object()){
         this->split();
@@ -198,10 +219,11 @@ void Node::load(nlohmann::json doc){
         get_northwest()->load(doc["NW"]);
         get_southeast()->load(doc["SE"]);
         get_southwest()->load(doc["SW"]);
+        return true;
     }else{
         assert(is_leaf());
         this->set_value(doc.get<double>());
-        
+        return true;
     }
 }
 
@@ -211,11 +233,6 @@ bool Node::nearby(const Point& p) const {
 
 bool Node::nearby(const Point& p, const double threshold) const {
     return (snap_center_distance > bounds.center.distance(p));
-}
-
-ostream& quadtree::operator<<(ostream& sink, const Node& n){
-    sink << n.bounds;
-    return sink;
 }
 
 Node& Node::search(const Point& p) {
@@ -238,7 +255,7 @@ Node& Node::search(const Point& p) {
     }
 }
 
-void Node::set_value(node_value_t new_value){
+void Node::set_value(cell_value_t new_value){
     this->value = new_value;
 }
 

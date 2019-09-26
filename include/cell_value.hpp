@@ -1,12 +1,12 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#ifndef _QUAD_TREE_NODE_VALUE_HPP_
-#define _QUAD_TREE_NODE_VALUE_HPP_
+#ifndef _CELL_VALUE_HPP_
+#define _CELL_VALUE_HPP_
 
 #include <cmath>
 
-namespace quadtree {
+namespace terrain {
 
 // // sized to fit in:  4 x sizeof(void*) on this platform, 
 // // compact POD.
@@ -22,8 +22,11 @@ namespace quadtree {
 //     // ~NodeValue();
 // };
 
-typedef uint32_t node_value_t;
-    
-} // namespace quadtree
+typedef uint8_t cell_value_t;
 
-#endif // _NODE_VALUE_HPP_
+constexpr cell_value_t cell_error_value   = 0xAB;
+constexpr cell_value_t cell_default_value = 0x99;
+    
+} // namespace terrain
+
+#endif // _CELL_VALUE_HPP_

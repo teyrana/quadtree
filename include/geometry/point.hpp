@@ -6,22 +6,25 @@
 
 #include <iostream>
 
-namespace geometry {
+namespace terrain::geometry {
+
 struct Point {
 public:
     // class is just POD + convenient methods
-    double x;
-    double y;
-    
+    double x, y;
+
     constexpr static double epsilon = 1e-6;
 
 public:
-    Point();
-    Point(double x, double y);
-    Point(const Point& other);
+    constexpr Point() :x(NAN),y(NAN) {}
+
+    constexpr Point(const double _x, const double _y) :x(_x),y(_y) {}
+    constexpr Point(const Point& other): x(other.x),y(other.y) {}
 
     // calculates angle between these vectors in radians
     double angle(const Point * other) const;
+
+    static Point average(const Point& p1, const Point& p2);
 
     void clear();
     
@@ -81,11 +84,10 @@ public:
 
     Point sub(const Point& other) const;
 
+    std::string str() const;
 };
 
-Point average(const Point& p1, const Point& p2);
 
-std::ostream& operator<<( std::ostream& sink, const Point& p);
+} // namespace terrain::geometry
 
-} // namespace geometry
-#endif
+#endif  // #endif _GEOMETRY_POINT_HPP_

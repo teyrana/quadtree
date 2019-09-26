@@ -6,8 +6,8 @@
 #include "geometry/point.hpp"
 #include "geometry/segment.hpp"
 
-using geometry::Point;
-using geometry::Segment;
+using terrain::geometry::Point;
+using terrain::geometry::Segment;
 
 
 Segment::Segment() {}

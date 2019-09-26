@@ -2,7 +2,7 @@
 // (c) 2019 Daniel Williams
 
 #include <cmath>
-#include <iostream>
+#include <sstream>
 
 #include "geometry/point.hpp"
 
@@ -11,22 +11,7 @@ using std::acos;
 using std::sqrt;
 using std::ostream;
 
-using geometry::Point;
-
-Point::Point() {
-    this->x = NAN;
-    this->y = NAN;
-}
-
-Point::Point(double _x, double _y) {
-    this->x = _x;
-    this->y = _y;
-}
-
-Point::Point(const Point& other) {
-    this->x = other.x;
-    this->y = other.y;
-}
+using terrain::geometry::Point;
 
 double Point::angle(const Point * other) const {
     if( this->is_zero() && other->is_zero() ){
@@ -39,8 +24,8 @@ double Point::angle(const Point * other) const {
                  sqrt((other->x * other->x) + (other->y * other->y))));
 }
 
-Point geometry::average(const Point& p1, const Point& p2){
-    return Point((p1.x + p2.x)/2, (p1.y + p2.y)/2);
+Point Point::average(const Point& p1, const Point& p2){
+    return {(p1.x + p2.x)/2, (p1.y + p2.y)/2};
 }
 
 // double Point::headingRadians() const {
@@ -80,8 +65,8 @@ double Point::cross(const Point * other) const {
 // WARNING: PURPOSE UNKNOWN! 
 // TODO: BROKEN
 bool Point::curves_right(const Point& p1, const Point& p2, const Point& p3) {
-    const Point segA(p2.x - p1.x, p2.y - p1.y);
-    const Point segB(p3.x - p1.x, p3.y - p1.y);
+    const Point segA = {p2.x - p1.x, p2.y - p1.y};
+    const Point segB = {p3.x - p1.x, p3.y - p1.y};
 
     const double cross_product = segA.is_right_handed(&segB);
 
@@ -117,8 +102,7 @@ bool Point::is_zero() const {
 }
 
 Point Point::mult(const double factor) const{
-    return {x * factor,
-            y * factor};
+    return {x * factor, y * factor};
 }
 
 bool Point::near(const Point& other) const {
@@ -141,9 +125,10 @@ void Point::normalize() {
     }
 }
 
-std::ostream& geometry::operator<<( std::ostream& sink, const Point& p) {
-    sink << "( " << p.x << ", " << p.y << " )";
-    return sink;
+std::string Point::str() const {
+    std::ostringstream sink; 
+    sink << "( " << x << ", " << y << " )";
+    return sink.str();
 }
 
 void Point::set(double _x, double _y) {

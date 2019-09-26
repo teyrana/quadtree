@@ -6,7 +6,8 @@
 
 #include "geometry/point.hpp"
 
-namespace geometry {
+namespace terrain::geometry {
+
 struct Segment {
 public:
     // - class is just POD
@@ -43,5 +44,6 @@ public:
     void clear();
 
 };
-} // namespace geometry
-#endif
+} // namespace terrain::geometry
+
+#endif  // #endif _GEOMETRY_SEGMENT_HPP_
