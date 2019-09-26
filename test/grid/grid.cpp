@@ -5,14 +5,14 @@
 #include <gtest/gtest.h>
 
 #include "geometry/polygon.hpp"
-#include "quadtree/grid.hpp"
+#include "grid/grid.hpp"
 
 using std::cerr;
 using std::endl;
 using std::isnan;
 using std::string;
 
-namespace quadtree {
+namespace grid {
 
 //                   +-----+-----+-----+-----+
 // Index:            |  0  |  1  |  2  |  3  |
@@ -21,7 +21,7 @@ namespace quadtree {
 // Coordinate:                           
 //
 TEST(GridTest, ConstructWithSizeSpacingCenter) {
-    quadtree::Grid g(4., 1., {3.,3.});
+    grid::Grid g(4., 1., {3.,3.});
 
  
     EXPECT_EQ( g.size(), 16);
@@ -42,7 +42,7 @@ TEST(GridTest, ConstructWithSizeSpacingCenter) {
 }
 
 TEST(GridTest, XYToIndex) {
-    quadtree::Grid g(8., 0.5, {5.,5.});
+    grid::Grid g(8., 0.5, {5.,5.});
     
     EXPECT_DOUBLE_EQ( g.spacing, 0.5);
     EXPECT_DOUBLE_EQ( g.bounds.half_width, 4.);
@@ -75,7 +75,7 @@ TEST(GridTest, XYToIndex) {
 }
 
 TEST(GridTest, LoadGridFromFile) {
-    quadtree::Grid g(9., 1., {4.5,4.5});
+    grid::Grid g(9., 1., {4.5,4.5});
 
     EXPECT_EQ( g.size(), 81);
     EXPECT_EQ( g.width(), 9);
@@ -126,7 +126,7 @@ TEST(GridTest, LoadGridFromFile) {
 }
 
 TEST(GridTest, LoadPolygonFromVector) {
-    quadtree::Grid g(8., 0.5, {8.,8.});
+    grid::Grid g(8., 0.5, {8.,8.});
 
     EXPECT_EQ( g.size(), 256);
     EXPECT_EQ( g.width(), 16);
@@ -189,7 +189,7 @@ TEST(GridTest, LoadPolygonFromVector) {
 }
 
 TEST(GridTest, SavePNG) {
-    quadtree::Grid g(9., 1., {4.5,4.5});
+    grid::Grid g(9., 1., {4.5,4.5});
 
     EXPECT_EQ( g.size(), 81);
     EXPECT_EQ( g.width(), 9);
@@ -215,14 +215,14 @@ TEST(GridTest, SavePNG) {
     std::istringstream source(arrow_csv);
     g.load_grid(source);
     
-    // DEBUG
-    g.draw(cerr);
+    // // DEBUG
+    // g.draw(cerr);
 
     // // because this manually tested, turn off by default.
     g.to_png("gridtest.png");
 }
 
-void fill_gradient(quadtree::Grid& g, uint8_t min_value, uint8_t max_value){
+void fill_gradient(grid::Grid& g, uint8_t min_value, uint8_t max_value){
     assert( min_value < max_value );
     // note: quantization to integers may cause some loss in "expected" precision, here
     const int value_span = static_cast<int>(max_value) - static_cast<int>(min_value);
@@ -237,7 +237,7 @@ void fill_gradient(quadtree::Grid& g, uint8_t min_value, uint8_t max_value){
 }
     
 TEST(GridTest, FillGradient) {
-    quadtree::Grid g(256., 0.5, {0.,0.});
+    grid::Grid g(256., 0.5, {0.,0.});
 
     EXPECT_EQ( g.size(), 512*512);
     EXPECT_EQ( g.width(), 512);

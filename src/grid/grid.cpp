@@ -26,12 +26,12 @@ using std::unique_ptr;
 #include <zlib.h>
 #endif
 
-#include "quadtree/grid.hpp"
+#include "grid/grid.hpp"
 
 using geometry::Bounds;
 using geometry::Polygon;
 
-using quadtree::Grid;
+using grid::Grid;
 
 Grid::Grid(double _size, double _spacing, const Point _center):
     bounds(_center, _size),

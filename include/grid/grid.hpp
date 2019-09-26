@@ -14,8 +14,6 @@
 #include "geometry/bounds.hpp"
 #include "geometry/point.hpp"
 #include "geometry/polygon.hpp"
-#include "node.hpp"
-#include "node_value.hpp"
 
 typedef uint8_t grid_value_t;
 
@@ -23,7 +21,7 @@ using geometry::Bounds;
 using geometry::Point;
 using geometry::Polygon;
 
-namespace quadtree {
+namespace grid {
 
 class Grid {
 public:
