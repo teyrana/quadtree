@@ -50,25 +50,6 @@ bool Grid::contains(const Point& p) const {
     return bounds.contains(p);
 }
 
-void Grid::debug() const{
-    auto& bounds = get_bounds(); 
-    cerr << "====== Grid: ======\n";
-    cerr << bounds.str() << "\n";
-
-    for( size_t yi = dimension()-1; yi < dimension() ; --yi){
-        for( size_t xi = 0; xi < dimension(); ++xi){
-            const auto value = get_cell(xi,yi);
-            if(0 == value){
-                cerr << "   ,";
-            }else{
-                cerr << " " << setfill('0') << setw(2) << hex << static_cast<int>(value) << ",";
-            }
-        }
-        cerr << '\n';
-    }
-    cerr << endl;
-}
-
 size_t Grid::dimension() const {
     return bounds.width() / precision;
 }
