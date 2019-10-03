@@ -2,6 +2,7 @@
 // (c) 2019 Daniel Williams
 
 #include <cmath>
+#include <cstdio>
 #include <string>
 #include <memory>
 #include <iostream>
@@ -57,39 +58,14 @@ void Tree::cull(){
     root->cull();
 }
 
-void Tree::debug() const {
-    const auto& height = get_height();
-
+void Tree::debug_tree() const {
     cerr << "====== Quad Tree: ======\n";
-    cerr << "##  bounds: " << get_bounds().str() << endl;
-    cerr << "##  height: " << get_height() << endl;
+    cerr << "##  bounds:     " << get_bounds().str() << endl;
+    cerr << "##  height:     " << get_height() << endl;
+    cerr << "##  precision:  " << get_precision() << endl;
 
-    if(5 > height){
-        cerr << "     ==== As Tree: ====\n";
-        root->draw(cerr, "    ", "RT");
-        cerr << endl;
-    }
-
-    debug_grid(cerr);
-}
-
-void Tree::debug_grid(std::ostream& sink) const {
-    const static string indent("    ");
-
-    sink << indent << "==== As Grid: ====\n";
-    for(double y = (bounds.get_y_max() - precision/2); y > bounds.get_y_min(); y -= precision ){
-        sink << indent << ' ';
-        for(double x = (bounds.get_y_min() + precision/2); x < bounds.get_y_max(); x += precision){
-            auto value = search({x,y});
-            if( 0 < value ){
-                sink << ' ' << std::setfill(' ') << std::setw(2) << std::hex << static_cast<int>(value) << ',';
-            }else{
-                sink << "   ,";
-            }
-        }
-        sink << '\n';
-    }
-    sink << '\n';
+    root->draw(cerr, "    ", "RT");
+    cerr << endl;
 }
 
 size_t Tree::dimension() const {
@@ -108,7 +84,6 @@ void Tree::grow(const double _precision){
     precision = _precision;
     return root->split(_precision);
 }
-
 
 cell_value_t Tree::interp(const Point& at) const {
     const Node& near = root->search(at);

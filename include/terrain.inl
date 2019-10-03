@@ -37,9 +37,6 @@ const static inline string grid_key("grid");
 const static inline string precision_key("precision");
 const static inline string tree_key("tree");
 
-// used for debug output:
-const static inline string indent("    ");
-
 template<typename T>
 Terrain<T>::Terrain(T& _ref): 
     impl(_ref) 
@@ -47,7 +44,52 @@ Terrain<T>::Terrain(T& _ref):
 
 template<typename T>
 void Terrain<T>::debug() const {
-    impl.debug();
+    const Bounds& bounds = impl.get_bounds();
+    const double precision = impl.get_precision();
+    const size_t dimension = impl.dimension();
+
+    cerr << "====== Quad Tree: ======\n";
+    cerr << "##  bounds:     " << bounds.str() << endl;
+    // cerr << "##  height:     " << get_height() << endl;
+    cerr << "##  precision:  " << precision << endl;
+    cerr << "##  dimension:  " << dimension << endl;
+
+    cerr << "           ======== ======== ======== ======== As Grid: ======== ======== ======== ========\n";
+    // print header (x-axis-labels: 
+    cerr << "            ";
+    for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
+        fprintf(stderr, "%4.1f ", x);
+    } cerr << endl;
+    // print top border
+    cerr << "          +";
+    for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
+        fprintf(stderr, "-----");
+    } cerr << "---+\n";
+
+    for(double y = (bounds.get_y_max() - precision/2); y > bounds.get_y_min(); y -= precision ){
+        // print left header:
+        fprintf(stderr, "     %4.1f | ", y);
+        for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
+            auto value = impl.search({x,y});
+            if( 0 < value ){
+                cerr << "  " << std::setfill(' ') << std::setw(2) << std::hex << static_cast<int>(value) << ',';
+            }else{
+                cerr << "    ,";
+            }
+        }
+        // print left header:
+        fprintf(stderr, "  | %4.1f\n", y);
+    }
+    // print bottom border
+    cerr << "          +";
+    for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
+        fprintf(stderr, "-----");
+    } cerr << "---+\n";
+    // print footer: (x-axis-labels: 
+    cerr << "            ";
+    for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
+        fprintf(stderr, "%4.1f ", x);
+    } cerr << endl << endl;
 }
 
 template<typename T>

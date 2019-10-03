@@ -74,7 +74,8 @@ public:
      * @param {std::ostream&} output stream to write data to
      */
     void debug() const; 
-
+    void debug_tree() const;
+    
     size_t dimension() const;
 
     /**

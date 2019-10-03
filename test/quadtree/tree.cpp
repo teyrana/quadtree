@@ -471,10 +471,12 @@ TEST(TreeTest, SavePNG) {
 
     constexpr double boundary_width = 16.;   // overall boundary
     constexpr double diamond_width = 8.;
-    constexpr double desired_precision = 0.5;
+    
+    constexpr double desired_precision = 0.4; ///< exhibits 'stripe' noise:
+    // constexpr double desired_precision = 0.25;  ///< displays cleanly
+
     // =====
     constexpr Point center(boundary_width/2, boundary_width/2);
-    constexpr Bounds expected_bounds(center, boundary_width);
     json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
                     {"precision", desired_precision},
                     {"allow", {{{center.x + diamond_width, center.y},
@@ -485,8 +487,9 @@ TEST(TreeTest, SavePNG) {
 
     ASSERT_TRUE(terrain.load(stream));
 
-    // // DEBUG
-    // terrain.debug();
+    // DEBUG
+    terrain.debug();
+    ASSERT_TRUE(false) << " !! Note: this is unique to the QuadTree storage, and is visible in both debug and png output.\n";
 
     const string filename("tree.test.png");
     // because this manually tested, turn off by default.
