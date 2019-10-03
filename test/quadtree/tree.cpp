@@ -314,7 +314,7 @@ TEST( QuadTreeTest, WriteLoadCycle){
 
     // write tree #1 to the serialization buffer
     std::stringstream buffer;
-    ASSERT_TRUE(source_terrain.write(buffer));
+    ASSERT_TRUE(source_terrain.json(buffer));
     
     // // DEBUG
     // cerr << buffer.str() << endl;
@@ -465,97 +465,39 @@ TEST( QuadTreeTest, TestInterpolateTree){
 }
 
 
-// TEST(TreeTest, SavePNG) {
-//     Tree tree({{0,0}, 256}, 0.5);
-    // Terrain terrain(tree);
+TEST(TreeTest, SavePNG) {
+    quadtree::Tree tree;
+    Terrain terrain(tree);
 
-    // auto& bounds = terrain.get_bounds();
+    constexpr double boundary_width = 16.;   // overall boundary
+    constexpr double diamond_width = 8.;
+    constexpr double desired_precision = 0.5;
+    // =====
+    constexpr Point center(boundary_width/2, boundary_width/2);
+    constexpr Bounds expected_bounds(center, boundary_width);
+    json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
+                    {"precision", desired_precision},
+                    {"allow", {{{center.x + diamond_width, center.y},
+                                {center.x                , center.y + diamond_width},
+                                {center.x - diamond_width, center.y},
+                                {center.x                , center.y - diamond_width}}}}};
+    std::istringstream stream(source.dump());
 
-//     // // load grid:
-//     // std::string document(R"({ "bounds": {"x": 0, "y": 0, "width": 256}, 
-//     //                           "grid":[[  5,   5,  96, 128],
-//     //                                   [  5,   5, 128, 196],
-//     //                                   [ 96, 128, 242, 242],
-//     //                                   [128, 196, 242, 242]] })");
-//     // std::istringstream source(document);
-//     // tree.load(source);
+    ASSERT_TRUE(terrain.load(stream));
 
-//     // // DEBUG
-//     tree.fill(128);
-//     geometry::Polygon edge_diamond("EdgeDiamond", {{ 100.,   0.},
-//                                                    {   0., 100.},
-//                                                    {-100.,   0.},
-//                                                    {   0.,-100.},
-//                                                    {   0.,   0.}});
-//     tree.fill(diamond, 32);
+    // // DEBUG
+    // terrain.debug();
 
-//     auto& b = tree.get_bounds();
-//     EXPECT_DOUBLE_EQ( b.center.x,       0.);
-//     EXPECT_DOUBLE_EQ( b.center.y,       0.);
-//     EXPECT_DOUBLE_EQ( b.width(),      256.);
-
-//     EXPECT_DOUBLE_EQ( b.get_x_min(), -128.);
-//     EXPECT_DOUBLE_EQ( b.get_y_min(), -128.);
-//     EXPECT_DOUBLE_EQ( b.get_x_max(),  128.);
-//     EXPECT_DOUBLE_EQ( b.get_y_max(),  128.);
-
-//     // // DEBUG
-//     // tree.write_tree(cerr);
-
-//     // // because this manually tested, turn off by default.
-//     tree.write_png("tree.test.png");
-// }
-
-// TEST( QuadTreeTest, TestSearchImplicitTree){
-//     Tree tree({1,1}, 256);
-
-//     node_value_t default_value = -99;
-    
-//     // .... Out Of Bounds:
-//     ASSERT_EQ(tree.search(150, 150), default_value);
-
-    // const vector<Point> input_polygon{
-    //     {232000, 806410},
-    //     {232400, 820494},
-    //     {243600, 842644},
-    //     {220900, 874092},
-    //     {221700, 906633},
-    //     {238400, 960000},
-    //     {247000, 960000},
-    //     {378000, 960000},
-    //     {378000, 762800},
-    //     {232000, 762800},
-    //     {232000, 806410}};
-    // ASSERT_EQ(input_polygon.size(), 11);
-
-    // tree.load(input_polygon);
-    // { // test bounds:
-    //     const auto & bounds = tree.get_bounds();
-    //     ASSERT_DOUBLE_EQ(bounds.center.x,    491850);
-    //     ASSERT_DOUBLE_EQ(bounds.center.y,    669000);
-    //     ASSERT_DOUBLE_EQ(bounds.width(),  291000);
+    const string filename("tree.test.png");
+    // because this manually tested, turn off by default.
+    // {
+    //     FILE* dest = fopen(filename.c_str(), "wb");
+    //     if(nullptr == dest){
+    //         cerr << "could not open destination .png file ("<<filename<<") for reading." << endl;
+    //         return;
+    //     }
+    //     terrain.png(dest);
     // }
-
-    // Set Quadrant I:
-//    tree.set_value(10, 10, true_value);
-    // Set Quadrdant II:
-//    tree.root->get_northwest()->set_value(false_value);
-    // Set Quadrant III:
-//    tree.root->get_southwest()->set_value(true_value);
-    // Set Quadrant IV:
-//    tree.root->get_southeast()->set_value(false_value);
-
-    // functional tests:
-    // .... Quadrant I:
-//    ASSERT_EQ(tree.search( 50,  50, -1), true_value);
-    // .... Quadrant II:
-//    ASSERT_EQ(tree.search(-50,  50, -1), false_value);
-    // .... Quadrant III:
-//    ASSERT_EQ(tree.search(-50, -50, -1), true_value);
-    // .... Quadrant IV:
-//    ASSERT_EQ(tree.search( 50, -50, -1), false_value);
-    
-//}
-
+}
 
 } // namespace quadtree

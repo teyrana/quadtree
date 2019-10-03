@@ -49,8 +49,12 @@ public:
     ///! \brief loads a json document from the given input stream
     bool load(std::istream& source);
 
+    ///! \brief writes a png file to the given outstream
+    bool png(FILE* dest);
+
     ///! \brief writes a json document to given output stream
-    bool write(std::ostream& document);
+    bool json(std::ostream& document);
+
 
 private:
     ///! \brief loads all the allowed and blocked areas

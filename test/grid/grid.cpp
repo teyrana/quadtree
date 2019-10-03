@@ -270,8 +270,8 @@ TEST(GridTest, SavePNG) {
     Terrain terrain(g);
 
     constexpr double boundary_width = 16.;   // overall boundary
-    constexpr double diamond_width = 6.;
-    constexpr double desired_precision = 0.5;
+    constexpr double diamond_width = 8.;
+    constexpr double desired_precision = 1.0;
     // =====
     constexpr Point center(boundary_width/2, boundary_width/2);
     constexpr Bounds expected_bounds(center, boundary_width);
@@ -284,23 +284,27 @@ TEST(GridTest, SavePNG) {
                                 {center.x                , center.y - diamond_width}}}}};
     std::istringstream stream(source.dump());
 
-    // DEBUG:
-    // cerr << "======\n" << source.dump(4) << "\n======\n";
-
     ASSERT_TRUE(terrain.load(stream));
 
     // storage
     EXPECT_EQ( g.dimension(), expected_dimension);
     EXPECT_EQ( g.size(), expected_dimension*expected_dimension);
-
     EXPECT_DOUBLE_EQ( terrain.get_precision(), desired_precision);
-    ASSERT_TRUE(expected_bounds == terrain.get_bounds());
+    EXPECT_TRUE(expected_bounds == terrain.get_bounds());
 
     // // DEBUG
     // terrain.debug();
 
-    // // because this manually tested, turn off by default.
-    // g.to_png("gridtest.png");
+    // const string filename("grid.test.png");
+    // // Because this manually tested, turn off by default.
+    // {
+    //     FILE* dest = fopen(filename.c_str(), "wb");
+    //     if(nullptr == dest){
+    //         cerr << "could not open destination .png file ("<<filename<<") for reading." << endl;
+    //         return;
+    //     }
+    //     terrain.png(dest);
+    // }
 }
 
 }; // namespace terrain::grid
