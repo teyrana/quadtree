@@ -13,7 +13,11 @@ using std::endl;
 using std::string;
 
 #include <nlohmann/json/json.hpp>
-using nlohmann::json;
+
+#ifdef ENABLE_LIBPNG
+#include <png.h>
+#include <zlib.h>
+#endif
 
 #include "geometry/bounds.hpp"
 #include "geometry/polygon.hpp"
@@ -103,10 +107,26 @@ double Terrain<T>::get_precision() const {
 }
 
 template<typename T>
+bool Terrain<T>::json(std::ostream& sink){
+    // explicitly create the json object
+    nlohmann::json doc = nlohmann::json::object();
+    
+    doc[bounds_key] = impl.get_bounds().to_json();
+
+    doc[precision_key] = impl.get_precision();
+
+    doc[grid_key] = to_json_grid();
+
+    sink << doc.dump(4) << endl;
+
+    return true;
+}
+
+template<typename T>
 bool Terrain<T>::load(std::istream& source){
-    json doc = json::parse( source,  // source document
-                            nullptr,   // callback argument
-                            false);    // allow exceptions?
+    nlohmann::json doc = nlohmann::json::parse( source,  // source document
+                                                nullptr,   // callback argument
+                                                false);    // allow exceptions?
     if(doc.is_discarded()){
         // cerr << "malformed json! ignore.\n";
         return false;
@@ -129,7 +149,7 @@ bool Terrain<T>::load(std::istream& source){
         const Bounds new_bounds(doc[bounds_key]);
         const double new_precision = new_bounds.width() / doc[grid_key].size();
         impl.reset(new_bounds, new_precision);
-
+        
         return impl.load_grid(doc[grid_key]);
 
     }else if( doc.contains(tree_key)){
@@ -157,7 +177,7 @@ bool Terrain<T>::load(std::istream& source){
 }
 
 template<typename T>
-bool Terrain<T>::load_polygons(json allow_doc, json block_doc){
+bool Terrain<T>::load_polygons(nlohmann::json allow_doc, nlohmann::json block_doc){
     auto allowed_polygons = make_polygons(allow_doc);
     auto blocked_polygons = make_polygons(block_doc);
 
@@ -178,7 +198,7 @@ bool Terrain<T>::load_polygons(json allow_doc, json block_doc){
 }
 
 template<typename T>
-std::vector<Polygon> Terrain<T>::make_polygons(json doc){
+std::vector<Polygon> Terrain<T>::make_polygons(nlohmann::json doc){
     std::vector<Polygon> result(static_cast<size_t>(doc.size()));
     if(0 < result.size()){
         size_t polygon_index = 0;
@@ -190,36 +210,119 @@ std::vector<Polygon> Terrain<T>::make_polygons(json doc){
 }
 
 template<typename T>
-bool Terrain<T>::write(std::ostream& sink){
-    // explicitly create the json object
-    json doc = json::object();
+bool Terrain<T>::png(FILE* dest){
+#ifdef ENABLE_LIBPNG
+    // from: < http://www.libpng.org/pub/png/libpng-manual.txt >
+    // from: < https://dev.w3.org/Amaya/libpng/example.c >
+    // (search for 'write_png' function near the end)
+    if(nullptr == dest){
+        return false;
+    }
+
+    png_structp png_ptr;
+    png_infop  info_ptr;
+    //png_colorp palette;
+
+    // allocate and initialize libpng structures:
+    {
+        // the nulls at the end indicate we are using 'standard' error handling:
+        //     i.e. 'setjmp' and 'png_jmpbuf'
+        png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,NULL, NULL, NULL);
+        if (!png_ptr){
+            cerr << "[Tree::to_png] png_create_write_struct failed" << endl;
+            fclose(dest);
+            return false;
+        }
+        
+        info_ptr = png_create_info_struct(png_ptr);
+        if (!info_ptr){
+            cerr << "[Tree::to_png] png_create_info_struct failed" << endl;
+            fclose(dest);
+            png_destroy_write_struct(&png_ptr,  NULL);
+            return false;
+        }
+
+        // associated this structure with our file pointer:
+        png_init_io(png_ptr, dest);
+            if (setjmp(png_jmpbuf(png_ptr))){
+            cerr << "[Tree::to_png] Error during init_io" << endl;
+            fclose(dest);
+            png_destroy_write_struct(&png_ptr, &info_ptr);
+            return false;
+        }
+    }
+
+
+    // write header:
+    // Output is 8-bit depth, grayscale, alpha-less format.
+    const png_uint_32 image_width = impl.dimension();
+                               // = static_cast<size_t>(get_bounds().width() / precision);
+    png_set_IHDR(png_ptr, info_ptr,
+                 image_width, image_width,
+                 8, PNG_COLOR_TYPE_GRAY,
+                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_FILTER_TYPE_DEFAULT);
+    png_write_info(png_ptr, info_ptr);
+    if (setjmp(png_jmpbuf(png_ptr))){
+        cerr << "[Grid:to_png] Error while writing header info" << endl;
+        return false;
+    }
+
+    // allocate data buffers
+    std::vector<png_byte> buffer( image_width * image_width );
+    std::vector<png_bytep> row_pointers( image_width );
+
+    const Bounds& bounds = impl.get_bounds();
+    const double pixel_increment = static_cast<double>(bounds.width() / image_width);
+    for( int yj = image_width-1; 0 <= yj ; --yj){
+        double y = bounds.get_y_min() + (yj + 0.5)* pixel_increment;
+        for( int xi = 0; xi < image_width; ++xi){
+            double x = bounds.get_x_min() + (xi + 0.5)* pixel_increment;
+            buffer[yj*image_width + xi] = impl.search({x,y});
+        }
+        row_pointers[image_width - 1 - yj] = &(buffer[yj*image_width]);
+    }
+
+    // write out the entire image data in one call
+    png_write_image(png_ptr, row_pointers.data());
+
+    // error during write
+    if (setjmp(png_jmpbuf(png_ptr))){
+        cerr << "[Tree::to_png] Error during end of write" << endl;
+        fclose(dest);
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        return false;
+    }
     
-    doc[bounds_key] = impl.get_bounds().to_json();
+    png_write_end(png_ptr, info_ptr);
 
-    doc[precision_key] = impl.get_precision();
-
-    doc[grid_key] = to_json_grid();
-
-    sink << doc.dump(4) << endl;
-
+    // clean up libpng structs
+    if (png_ptr && info_ptr){
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+    }
+    fclose(dest); // close file
     return true;
+#else
+    cerr << "libpng is disabled!! Could not save."
+    return false;
+#endif //#ifdef ENABLE_LIBPNG
 }
 
 template<typename T>
-json Terrain<T>::to_json_grid() const {
+nlohmann::json Terrain<T>::to_json_grid() const {
     const size_t dim = impl.get_dimension();
     const double precision = impl.get_precision();
     const double prec_2 = precision /2;
     const Bounds& bounds = impl.get_bounds();
 
     // explicitly create the json array
-    json grid;
+    nlohmann::json grid;
 
     for(size_t yi=0; yi < dim; ++yi){
         const double y = ((dim-yi-1)*precision + prec_2 + bounds.center.y - bounds.half_width);
         // cerr << "    @[" << yi << "] => (" << y << ")" << endl;
         if(grid[yi].is_null()){
-            grid[yi] = json::array();
+            grid[yi] = nlohmann::json::array();
         }
     
         for(size_t xi=0; xi < dim; ++xi){
