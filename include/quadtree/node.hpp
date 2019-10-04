@@ -32,11 +32,6 @@ public:
 
     ~Node();
 
-    /**
-     * Condense groups of leaf nodes with identice values (for some value of "identical")
-     */
-    void cull();
-
     bool contains(const geometry::Point& at) const;
 
     void draw(std::ostream& sink, const std::string& prefix, const std::string& as) const ;
@@ -85,6 +80,9 @@ public:
     constexpr static double snap_center_distance = 0.5;
     bool nearby(const geometry::Point& p) const;
     bool nearby(const geometry::Point& p, const double threshold) const;
+
+    ///! \brief coalesce groups of leaf nodes with identice values (for some value of "identical")
+    void prune();
 
     Node& search(const geometry::Point& at);
 

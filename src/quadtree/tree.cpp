@@ -27,11 +27,11 @@ using quadtree::Node;
 static cell_value_t scratch;
 
 Tree::Tree(): 
-    Tree(Tree::default_bounds, 4.)
+    Tree(layout->default_bounds, layout->default_precision)
 {}
 
 Tree::Tree(const Bounds& _bounds, const double _precision):
-    bounds(_bounds), root(new Node(_bounds, 0)), precision(_precision)
+    layout(new Layout(_bounds, _precision)), root(new Node(_bounds, 0))
 {}
 
 Tree::~Tree(){
@@ -54,10 +54,6 @@ bool Tree::contains(const Point& p) const {
     return true;
 }
 
-void Tree::cull(){
-    root->cull();
-}
-
 void Tree::debug_tree() const {
     cerr << "====== Quad Tree: ======\n";
     cerr << "##  bounds:     " << get_bounds().str() << endl;
@@ -68,21 +64,16 @@ void Tree::debug_tree() const {
     cerr << endl;
 }
 
-size_t Tree::dimension() const {
-    return static_cast<size_t>(bounds.width() / precision);
-}
-
 const Bounds& Tree::get_bounds() const {
-    return bounds;
+    return layout->bounds;
 }
 
 size_t Tree::get_dimension() const {
-    return static_cast<size_t>( bounds.width() / precision );
+    return layout->dimension;
 }
 
-void Tree::grow(const double _precision){
-    precision = _precision;
-    return root->split(_precision);
+double Tree::get_precision() const { 
+    return layout->precision;
 }
 
 cell_value_t Tree::interp(const Point& at) const {
@@ -120,42 +111,8 @@ size_t Tree::get_height() const {
     return root->get_height();
 }
 
-void Tree::load_polygon(const std::vector<Point>& source){
-    // pass
-}
-
-bool Tree::load_grid(nlohmann::json& grid ){
-    if(grid.is_array() && grid[0].is_array()){
-        const size_t dim = grid.size();
-        const size_t pow_of_2 = pow(2, ceil(log2(dim)));
-        if(grid.size() != pow_of_2 ){
-            return false;
-        }
-        
-        // pre-allocate the right tree shape & depth for the input grid
-        const double new_precision = bounds.width() / dim;
-        grow(new_precision);
-
-        // populate the tree
-        int row_index = dim-1;
-        for(auto& row : grid){
-            double y = bounds.get_y_min() + (row_index + 0.5)* precision;
-
-            int column_index = 0;
-            // i.e. a cell is the element at [column_index, row_index] <=> [x,y]
-            for(auto& cell : row){
-                double x = bounds.get_x_min() + (column_index + 0.5) * precision;
-                Node& n= root->search({x,y});
-                n.set_value(cell.get<int>());
-                ++column_index;
-            }
-            --row_index;
-        }
-        
-        root->cull();
-        return true;
-    }
-    return false;
+const Layout& Tree::get_layout() const {
+    return *layout.get();
 }
 
 bool Tree::load_tree(nlohmann::json& doc){
@@ -164,7 +121,6 @@ bool Tree::load_tree(nlohmann::json& doc){
     }
     return root->load(doc);
 }
-
 
 cell_value_t& Tree::search(const Point& p) {
     if(contains(p)){
@@ -182,40 +138,36 @@ cell_value_t Tree::search(const Point& p) const {
     return cell_default_value;
 }
 
+void Tree::prune(){
+    root->prune();
+}
+
 void Tree::reset(const Bounds new_bounds, const double new_precision){
     if( isnan(new_precision) ){
         root.release();
         return;
     }
 
-    this->bounds = new_bounds;
-    this->precision = new_precision;
-
-
-    root = std::make_unique<Node>(bounds,0);
-    root->split(precision);
+    layout.reset(new geometry::Layout(new_bounds, new_precision));
+    
+    root = std::make_unique<Node>(layout->bounds, 0);
+    root->split(layout->precision);
+    
 }
-
-// void Tree::set(double x, double y, cell_value_t new_value) {
-//     if( ! contains(x,y)){
-//         cerr << "Attempt to set location for a point (" << x << ", " << y << "), not contained by this tree\n";
-//     }
-
-//     // reminder: this method does not modify tree _shape_.  Just stores values in existing nodes.
-
-// }
-
 
 json Tree::to_json_tree() const {
     return root->to_json();
 }
 
+size_t Tree::width() const {
+    return layout->bounds.width();
+}
 
 // size_t Tree::x_to_index(double x) const {
 //     if(x < bounds.get_x_min()){
 //         return 0;
 //     }else if(x > bounds.get_x_max()){
-//         return dimension()-1;
+//         return get_dimension()-1;
 //     }
 
 //     return static_cast<size_t>((x - (bounds.center.x - bounds.half_width))/precision);
@@ -225,7 +177,7 @@ json Tree::to_json_tree() const {
 //     if(y < bounds.get_y_min()){
 //         return 0;
 //     }else if(y > bounds.get_y_max()){
-//         return dimension()-1;
+//         return get_dimension()-1;
 //     }
 
 //     return static_cast<size_t>((y - (bounds.center.y - bounds.half_width))/precision);

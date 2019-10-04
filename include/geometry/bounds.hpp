@@ -14,7 +14,8 @@
 namespace terrain::geometry {
 class Bounds {
 public:
-    constexpr Bounds() :center(NAN,NAN),half_width(NAN) {}
+    constexpr Bounds():
+        center(NAN,NAN),half_width(NAN) {}
     constexpr Bounds(const Point& _center, const double _width):
         center(_center), half_width(_width/2) {}
 
@@ -44,7 +45,7 @@ public:
 
     nlohmann::json to_json() const;
 
-    double width() const;
+    constexpr double width() const { return half_width*2; }
     
 public:
     // used for comparisons

@@ -16,7 +16,9 @@
 #include <nlohmann/json/json_fwd.hpp>
 
 #include "geometry/bounds.hpp"
+#include "geometry/layout.hpp"
 #include "geometry/point.hpp"
+
 #include "cell_value.hpp"
 #include "quadtree/node.hpp"
 
@@ -65,18 +67,15 @@ public:
      */
     bool contains(const geometry::Point& p) const;
 
-    void cull();
-
     /**
      * Draws a simple debug representation of this tree to the given
      * output stream. 
      *
      * @param {std::ostream&} output stream to write data to
      */
-    void debug() const; 
+    void debug() const;
+
     void debug_tree() const;
-    
-    size_t dimension() const;
 
     /**
      * Gets the value of the point at (x, y).  If the point is not close to the center of a node, this function interpolates or extrapolates an appropriate value.
@@ -100,11 +99,11 @@ public:
 
     size_t get_dimension() const ;
 
-    double get_precision() const { return precision;}
-
     size_t get_height() const;
 
-    void grow(const double precision);
+    const Layout& get_layout() const;
+
+    double get_precision() const;
 
     /**
      * Loads a representation of a tree from the data source.  The the form source is assumed to
@@ -124,14 +123,7 @@ public:
 
     bool load_tree(nlohmann::json& tree);
 
-    // /**
-    //  * Sets the value of an (x, y) point within the quad-tree.
-    //  *
-    //  * @param {double} x The x-coordinate.
-    //  * @param {double} y The y-coordinate.
-    //  * @param {V} value The value associated with the point.
-    //  */
-    // void set(const double x, const double y, const cell_value_t new_value);
+    void prune();
 
     /**
      * Gets the value of the point at (x, y) or null if the point is empty.
@@ -165,7 +157,7 @@ public:
     ///! \brief generates a json structure, describing the tree itself
     nlohmann::json to_json_tree() const;
 
-    size_t width() const {return bounds.width();}
+    size_t width() const;
 
     bool write_png(const std::string filename) const;
 
@@ -202,13 +194,11 @@ private:
     //  */
     // private bool insert(Node<V> parent, Point<V> point);
 
-public:
-    static constexpr Bounds default_bounds = {Point(0.,0.), 32};
-
 private:
-    Bounds bounds;
+    ///! the data layout this tree represents
+    std::unique_ptr<geometry::Layout> layout;
+
     unique_ptr<terrain::quadtree::Node> root;
-    double precision;
 
 private:
     friend class QuadTreeTest_ConstructDefault_Test;

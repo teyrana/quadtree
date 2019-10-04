@@ -6,7 +6,9 @@
 
 #include "nlohmann/json/json.hpp"
 
+#include "geometry/layout.hpp"
 #include "geometry/polygon.hpp"
+
 #include "grid/grid.hpp"
 #include "terrain.hpp"
 #include "terrain.inl"
@@ -18,18 +20,20 @@ using std::string;
 
 using nlohmann::json;
 
+const static Bounds& default_bounds = terrain::geometry::Layout::default_bounds;
+
 namespace terrain::grid {
 
 TEST(GridTest, ConstructDefault) {
     grid::Grid g;
     Terrain terr(g);
  
-    EXPECT_EQ( g.dimension(), 2);
-    EXPECT_GE( g.size(),      4);
+    EXPECT_EQ( g.get_dimension(), 1);
+    EXPECT_GE( g.size(),      1);
 
-    EXPECT_DOUBLE_EQ( terr.get_precision(), 16.);
+    EXPECT_DOUBLE_EQ( terr.get_precision(), 1.);
 
-    EXPECT_TRUE( Bounds({0,0}, 32) == terr.get_bounds());
+    EXPECT_TRUE( default_bounds == terr.get_bounds());
 }
 
 //                   +-----+-----+-----+-----+
@@ -42,29 +46,27 @@ TEST(GridTest, ConstructWithSizeSpacingCenter) {
     grid::Grid g({{3.,3.}, 4.}, 1);
     Terrain terr(g);
  
-    EXPECT_EQ( g.dimension(), 4);
-    EXPECT_GE( g.size(),     16);
-    EXPECT_EQ( g.width(),     4);
-
-    EXPECT_DOUBLE_EQ( terr.get_precision(), 1.0);
-
     const auto& bounds = terr.get_bounds();
     EXPECT_DOUBLE_EQ( bounds.half_width,  2.);
     EXPECT_DOUBLE_EQ( bounds.center.x,    3.);
     EXPECT_DOUBLE_EQ( bounds.center.y,    3.);
+
+    EXPECT_DOUBLE_EQ( terr.get_precision(), 1.0);
+
+    EXPECT_EQ( g.get_dimension(), 4);
+    EXPECT_GE( g.size(),     16);
 }
 
 TEST(GridTest, ConstructWithUnitSize){
     grid::Grid g({{0,0}, 1.}, 1./16.);
     Terrain terr(g);
  
-    EXPECT_EQ( g.dimension(), 16);
-    EXPECT_GE( g.size(),     256);
+    EXPECT_TRUE(Bounds({0,0}, 1.) == terr.get_bounds());
 
     EXPECT_DOUBLE_EQ( terr.get_precision(), 0.0625);
 
-
-    EXPECT_TRUE(Bounds({0,0}, 1.) == terr.get_bounds());
+    EXPECT_EQ( g.get_dimension(), 16);
+    EXPECT_GE( g.size(),     256);
 }
 
 
@@ -72,22 +74,14 @@ TEST(GridTest, ConstructWithOddSize) {
     grid::Grid g({{0,0}, 32.}, 7.1);
     Terrain terr(g);
  
-    EXPECT_EQ( g.dimension(), 8);
-    EXPECT_GE( g.size(),     64);
+    EXPECT_TRUE(Bounds({0,0}, 32) == terr.get_bounds());
 
     EXPECT_DOUBLE_EQ( terr.get_precision(), 4.0);
+    
+    EXPECT_EQ( g.get_dimension(), 8);
+    EXPECT_GE( g.size(),     64);
 
-    EXPECT_TRUE(Bounds({0,0}, 32) == terr.get_bounds());
-}
 
-
-TEST(GridTest, SnapPrecision) {
-    ASSERT_DOUBLE_EQ(1., Grid::snap_precision(32, 1));
-    ASSERT_DOUBLE_EQ(2., Grid::snap_precision(32, 2));
-    ASSERT_DOUBLE_EQ(2., Grid::snap_precision(32, 2.5));
-    ASSERT_DOUBLE_EQ(4., Grid::snap_precision(32, 7.2));
-    ASSERT_DOUBLE_EQ(8., Grid::snap_precision(32, 8.1));
-    ASSERT_DOUBLE_EQ(8., Grid::snap_precision(32, 8.8));
 }
 
 TEST(GridTest, XYToIndex) {
@@ -127,7 +121,7 @@ TEST(GridTest, XYToIndex) {
 TEST( GridTest, LoadMalformedSource){
     grid::Grid g;
     Terrain terrain(g);
-    ASSERT_TRUE(Grid::default_bounds == terrain.get_bounds());
+    ASSERT_TRUE(default_bounds == terrain.get_bounds());
 
     // this is simply a malformed document.  It should not parse.
     std::istringstream source(R"({"bounds": {"x": 100, "y": 100, "width": )");
@@ -135,13 +129,13 @@ TEST( GridTest, LoadMalformedSource){
     EXPECT_FALSE(terrain.load(source));
 
     // these tests should be *exactly* the same as before the 'load' call
-    ASSERT_TRUE(Grid::default_bounds == terrain.get_bounds());
+    ASSERT_TRUE(default_bounds == terrain.get_bounds());
 }
 
 TEST( GridTest, LoadValidBoundsFromJSON){
     grid::Grid g;
     Terrain terrain(g);
-    ASSERT_TRUE(Grid::default_bounds == terrain.get_bounds());
+    ASSERT_TRUE(default_bounds == terrain.get_bounds());
 
     // construct a valid document, with correct fields, but missing required fields:
     std::istringstream source(R"({"bounds": {"x": 100, "y": 100, "width": 64}} )");
@@ -149,7 +143,7 @@ TEST( GridTest, LoadValidBoundsFromJSON){
     EXPECT_FALSE(terrain.load(source));
 
     // these tests should be *exactly* the same as before the 'load' call
-    ASSERT_TRUE(Grid::default_bounds == terrain.get_bounds());
+    ASSERT_TRUE(default_bounds == terrain.get_bounds());
 }
 
 TEST(GridTest, LoadGridFromJSON) {
@@ -173,7 +167,7 @@ TEST(GridTest, LoadGridFromJSON) {
     // // DEBUG
     // terrain.debug();
 
-    EXPECT_EQ( g.dimension(), 8);
+    EXPECT_EQ( g.get_dimension(), 8);
     EXPECT_EQ( g.size(), 64);
     EXPECT_EQ( g.width(), 8);
 
@@ -224,7 +218,7 @@ TEST(GridTest, LoadPolygonFromJSON) {
     // cerr << "======\n" << source.dump(4) << "\n======\n" << endl;
     // terrain.debug();
 
-    EXPECT_EQ( g.dimension(), 16);
+    EXPECT_EQ( g.get_dimension(), 16);
     EXPECT_EQ( g.size(),     256);
 
     EXPECT_DOUBLE_EQ( terrain.get_precision(), desired_precision);
@@ -287,7 +281,7 @@ TEST(GridTest, SavePNG) {
     ASSERT_TRUE(terrain.load(stream));
 
     // storage
-    EXPECT_EQ( g.dimension(), expected_dimension);
+    EXPECT_EQ( g.get_dimension(), expected_dimension);
     EXPECT_EQ( g.size(), expected_dimension*expected_dimension);
     EXPECT_DOUBLE_EQ( terrain.get_precision(), desired_precision);
     EXPECT_TRUE(expected_bounds == terrain.get_bounds());

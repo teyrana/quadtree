@@ -15,6 +15,7 @@
 #include "geometry/bounds.hpp"
 #include "geometry/point.hpp"
 #include "geometry/polygon.hpp"
+#include "geometry/layout.hpp"
 
 #include "cell_value.hpp"
 
@@ -62,8 +63,6 @@ public:
     ///! \brief Draws a simple debug representation of this grid to stderr
     void debug() const;
 
-    size_t dimension() const;
-
     ///! \brief sets the entire grid to the given value
     ///! \param fill_value - fill value for entire grid
     void fill(const cell_value_t fill_value);
@@ -73,6 +72,13 @@ public:
     ///! @param source - polygon defining the fill araea. Assumed to be closed, CCW, and non-intersecting
     ///! @param fill_value -fill value for area
     void fill(const Polygon& source, const cell_value_t fill_value);
+
+    /**
+     * Get the overall bounds of this tree
+     *
+     * @return Bounds object describing the tree's overall bounds.
+     */
+    const Bounds& get_bounds() const;
 
     /** 
      *                   +---+---+     +---+---+
@@ -86,16 +92,13 @@ public:
     cell_value_t& get_cell(const size_t xi, const size_t yi);
     cell_value_t get_cell(const size_t xi, const size_t yi) const ;
    
-    /**
-     * Get the overall bounds of this tree
-     *
-     * @return Bounds object describing the tree's overall bounds.
-     */
-    const Bounds& get_bounds() const;
+    ///! the number of cells on each axis of the grid
+   size_t get_dimension() const;
 
+    ///! the spacing of each cell === center-to-center distance. === cell-width.
     double get_precision() const;
 
-    bool load_grid(nlohmann::json& doc);
+    inline void prune() {};
 
     void reset();
     void reset(const Bounds bounds, const double new_precision);
@@ -115,26 +118,21 @@ public:
     ///! \return reference to the cell value
     cell_value_t& search(const Point& p);
 
+    ///! \brief the _total_ number of cells in this grid === (width * height)
     size_t size() const;
 
     bool to_png(const std::string filename) const;
 
-    double width() const {return bounds.width();}
+    ///! \brief the width of the represented bounds
+    double width() const ;
 
 private:
-    static double snap_precision(const double width, const double precision);
     size_t x_to_index(const double x) const;
     size_t y_to_index(const double y) const;
 
 public:
-    ///! the bounds that this grid covers
-    Bounds bounds;
-
-    constexpr static double epsilon = 1e-6;
-    constexpr static Bounds default_bounds = {{0,0}, 32};
-
-    ///! the spacing of each cell === center-to-center distance. === cell-width.
-    double precision;
+    ///! the data layout this grid represents
+    std::unique_ptr<geometry::Layout> layout;
 
     // raw array:  2D addressing is performed through the class methods
     std::vector<cell_value_t> storage;
