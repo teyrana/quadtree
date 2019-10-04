@@ -21,10 +21,13 @@ using std::unique_ptr;
 
 #include <nlohmann/json/json.hpp>
 
+#include "geometry/layout.hpp"
+
 #include "grid/grid.hpp"
 
 using terrain::geometry::Bounds;
 using terrain::geometry::Polygon;
+using terrain::geometry::Layout;
 
 using terrain::grid::Grid;
 
@@ -32,81 +35,60 @@ using terrain::grid::Grid;
 static cell_value_t scratch;
 
 
-Grid::Grid(): Grid(default_bounds, default_bounds.width()/2) {  
-    reset(); 
-}
-
-Grid::Grid(const Bounds& _bounds, double _precision):
-    bounds(_bounds), precision(_precision)
+Grid::Grid(): 
+    Grid(Layout::default_bounds, Layout::default_precision)
 {
     reset();
 }
 
+Grid::Grid(const Bounds& _bounds, double _precision):
+    layout(new geometry::Layout(_bounds, _precision))
+{
+    reset();
+}
+
+
 const Point Grid::anchor() const {
-    return bounds.center.sub({bounds.half_width, bounds.half_width});
+    const double width_2 = layout->bounds.half_width;
+    return layout->bounds.center.sub({width_2, width_2});
 }
 
 bool Grid::contains(const Point& p) const {
-    return bounds.contains(p);
-}
-
-size_t Grid::dimension() const {
-    return bounds.width() / precision;
+    return layout->bounds.contains(p);
 }
 
 void Grid::fill(const cell_value_t value){
     memset(storage.data(), value, size());
 }
 
+const Bounds& Grid::get_bounds() const {
+    return layout->bounds;
+}
+
 cell_value_t& Grid::get_cell(const size_t xi, const size_t yi) {
-    return storage[xi + yi*dimension()];
+    return storage[xi + yi * get_dimension()];
 }
 
 cell_value_t Grid::get_cell(const size_t xi, const size_t yi) const {
-    return storage[xi + yi*dimension()];
+    return storage[xi + yi * get_dimension()];
 }
 
-const Bounds& Grid::get_bounds() const {
-    return bounds;
+size_t Grid::get_dimension() const {
+    return layout->dimension;
 }
 
 double Grid::get_precision() const {
-    return precision;
+    return layout->precision;
 }
 
-bool Grid::load_grid(nlohmann::json& doc){
-    if(!doc.is_array() || !doc[0].is_array()){
-        cerr << "Grid::load_grid expected a array-of-arrays! aborting!\n";
-        return false;
-    }
-
-    if( doc.size() != dimension() ){
-        cerr << "Grid::load_grid expected a array of the same dimension as configured!!\n";
-        return false;
-    }
-
-    const size_t dim = dimension();
-    size_t row_index = dim - 1;
-    for( auto& row : doc ){
-        size_t column_index = 0;
-        for( auto& cell : row){
-            get_cell(column_index, row_index) = cell.get<cell_value_t>();
-            column_index++;
-        }
-        --row_index;
-    }
-
-    return true;
-}
 void Grid::reset() {
-    precision = snap_precision( bounds.width(), precision);
-    storage.resize( dimension()*dimension() );
+    storage.resize( layout->size );
 }
 
 void Grid::reset(const Bounds new_bounds, const double new_precision){
-    this->bounds = new_bounds;
-    this->precision = snap_precision( bounds.width(), new_precision );
-    storage.resize( dimension()*dimension() );
+    layout.reset(new geometry::Layout(new_bounds, new_precision));
+    
+    reset();
 }
 
 cell_value_t& Grid::search(const Point& p) {
@@ -118,37 +100,31 @@ cell_value_t& Grid::search(const Point& p) {
     return scratch;
 }
 
-
 size_t Grid::size() const {
     return storage.size();
 }
 
-double Grid::snap_precision(const double width, const double precision){
-    if( epsilon < std::fmod(width, precision)){
-      const double dimension_guess = width/precision;
-      const size_t next_power_of_2 = pow(2, ceil(log2(dimension_guess)));
-      return width / next_power_of_2;
-    }
 
-    return precision;
+double Grid::width() const {
+    return layout->bounds.width();
 }
 
 size_t Grid::x_to_index(double x) const {
-    if(x < bounds.get_x_min()){
+    if(x < layout->bounds.get_x_min()){
         return 0;
-    }else if(x > bounds.get_x_max()){
-        return dimension()-1;
+    }else if(x > layout->bounds.get_x_max()){
+        return layout->dimension-1;
     }
 
-    return static_cast<size_t>((x - bounds.center.x + bounds.half_width)/precision);
+    return static_cast<size_t>((x - layout->bounds.center.x + layout->bounds.half_width)/layout->precision);
 }
 
 size_t Grid::y_to_index(double y) const {
-    if(y < bounds.get_y_min()){
+    if(y < layout->bounds.get_y_min()){
         return 0;
-    }else if(y > bounds.get_y_max()){
-        return dimension()-1;
+    }else if(y > layout->bounds.get_y_max()){
+        return layout->dimension-1;
     }
 
-    return static_cast<size_t>((y - bounds.center.y + bounds.half_width)/precision);
+    return static_cast<size_t>((y - layout->bounds.center.y + layout->bounds.half_width)/layout->precision);
 }

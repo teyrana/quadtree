@@ -49,8 +49,9 @@ MESSAGE( STATUS "    with name: ${SHAPE_LIB_LINKAGE}")
 # Add Subdirectories
 #=============================================================================
 include_directories(include)
-SET(LIB_HEADERS include/terrain.hpp include/terrain.cpp
+SET(LIB_HEADERS include/terrain.hpp include/terrain.inl
                 include/geometry/bounds.hpp
+                include/geometry/layout.hpp include/geometry/layout.inl
                 include/geometry/point.hpp
                 include/geometry/polygon.hpp
                 include/grid/grid.hpp
@@ -97,12 +98,13 @@ enable_testing()
 # ============= Build Project Tests  =================
 # https://cmake.org/cmake/help/v3.0/module/FindGTest.html 
 SET(TEST_EXE testtree) 
-SET(TEST_SOURCES    test/geometry/bounds.cpp 
-                    test/geometry/point.cpp 
+SET(TEST_SOURCES    test/geometry/bounds.cpp
+                    test/geometry/layout.cpp
+                    test/geometry/point.cpp
                     test/geometry/polygon.cpp
                     test/grid/grid.cpp
-                    test/quadtree/node.cpp 
-                    test/quadtree/tree.cpp) 
+                    test/quadtree/node.cpp
+                    test/quadtree/tree.cpp)
 
 SET(TEST_LINKAGE ${QUAD_TREE_LIB_NAME} gtest gtest_main ) 
 

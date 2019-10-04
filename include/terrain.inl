@@ -46,9 +46,9 @@ template<typename T>
 void Terrain<T>::debug() const {
     const Bounds& bounds = impl.get_bounds();
     const double precision = impl.get_precision();
-    const size_t dimension = impl.dimension();
+    const size_t dimension = impl.get_dimension();
 
-    cerr << "====== Quad Tree: ======\n";
+    cerr << "====== Structure: ======\n";
     cerr << "##  bounds:     " << bounds.str() << endl;
     // cerr << "##  height:     " << get_height() << endl;
     cerr << "##  precision:  " << precision << endl;
@@ -144,6 +144,11 @@ const Bounds& Terrain<T>::get_bounds() const {
 }
 
 template<typename T>
+size_t Terrain<T>::get_dimension() const {
+    return impl.get_dimension();
+}
+
+template<typename T>
 double Terrain<T>::get_precision() const {
     return impl.get_precision();
 }
@@ -191,8 +196,8 @@ bool Terrain<T>::load(std::istream& source){
         const Bounds new_bounds(doc[bounds_key]);
         const double new_precision = new_bounds.width() / doc[grid_key].size();
         impl.reset(new_bounds, new_precision);
-        
-        return impl.load_grid(doc[grid_key]);
+
+        return load_grid(doc[grid_key]);
 
     }else if( doc.contains(tree_key)){
         cerr << "!! Tree loading not implemented!" << endl;
@@ -216,6 +221,43 @@ bool Terrain<T>::load(std::istream& source){
     // cerr << doc.dump(4) << endl;
     // #endif
     return false;
+}
+
+template<typename T>
+bool Terrain<T>::load_grid(nlohmann::json grid ){
+    const Bounds& bounds = impl.get_bounds();
+    const double precision = impl.get_precision();
+
+    if(!grid.is_array() && !grid[0].is_array()){
+        cerr << "Terrain::load_grid expected a array-of-arrays! aborting!\n";
+        return false;
+    }
+
+    if( grid.size() != impl.get_dimension() ){
+        cerr << "Terrain::load_grid expected a array of the same dimension as configured!!\n";
+        return false;
+    }
+
+
+    // populate the tree
+    int row_index = impl.get_dimension() - 1;
+    for(auto& row : grid){
+        double y = bounds.get_y_min() + (row_index + 0.5)* precision;
+
+        int column_index = 0;
+        // i.e. a cell is the element at [column_index, row_index] <=> [x,y]
+        for(auto& cell : row){
+            double x = bounds.get_x_min() + (column_index + 0.5) * precision;
+
+            impl.search({x,y}) = cell.get<int>();
+
+            ++column_index;
+        }
+        --row_index;
+    }
+        
+    impl.prune();
+    return true;
 }
 
 template<typename T>
@@ -297,7 +339,7 @@ bool Terrain<T>::png(FILE* dest){
 
     // write header:
     // Output is 8-bit depth, grayscale, alpha-less format.
-    const png_uint_32 image_width = impl.dimension();
+    const png_uint_32 image_width = impl.get_dimension();
                                // = static_cast<size_t>(get_bounds().width() / precision);
     png_set_IHDR(png_ptr, info_ptr,
                  image_width, image_width,

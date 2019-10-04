@@ -117,7 +117,3 @@ nlohmann::json Bounds::to_json() const {
     buf["width"] = half_width * 2.0;
     return buf;
 }
-
-double Bounds::width() const {
-    return 2*half_width;
-}

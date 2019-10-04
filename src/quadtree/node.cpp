@@ -42,27 +42,6 @@ Node::Node(const Bounds& _bounds, const cell_value_t _value):
 //   quadtree_bounds_extend(node->bounds, minx, miny);
 // }
 
-void Node::cull() {
-    if( is_leaf() ){
-        return;
-    }
-
-    get_northeast()->cull();
-    get_northwest()->cull();
-    get_southeast()->cull();
-    get_southwest()->cull();
-
-    auto nev = get_northeast()->get_value();
-    auto nwv = get_northwest()->get_value();
-    auto sev = get_southeast()->get_value();
-    auto swv = get_southwest()->get_value();
-
-    if( (nev == nwv) && (nwv == sev) && (sev == swv )){
-        reset();
-        set_value(nev);
-    }
-}
-
 bool Node::contains(const Point& at) const {
     return bounds.contains(at);
 }
@@ -233,6 +212,27 @@ bool Node::nearby(const Point& p) const {
 
 bool Node::nearby(const Point& p, const double threshold) const {
     return (snap_center_distance > bounds.center.distance(p));
+}
+
+void Node::prune() {
+    if( is_leaf() ){
+        return;
+    }
+
+    northeast->prune();
+    northwest->prune();
+    southeast->prune();
+    southwest->prune();
+
+    auto nev = get_northeast()->get_value();
+    auto nwv = get_northwest()->get_value();
+    auto sev = get_southeast()->get_value();
+    auto swv = get_southwest()->get_value();
+
+    if( (nev == nwv) && (nwv == sev) && (sev == swv )){
+        reset();
+        set_value(nev);
+    }
 }
 
 Node& Node::search(const Point& p) {

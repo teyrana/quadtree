@@ -9,9 +9,10 @@
 
 #include <nlohmann/json/json.hpp>
 
-#include "quadtree/tree.hpp"
+#include "geometry/layout.hpp"
 #include "geometry/point.hpp"
 #include "geometry/polygon.hpp"
+#include "quadtree/tree.hpp"
 #include "terrain.hpp"
 #include "terrain.inl"
 
@@ -25,14 +26,16 @@ using nlohmann::json;
 using terrain::geometry::Point;
 using terrain::geometry::Bounds;
 
+const Bounds& default_bounds = terrain::geometry::Layout::default_bounds;
+
 namespace terrain::quadtree {
 
 TEST(QuadTreeTest, ConstructDefault) {
     Tree tree;
     Terrain terrain(tree);
 
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 4.);
-    EXPECT_TRUE( Tree::default_bounds == terrain.get_bounds());
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
     
     // // DEBUG for line above
     // ASSERT_DOUBLE_EQ(terrain.get_bounds().center.x,  0);
@@ -66,10 +69,11 @@ TEST( QuadTreeTest, ConstructAndSetBounds) {
 
     // pre-conditions
     EXPECT_TRUE( Bounds({5,3}, 17) == terrain.get_bounds());
-    EXPECT_DOUBLE_EQ( 1.0, terrain.get_precision());
+    EXPECT_DOUBLE_EQ( 0.53125, terrain.get_precision());
 
     const Bounds new_bounds = {{1.,1}, 256};
-    const double new_precision = 32.;
+    const double new_precision = 32.; // this will very much get snapped down
+
     // test target
     tree.reset(new_bounds, new_precision);
     // test target
@@ -82,8 +86,8 @@ TEST( QuadTreeTest, ConstructAndSetBounds) {
 TEST( QuadTreeTest, LoadMalformedSource){
     Tree tree;
     Terrain terrain(tree);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 4.);
-    EXPECT_TRUE( Tree::default_bounds == terrain.get_bounds());
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
     
     // this is simply a malformed document.  It should not parse.
     std::istringstream source(R"({"bounds": {"x": 100, "y": 100, "width": )");
@@ -92,14 +96,14 @@ TEST( QuadTreeTest, LoadMalformedSource){
     EXPECT_FALSE(terrain.load(source));
 
     // these tests should be *exactly* the same as before the 'load' call
-    EXPECT_TRUE( Tree::default_bounds == terrain.get_bounds());
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
 }
 
 TEST( QuadTreeTest, LoadBoundsOnly){
     Tree tree;
     Terrain terrain(tree);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 4.);
-    EXPECT_TRUE( Tree::default_bounds == terrain.get_bounds());
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
     
     // construct a valid document, with correct fields, but simply .. missing things: 
     std::stringstream stream(R"({"bounds": {"x": 100, "y": 100, "width": 64}} )");
@@ -108,14 +112,14 @@ TEST( QuadTreeTest, LoadBoundsOnly){
     EXPECT_FALSE(terrain.load(stream));
 
     // these tests should be *exactly* the same as before the 'load' call
-    EXPECT_TRUE( Tree::default_bounds == terrain.get_bounds());
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
 }
 
 TEST( QuadTreeTest, LoadValidTree){
     Tree tree;
     Terrain terrain(tree);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 4.);
-    EXPECT_TRUE( Tree::default_bounds == terrain.get_bounds());
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
 
     json source = {{"bounds", {{"x", 0}, {"y", 0}, {"width", 1024}}},
                    {"precision", 1.},
@@ -127,24 +131,24 @@ TEST( QuadTreeTest, LoadValidTree){
                              {"SE", 0.0}, 
                              {"SW", 0.0}}}};
 
-    // ... just ... ignore the rest of that document.  It's really not important.
+    // ... just ... ignore the rest of the json document.  It's really not important.
     tree.load_tree(source["tree"]);
 
     // // debug
     // terrain.debug();
 
     // test shape
-    ASSERT_FALSE(tree.root->is_leaf());
-    ASSERT_FALSE(tree.root->get_northeast()->is_leaf());
-    ASSERT_TRUE(tree.root->get_southwest()->is_leaf());
+    ASSERT_FALSE( tree.root->is_leaf());
+    ASSERT_FALSE( tree.root->get_northeast()->is_leaf());
+    ASSERT_TRUE( tree.root->get_southwest()->is_leaf());
 }
 
 TEST(QuadTreeTest, LoadGridFromJSON) {
     Tree tree;
     Terrain terrain(tree);
 
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 4.0);
-    EXPECT_TRUE( Bounds({0,0},32) == terrain.get_bounds());
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
 
     std::istringstream stream(R"(
         {"bounds": {"x": 1, "y": 1, "width": 256},
@@ -465,7 +469,7 @@ TEST( QuadTreeTest, TestInterpolateTree){
 }
 
 
-TEST(TreeTest, SavePNG) {
+TEST( QuadTreeTest, SavePNG) {
     quadtree::Tree tree;
     Terrain terrain(tree);
 
@@ -487,12 +491,18 @@ TEST(TreeTest, SavePNG) {
 
     ASSERT_TRUE(terrain.load(stream));
 
-    // DEBUG
-    terrain.debug();
-    ASSERT_TRUE(false) << " !! Note: this is unique to the QuadTree storage, and is visible in both debug and png output.\n";
+    // // DEBUG
+    // terrain.debug();
 
-    const string filename("tree.test.png");
-    // because this manually tested, turn off by default.
+    EXPECT_TRUE(Bounds({8,8}, 16) == terrain.get_bounds());
+    EXPECT_EQ( terrain.get_dimension(), 64);
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 0.25);
+
+    // DEVEL
+    // ASSERT_TRUE(false) << " !! Note: this is unique to the QuadTree storage, and is visible in both debug and png output.\n";
+
+    // // Because this manually tested, comment this block until needed:
+    // const string filename("tree.test.png");
     // {
     //     FILE* dest = fopen(filename.c_str(), "wb");
     //     if(nullptr == dest){

@@ -44,6 +44,9 @@ public:
     const geometry::Bounds& get_bounds() const;
 
     ///! \brief describes the precision of this lookup structure === cell size
+    size_t get_dimension() const;
+
+    ///! \brief describes the precision of this lookup structure === cell size
     double get_precision() const;
 
     ///! \brief loads a json document from the given input stream
@@ -57,6 +60,9 @@ public:
 
 
 private:
+    ///! \brief 
+    bool load_grid(nlohmann::json grid );
+
     ///! \brief loads all the allowed and blocked areas
     ///! @param allow - a (json) list of allowed areas, as defined by polygons, as defined by a list of points.
     ///! @param block - a (json) list of blocked areas, as defined by polygons, as defined by a list of points.
