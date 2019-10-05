@@ -11,7 +11,6 @@
 
 #include "grid/grid.hpp"
 #include "terrain.hpp"
-#include "terrain.inl"
 
 using std::cerr;
 using std::endl;

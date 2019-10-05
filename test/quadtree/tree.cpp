@@ -14,7 +14,6 @@
 #include "geometry/polygon.hpp"
 #include "quadtree/tree.hpp"
 #include "terrain.hpp"
-#include "terrain.inl"
 
 using std::cerr;
 using std::endl;

@@ -4,6 +4,7 @@
 // NOTE: This is the template-class implementation -- 
 //       It is not compiled until referenced, even though it contains the function implementations.
 
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -26,7 +27,6 @@ using std::string;
 
 using terrain::geometry::Bounds;
 using terrain::geometry::Polygon;
-
 using terrain::Terrain;
 
 // used for reading and write json documents:
@@ -72,7 +72,7 @@ void Terrain<T>::debug() const {
         for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
             auto value = impl.search({x,y});
             if( 0 < value ){
-                cerr << "  " << std::setfill(' ') << std::setw(2) << std::hex << static_cast<int>(value) << ',';
+                fprintf(stderr, "  %2X,", static_cast<int>(value) );
             }else{
                 cerr << "    ,";
             }
@@ -175,7 +175,7 @@ bool Terrain<T>::load(std::istream& source){
                                                 nullptr,   // callback argument
                                                 false);    // allow exceptions?
     if(doc.is_discarded()){
-        // cerr << "malformed json! ignore.\n";
+        cerr << "malformed json! ignore.\n";
         return false;
     }else if(!doc.is_object()){
         cerr << "input should be a json _document_!!\n";
@@ -184,7 +184,7 @@ bool Terrain<T>::load(std::istream& source){
     }
     
     if(!doc.contains(bounds_key)){
-        // cerr << "Expected '" << bounds_key << "' field in json input document!\n";
+        cerr << "Expected '" << bounds_key << "' field in json input document!\n";
         return false;
     }else if(doc.contains(precision_key) && !doc[precision_key].is_number()){
         cerr << "If document contains a precision value, it should be _numeric_!!\n";
@@ -291,6 +291,21 @@ std::vector<Polygon> Terrain<T>::make_polygons(nlohmann::json doc){
         }
     }
     return result;
+}
+
+template<typename T>
+bool Terrain<T>::png(const string& filename){
+#ifdef ENABLE_LIBPNG
+    FILE* dest = fopen(filename.c_str(), "wb");
+    if(nullptr == dest){
+        cerr << "could not open destination .png file ("<<filename<<") for reading." << endl;
+        return false;
+    }
+    return png(dest);
+#else
+    cerr << "libpng is disabled!! Could not save."
+    return false;
+#endif //#ifdef ENABLE_LIBPNG
 }
 
 template<typename T>
