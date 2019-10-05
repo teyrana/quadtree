@@ -169,30 +169,6 @@ private:
     void debug_grid(std::ostream& sink) const;
 
     static bool is_perimeter_cell(const Bounds& root_bounds, const Bounds& near_bounds);
-    
-    // /**
-    //  * Traverses the tree depth-first, with quadrants being traversed in clockwise
-    //  * order (NE, SE, SW, NW).  The provided function will be called for each
-    //  * leaf node that is encountered.
-    //  * @param {Tree.Node} node The current node.
-    //  * @param {function(Tree.Node)} fn The function to call
-    //  *     for each leaf node. This function takes the node as an argument, and its
-    //  *     return value is irrelevant.
-    //  * @private
-    //  */
-    // void traverse(Node<V> node, Func<V> func);
-
-
-    //  * Inserts a point into the tree, updating the tree's structure if necessary.
-    //  * @param {.Tree.Node} parent The parent to insert the point
-    //  *     into.
-    //  * @param {Tree.Point} point The point to insert.
-    //  * @return {bool} True if a new node was added to the tree; False if a node
-    //  *     already existed with the correpsonding coordinates and had its value
-    //  *     reset.
-    //  * @private
-    //  */
-    // private bool insert(Node<V> parent, Point<V> point);
 
 private:
     ///! the data layout this tree represents
