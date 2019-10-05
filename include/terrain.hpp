@@ -10,6 +10,7 @@
 // This StackOverflow answer: 
 //   https://stackoverflow.com/questions/318064/how-do-you-declare-an-interface-in-c/17299151#17299151
 
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,7 @@
 #include "geometry/polygon.hpp"
 
 namespace terrain {
+
 template<typename T>
 class Terrain {
 public:
@@ -53,8 +55,8 @@ public:
     bool load(std::istream& source);
 
     ///! \brief writes a png file to the given outstream
-    bool png(FILE* dest);
-
+    bool png(const std::string& filename);
+    
     ///! \brief writes a json document to given output stream
     bool json(std::ostream& document);
 
@@ -74,9 +76,14 @@ private:
     ///! @return vector of polygons
     std::vector<geometry::Polygon> make_polygons(nlohmann::json list);
 
+    bool png(FILE* dest);
+
     nlohmann::json to_json_grid() const;
-};
+
+}; // class Terrain<T>
 
 }; // namespace terrain
 
-#endif
+#include "terrain.inl"
+
+#endif  // #ifdef _TERRAIN_HPP_
