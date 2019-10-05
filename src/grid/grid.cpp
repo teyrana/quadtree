@@ -93,38 +93,30 @@ void Grid::reset(const Bounds new_bounds, const double new_precision){
 
 cell_value_t& Grid::search(const Point& p) {
     if(contains(p)){
-        return get_cell(x_to_index(p.x), y_to_index(p.y));
+        const size_t x_index = (p.x - layout->bounds.center.x + layout->bounds.half_width)/layout->precision;
+        const size_t y_index = (p.y - layout->bounds.center.y + layout->bounds.half_width)/layout->precision;
+        return get_cell(x_index, y_index);
     }
 
     scratch = cell_error_value;
     return scratch;
 }
 
+cell_value_t Grid::search(const Point& p) const {
+    if(contains(p)){
+        const size_t x_index = (p.x - layout->bounds.center.x + layout->bounds.half_width)/layout->precision;
+        const size_t y_index = (p.y - layout->bounds.center.y + layout->bounds.half_width)/layout->precision;
+        return get_cell(x_index, y_index);
+    }
+
+    return cell_default_value;
+}
+
 size_t Grid::size() const {
     return storage.size();
 }
-
 
 double Grid::width() const {
     return layout->bounds.width();
 }
 
-size_t Grid::x_to_index(double x) const {
-    if(x < layout->bounds.get_x_min()){
-        return 0;
-    }else if(x > layout->bounds.get_x_max()){
-        return layout->dimension-1;
-    }
-
-    return static_cast<size_t>((x - layout->bounds.center.x + layout->bounds.half_width)/layout->precision);
-}
-
-size_t Grid::y_to_index(double y) const {
-    if(y < layout->bounds.get_y_min()){
-        return 0;
-    }else if(y > layout->bounds.get_y_max()){
-        return layout->dimension-1;
-    }
-
-    return static_cast<size_t>((y - layout->bounds.center.y + layout->bounds.half_width)/layout->precision);
-}
