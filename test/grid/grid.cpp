@@ -80,43 +80,7 @@ TEST(GridTest, ConstructWithOddSize) {
     
     EXPECT_EQ( g.get_dimension(), 8);
     EXPECT_GE( g.size(),     64);
-
-
 }
-
-TEST(GridTest, XYToIndex) {
-    grid::Grid g({{5.,5.}, 8.}, 0.5);
-    Terrain terrain(g);
-
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 0.5);
-    
-    ASSERT_TRUE(terrain.get_bounds() == Bounds({5,5}, 8));
-
-    EXPECT_EQ(g.x_to_index(0.5),  0); // <- past-the-post attempt
-
-    EXPECT_EQ(g.x_to_index(1.0),  0); // <- actual first cell
-    EXPECT_EQ(g.x_to_index(1.1),  0); // <- actual first cell
-    EXPECT_EQ(g.x_to_index(1.49),  0); // <- actual first cell
-    EXPECT_EQ(g.x_to_index(1.6),  1);
-    EXPECT_EQ(g.x_to_index(2.1),  2);
-    EXPECT_EQ(g.x_to_index(2.6),  3);
-    EXPECT_EQ(g.x_to_index(3.1),  4);
-    EXPECT_EQ(g.x_to_index(3.6),  5);
-    EXPECT_EQ(g.x_to_index(4.1),  6);
-    EXPECT_EQ(g.x_to_index(4.6),  7);
-    EXPECT_EQ(g.x_to_index(5.1),  8);
-    EXPECT_EQ(g.x_to_index(5.6),  9);
-    EXPECT_EQ(g.x_to_index(6.1), 10);
-    EXPECT_EQ(g.x_to_index(6.6), 11);
-    EXPECT_EQ(g.x_to_index(7.1), 12);
-    EXPECT_EQ(g.x_to_index(7.6), 13);
-    EXPECT_EQ(g.x_to_index(8.1), 14);
-    EXPECT_EQ(g.x_to_index(8.5), 15); // <- actual last cell 
-    EXPECT_EQ(g.x_to_index(8.6), 15); // <- actual last cell 
-    EXPECT_EQ(g.x_to_index(8.99), 15); // <- actual last cell 
-    EXPECT_EQ(g.x_to_index(9.1), 15); // <- past-the-post attempt
-}
-
 
 TEST( GridTest, LoadMalformedSource){
     grid::Grid g;

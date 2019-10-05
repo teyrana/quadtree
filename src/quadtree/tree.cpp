@@ -162,23 +162,3 @@ json Tree::to_json_tree() const {
 size_t Tree::width() const {
     return layout->bounds.width();
 }
-
-// size_t Tree::x_to_index(double x) const {
-//     if(x < bounds.get_x_min()){
-//         return 0;
-//     }else if(x > bounds.get_x_max()){
-//         return get_dimension()-1;
-//     }
-
-//     return static_cast<size_t>((x - (bounds.center.x - bounds.half_width))/precision);
-// }
-
-// size_t Tree::y_to_index(double y) const {
-//     if(y < bounds.get_y_min()){
-//         return 0;
-//     }else if(y > bounds.get_y_max()){
-//         return get_dimension()-1;
-//     }
-
-//     return static_cast<size_t>((y - (bounds.center.y - bounds.half_width))/precision);
-// }

@@ -161,10 +161,6 @@ public:
 
     bool write_png(const std::string filename) const;
 
-    // size_t x_to_index(double x) const;
-    // size_t y_to_index(double y) const;
-
-
 private:
     void debug_grid(std::ostream& sink) const;
 

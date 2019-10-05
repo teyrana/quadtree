@@ -103,20 +103,12 @@ public:
     void reset();
     void reset(const Bounds bounds, const double new_precision);
 
-    /**
-     * Sets the value at an (x, y) point
-     *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @param {V} value The value associated with the point.
-     */
-    void set(const double x, const double y, const cell_value_t new_value);
-
     ///! \brief Access the value at an (x, y) point
     ///!
     ///! \param point - the x,y coordinates to search at:
     ///! \return reference to the cell value
     cell_value_t& search(const Point& p);
+    cell_value_t  search(const Point& p) const;
 
     ///! \brief the _total_ number of cells in this grid === (width * height)
     size_t size() const;
@@ -124,11 +116,7 @@ public:
     bool to_png(const std::string filename) const;
 
     ///! \brief the width of the represented bounds
-    double width() const ;
-
-private:
-    size_t x_to_index(const double x) const;
-    size_t y_to_index(const double y) const;
+    double width() const;
 
 public:
     ///! the data layout this grid represents
