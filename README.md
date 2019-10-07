@@ -1,13 +1,29 @@
-QuadTree 
----------------
+# QuadTree 
 
-This is an C++ implementation of the quadtree data structure:
-[Quadtree](http://en.wikipedia.org/wiki/Quadtree).
+This project is primarily a demo and learning project; implementing a quadtree data structure: [Quadtree](http://en.wikipedia.org/wiki/Quadtree).  Specifically, to provide a performant lookup into x,y and return whether a location is allowable, or not.
+
+## Purpose
+
+While quadtrees have a wide variety of uses, this implementation is designed to partition space into allowable area, and blocked area.  (Both may be convex, concave, or disjoint.)  The allowable nature of the space is tracked on a square-area basis (in fact, the include reference implementation is a grid.)
+
+For instance, imagine a robot in a room; in order to locate the robot in the room, and the boundaries of the room. 
 
 
-Source:
-====
-This c++ code is ported from this Java implementation:
-[varunpant/Quadtree](https://github.com/varunpant/Quadtree.git)
+## Build
 
-The original port is licensed under the MIT License, and this port preserves that.
+This project uses CMake as its primary build system. `build.sh` in the base directory should automatically build all executables.
+
+### Dependencies
+
+This project makes use of several libraries:
+- [nlohmann/json][4] - header-only json I/O libray.  Vendored at `vendor/nlohmann/json`.
+- [5] - [optional] Used to output the contents of a quadtree or grid as an image (grayscale height map).
+- [Google Test Framework][6]- used to run all of the development tests
+
+## References
+- [1] [Quadtree (Wikipedia) ](http://en.wikipedia.org/wiki/Quadtree).
+- [2] [varunpant/Quadtree (Java Implementation)]( https://github.com/varunpant/Quadtree )
+- [3] [Jefflarson/quadtree (C Implementation)]( https://github.com/thejefflarson/quadtree )
+- [4] [nlohmann/json](https://github.com/nlohmann/json)
+- [5] [libpng](http://www.libpng.org/)
+- [6] [Google Test Framework](https://github.com/google/googletest)
