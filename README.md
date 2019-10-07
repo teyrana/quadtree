@@ -23,7 +23,7 @@ This project makes use of several libraries:
 
 References
 ----------
-- [1] [Quadtree (Wikipedia)]: http://en.wikipedia.org/wiki/Quadtree  [1]
+- [1] [Quadtree (Wikipedia)] http://en.wikipedia.org/wiki/Quadtree
 - [2] [varunpant/Quadtree (Java Implementation)]( https://github.com/varunpant/Quadtree )
 - [3] [Jefflarson/quadtree (C Implementation)]( https://github.com/thejefflarson/quadtree )
 - [4] [nlohmann/json](https://github.com/nlohmann/json)
