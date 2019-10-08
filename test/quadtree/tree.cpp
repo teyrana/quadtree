@@ -120,26 +120,67 @@ TEST( QuadTreeTest, LoadValidTree){
     EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
     EXPECT_TRUE( default_bounds == terrain.get_bounds());
 
-    json source = {{"bounds", {{"x", 0}, {"y", 0}, {"width", 1024}}},
-                   {"precision", 1.},
-                   {"tree", {{"NE", {{"NE", 0.0},
-                                   {"NW", 0.0}, 
-                                   {"SE", 0.0}, 
-                                   {"SW", 0.0}}},
-                             {"NW", 0.0},
-                             {"SE", 0.0}, 
-                             {"SW", 0.0}}}};
+    const json source = {
+            {"NE", {
+                {"NE", 0.0},
+                {"NW", 0.0}, 
+                {"SE", 0.0}, 
+                {"SW", 0.0}}},
+            {"NW", 0.0},
+            {"SE", 0.0}, 
+            {"SW", 0.0}};
 
-    // ... just ... ignore the rest of the json document.  It's really not important.
-    tree.load_tree(source["tree"]);
+    tree.load_tree(source);
 
     // // debug
-    // terrain.debug();
+    // tree.debug_tree();
 
     // test shape
     ASSERT_FALSE( tree.root->is_leaf());
     ASSERT_FALSE( tree.root->get_northeast()->is_leaf());
     ASSERT_TRUE( tree.root->get_southwest()->is_leaf());
+}
+
+TEST( QuadTreeTest, MeasureLoadFactor){
+    Tree tree;
+    Terrain terrain(tree);
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+
+    const json source = {
+        {"NE", {
+            {"NE", 0.0},
+            {"NW", 0.0},
+            {"SE", {
+                {"NE", 0.0},
+                {"NW", 0.0},
+                {"SE", 0.0},
+                {"SW", 0.0}}},
+            {"SW", 0.0}}},
+        {"NW", 0.0},
+        {"SE", 0.0}, 
+        {"SW", 0.0}};
+
+    tree.load_tree(source);
+
+    // // debug
+    // tree.debug_tree();
+
+    // test shape
+    ASSERT_FALSE( tree.root->is_leaf());
+    ASSERT_FALSE( tree.root->get_northeast()->is_leaf());
+    ASSERT_TRUE( tree.root->get_northeast()->get_southeast()->get_southeast()->is_leaf());
+    ASSERT_TRUE( tree.root->get_southwest()->is_leaf());
+
+    ASSERT_EQ( tree.get_height(), 4);
+    ASSERT_EQ( tree.size(), 13);
+
+    ASSERT_EQ( tree.calculate_full_loading(1), 1);
+    ASSERT_EQ( tree.calculate_full_loading(2), 5);
+    ASSERT_EQ( tree.calculate_full_loading(3), 21);
+    ASSERT_EQ( tree.calculate_full_loading(4), 85);
+    
+    ASSERT_NEAR( tree.get_load_factor(),  0.1530, 1e-4);
 }
 
 TEST(QuadTreeTest, LoadGridFromJSON) {

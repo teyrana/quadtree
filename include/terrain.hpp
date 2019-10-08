@@ -60,6 +60,9 @@ public:
     ///! \brief describes the precision of this lookup structure === cell size
     double get_precision() const;
 
+    ///! \brief gets the total count of cells in this data structure
+    size_t get_size() const;
+
     ///! \brief loads a json document from the given input stream
     bool load(std::istream& source);
 

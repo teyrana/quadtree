@@ -57,7 +57,8 @@ public:
      */
     ~Tree();
 
-        
+    static size_t calculate_full_loading(const size_t height);
+
     /**
      * Returns true if the point at (x, y) exists in the tree.
      *
@@ -71,10 +72,7 @@ public:
      * Draws a simple debug representation of this tree to the given
      * output stream. 
      *
-     * @param {std::ostream&} output stream to write data to
      */
-    void debug() const;
-
     void debug_tree() const;
 
     /**
@@ -103,16 +101,9 @@ public:
 
     const Layout& get_layout() const;
 
+    double get_load_factor() const; 
+    
     double get_precision() const;
-
-    /**
-     * Loads a representation of a tree from the data source.  The the form source is assumed to
-     * contain a serialization of a tree, as represented in valid json.  That is, in the same
-     * format as Tree::serialize(...).
-     *
-     * @param {std::istream} input stream containing the serialization text
-     */
-    bool load_grid(nlohmann::json& grid);
 
     /**
      * Loads the vector of points as a CCW polygon.
@@ -121,22 +112,16 @@ public:
      */
     void load_polygon(const std::vector<Point>& source);
 
-    bool load_tree(nlohmann::json& tree);
+    /**
+     * Loads a representation of a tree from the data source.  The the form source is assumed to
+     * contain a serialization of a tree, as represented in valid json.  That is, in the same
+     * format as Tree::serialize(...).
+     *
+     * @param tree - input json object containing a tree structure
+     */
+    bool load_tree(const nlohmann::json& tree);
 
     void prune();
-
-    /**
-     * Gets the value of the point at (x, y) or null if the point is empty.
-     *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @param {cell_value_t} opt_default The default value to return if the node doesn't
-     *                 exist.
-     * @return {cell_value_t} The value of the node, if available; or the default value.
-     */
-    cell_value_t search(const Point& p) const;
-
-    cell_value_t& search(const Point& p);
 
     /**
      * Removes a point from (x, y) if it exists.
@@ -154,16 +139,28 @@ public:
     ///! \param precision - describe the bounds to at least this precision
     void reset(const Bounds bounds, const double new_precision);
     
+    /**
+     * Gets the value of the point at (x, y) or null if the point is empty.
+     *
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @param {cell_value_t} opt_default The default value to return if the node doesn't
+     *                 exist.
+     * @return {cell_value_t} The value of the node, if available; or the default value.
+     */
+    cell_value_t search(const Point& p) const;
+
+    cell_value_t& search(const Point& p);
+    size_t size() const;
+
     ///! \brief generates a json structure, describing the tree itself
     nlohmann::json to_json_tree() const;
 
-    size_t width() const;
+    size_t get_width() const;
 
     bool write_png(const std::string filename) const;
 
 private:
-    void debug_grid(std::ostream& sink) const;
-
     static bool is_perimeter_cell(const Bounds& root_bounds, const Bounds& near_bounds);
 
 private:
@@ -175,6 +172,7 @@ private:
 private:
     friend class QuadTreeTest_ConstructDefault_Test;
     friend class QuadTreeTest_LoadValidTree_Test;
+    friend class QuadTreeTest_MeasureLoadFactor_Test;
     friend class QuadTreeTest_LoadGridFromJSON_Test;
     friend class QuadTreeTest_WriteLoadCycle_Test;
     friend class QuadTreeTest_TestSearchExplicitTree_Test;

@@ -40,6 +40,7 @@ public:
 
     const geometry::Bounds& get_bounds() const;
     const geometry::Point& get_center() const;
+    size_t get_count() const;
     double x() const;
     double y() const;
     size_t get_height() const;
@@ -75,7 +76,7 @@ public:
                              const Node& dn,
                              const Node& yn) const;
 
-    bool load(nlohmann::json doc);
+    bool load(const nlohmann::json& doc);
 
     constexpr static double snap_center_distance = 0.5;
     bool nearby(const geometry::Point& p) const;
