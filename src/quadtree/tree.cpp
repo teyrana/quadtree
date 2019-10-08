@@ -31,7 +31,7 @@ Tree::Tree():
 {}
 
 Tree::Tree(const Bounds& _bounds, const double _precision):
-    layout(new Layout(_bounds, _precision)), root(new Node(_bounds, 0))
+    layout(new Layout(_bounds, _precision)), root(std::make_unique<Node>(_bounds, 0))
 {}
 
 Tree::~Tree(){
@@ -70,6 +70,21 @@ const Bounds& Tree::get_bounds() const {
 
 size_t Tree::get_dimension() const {
     return layout->dimension;
+}
+
+size_t Tree::calculate_full_loading(const size_t height){
+    size_t full = 1;
+    for(size_t n = 1; n < height; ++n){
+        full += std::pow(4,n);
+    }
+    return full;
+}
+
+double Tree::get_load_factor() const {
+    const size_t height = root->get_height();
+    const size_t count = root->get_count();
+    const size_t full = calculate_full_loading(height);
+    return static_cast<double>(count) / static_cast<double>(full);
 }
 
 double Tree::get_precision() const { 
@@ -115,11 +130,28 @@ const Layout& Tree::get_layout() const {
     return *layout.get();
 }
 
-bool Tree::load_tree(nlohmann::json& doc){
+bool Tree::load_tree(const nlohmann::json& doc){
     if(! doc.is_object()){
+        cerr << "?? attempted to load unexpected format: no-object json document!\n";
         return false;
     }
     return root->load(doc);
+}
+
+void Tree::prune(){
+    root->prune();
+}
+
+void Tree::reset(const Bounds new_bounds, const double new_precision){
+    if( isnan(new_precision) ){
+        root.release();
+        return;
+    }
+
+    layout.reset(new geometry::Layout(new_bounds, new_precision));
+
+    root = std::make_unique<Node>(layout->bounds, 0);
+    root->split(layout->precision);
 }
 
 cell_value_t& Tree::search(const Point& p) {
@@ -138,27 +170,14 @@ cell_value_t Tree::search(const Point& p) const {
     return cell_default_value;
 }
 
-void Tree::prune(){
-    root->prune();
-}
-
-void Tree::reset(const Bounds new_bounds, const double new_precision){
-    if( isnan(new_precision) ){
-        root.release();
-        return;
-    }
-
-    layout.reset(new geometry::Layout(new_bounds, new_precision));
-    
-    root = std::make_unique<Node>(layout->bounds, 0);
-    root->split(layout->precision);
-    
+size_t Tree::size() const {
+    return root->get_count();
 }
 
 json Tree::to_json_tree() const {
     return root->to_json();
 }
 
-size_t Tree::width() const {
+size_t Tree::get_width() const {
     return layout->bounds.width();
 }

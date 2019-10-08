@@ -93,8 +93,10 @@ public:
     cell_value_t get_cell(const size_t xi, const size_t yi) const ;
    
     ///! the number of cells on each axis of the grid
-   size_t get_dimension() const;
-
+    size_t get_dimension() const;
+  
+    constexpr double get_load_factor() const { return 1.0; }
+    
     ///! the spacing of each cell === center-to-center distance. === cell-width.
     double get_precision() const;
 

@@ -1,2 +1,5 @@
 [ ] Write short profiling main
   [ ] add construction timers
+  [ ] adds switch for memory vs speed
+
+

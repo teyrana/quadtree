@@ -167,6 +167,11 @@ double Terrain<T>::get_precision() const {
 }
 
 template<typename T>
+size_t Terrain<T>::get_size() const {
+    return impl.size();
+}
+
+template<typename T>
 bool Terrain<T>::json(std::ostream& sink){
     // explicitly create the json object
     nlohmann::json doc = nlohmann::json::object();

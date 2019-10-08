@@ -82,6 +82,19 @@ const Point& Node::get_center() const {
     return bounds.center;
 }
 
+size_t Node::get_count() const {
+    if( is_leaf()){
+        return 1;
+    }else{
+        size_t count = 0;
+        count += northeast->get_count();
+        count += northwest->get_count();
+        count += southeast->get_count();
+        count += southwest->get_count();
+        return count + 1;
+    }
+}
+
 size_t Node::get_height() const {
     if(is_leaf()){
         return 1;
@@ -190,7 +203,7 @@ cell_value_t Node::interpolate_bilinear(const Point& at,
     return upper_node.interpolate_linear(at, lower_node);
 }
 
-bool Node::load(nlohmann::json doc){
+bool Node::load(const nlohmann::json& doc){
     reset();
     if(doc.is_object()){
         this->split();
