@@ -1,1 +1,2 @@
-[ ] Write short debug main
+[ ] Write short profiling main
+  [ ] add construction timers
