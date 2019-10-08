@@ -38,6 +38,9 @@ const static inline string precision_key("precision");
 const static inline string tree_key("tree");
 
 template<typename T>
+Terrain<T>::Terrain(): impl(*(new T())) {}
+
+template<typename T>
 Terrain<T>::Terrain(T& _ref): 
     impl(_ref) 
 {}
@@ -149,6 +152,16 @@ size_t Terrain<T>::get_dimension() const {
 }
 
 template<typename T>
+const string& Terrain<T>::get_error() const {
+    return error_message;
+}
+
+template<typename T>
+inline double Terrain<T>::get_load_factor() const {
+    return impl.get_load_factor();
+}
+
+template<typename T>
 double Terrain<T>::get_precision() const {
     return impl.get_precision();
 }
@@ -174,20 +187,22 @@ bool Terrain<T>::load(std::istream& source){
     nlohmann::json doc = nlohmann::json::parse( source,  // source document
                                                 nullptr,   // callback argument
                                                 false);    // allow exceptions?
+
     if(doc.is_discarded()){
-        cerr << "malformed json! ignore.\n";
+        error_message = "malformed json! ignore.\n";
+	source.seekg(0);
+	// cerr << source.rdbuf() << endl;
         return false;
     }else if(!doc.is_object()){
-        cerr << "input should be a json _document_!!\n";
-        cerr << doc.dump(4) << endl;
+        error_message = "input should be a json _document_!!\n" + doc.dump(4) + '\n';
         return false; 
     }
     
     if(!doc.contains(bounds_key)){
-        cerr << "Expected '" << bounds_key << "' field in json input document!\n";
+        error_message = "Expected '" + bounds_key + "' field in json input document!\n";
         return false;
     }else if(doc.contains(precision_key) && !doc[precision_key].is_number()){
-        cerr << "If document contains a precision value, it should be _numeric_!!\n";
+	error_message = "If document contains a precision value, it should be _numeric_!!\n";
         return false;
     }
 
@@ -200,12 +215,12 @@ bool Terrain<T>::load(std::istream& source){
         return load_grid(doc[grid_key]);
 
     }else if( doc.contains(tree_key)){
-        cerr << "!! Tree loading not implemented!" << endl;
+        error_message = "!! Tree loading not implemented!\n";
         return false;
         
     }else if(doc.contains(allow_key)){
         if( ! doc.contains(precision_key) ){
-            cerr << "Polygon data requires a precision key !!\n";
+            error_message = "Polygon data requires a precision key !!\n";
             return false;
         }
 
@@ -405,6 +420,11 @@ bool Terrain<T>::png(FILE* dest){
     cerr << "libpng is disabled!! Could not save."
     return false;
 #endif //#ifdef ENABLE_LIBPNG
+}
+
+template<typename T>
+cell_value_t Terrain<T>::search(const Point& p) const {
+    return impl.search(p);
 }
 
 template<typename T>

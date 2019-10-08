@@ -27,6 +27,10 @@ template<typename T>
 class Terrain {
 public:
     T& impl;
+    std::string error_message;
+
+    Terrain();
+
     Terrain(T& _ref);
 
     ///! \brief writes debug information to std err
@@ -48,6 +52,11 @@ public:
     ///! \brief describes the precision of this lookup structure === cell size
     size_t get_dimension() const;
 
+    const std::string& get_error() const;
+
+    ///! \brief describes the precision of this lookup structure === cell size
+    double get_load_factor() const;
+
     ///! \brief describes the precision of this lookup structure === cell size
     double get_precision() const;
 
@@ -60,6 +69,7 @@ public:
     ///! \brief writes a json document to given output stream
     bool json(std::ostream& document);
 
+    cell_value_t search(const Point& p) const;
 
 private:
     ///! \brief 
