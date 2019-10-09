@@ -133,6 +133,7 @@ int main(int argc, char* argv[]){
     if(true){ // Profiling the quadtree
         Terrain<Tree> tree;
 
+        cerr << ">> loading terrain ... \n";
         const auto start_load = std::chrono::high_resolution_clock::now(); 
         if( ! tree.load(*document_stream)){
             cerr << "!!!! error while loading into the tree!!!!\n";
@@ -140,11 +141,11 @@ int main(int argc, char* argv[]){
             return -1;
         }
         const auto finish_load = std::chrono::high_resolution_clock::now(); 
-        const auto load_duration = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(finish_load - start_load).count());
+        const auto load_duration = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(finish_load - start_load).count())/1000;
 
         // tree.debug();
-        cerr << ">> Loaded Tree in " << load_duration << " ms\n";
-        cerr << "====== Tree Stats: ======\n";
+        cerr << "## Loaded in:   " << load_duration << " s \n";
+        cerr << "====== Terrain Stats: ======\n";
         cerr << "##  bounds:     " << tree.get_bounds().str() << endl;
         cerr << "##  loading:    " << tree.impl.get_load_factor() << endl;
         cerr << "##  precision:  " << tree.get_precision() << endl;
