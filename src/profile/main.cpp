@@ -26,16 +26,17 @@ using terrain::quadtree::Tree;
 using terrain::Terrain;
 
 constexpr double boundary_width = 4096.;   // overall boundary
-constexpr double diamond_width =  1024.;
-constexpr double desired_precision = 100.;
+constexpr double diamond_width =  2048.;
+constexpr double desired_precision = 1.;
 // =====
 constexpr Point center(boundary_width/2, boundary_width/2);
-json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
-                {"precision", desired_precision},
-                {"allow", {{{center.x + diamond_width, center.y},
-                            {center.x                , center.y + diamond_width},
-                            {center.x - diamond_width, center.y},
-                            {center.x                , center.y - diamond_width}}}}};
+constexpr double diamond_width_2 = diamond_width/2;
+const json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
+                      {"precision", desired_precision},
+                      {"allow", {{{center.x + diamond_width_2, center.y},
+                                  {center.x                  , center.y + diamond_width_2 },
+                                  {center.x - diamond_width_2, center.y},
+                                  {center.x                  , center.y - diamond_width_2 }}}}};
 
 constexpr size_t test_seed = 55;
 static std::mt19937 generator;
