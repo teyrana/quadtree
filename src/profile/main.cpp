@@ -29,7 +29,7 @@ using terrain::Terrain;
 
 constexpr double boundary_width = 4096.;   // overall boundary
 constexpr double diamond_width =  2048.;
-constexpr double desired_precision = 1.;
+constexpr double desired_precision = 1.0;
 // =====
 constexpr Point center(boundary_width/2, boundary_width/2);
 constexpr double diamond_width_2 = diamond_width/2;

@@ -1,5 +1,17 @@
 [ ] Write short profiling main
-  [ ] add construction timers
-  [ ] adds switch for memory vs speed
+    [ ] (?) adds switch for memory vs speed
+[ ] excise Bounds from each node
+[ ] merge Bounds -><- Layout
+[ ] GridLayout -> snap sizes:
+    to powers of 2 vs. powers of 4
+
+[ ] migrate to Eigen library:
+    http://eigen.tuxfamily.org/index.php?title=Main_Page
+[ ] migrate do gdal for file i/o
+    https://gdal.org/
 
 
+See Also:
+====
+- https://github.com/uber/h3
+- http://wiki.ros.org/grid_map
