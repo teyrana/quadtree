@@ -435,6 +435,19 @@ cell_value_t Terrain<T>::search(const Point& p) const {
 }
 
 template<typename T>
+std::string Terrain<T>::summary() const {
+    std::ostringstream buffer;
+    buffer << "====== Terrain Stats: ======\n";
+    buffer << "##  bounds:     " << impl.get_bounds().str() << '\n';
+    buffer << "##  loading:    " << impl.get_load_factor() << '\n';
+    buffer << "##  precision:  " << impl.get_precision() << '\n';
+    buffer << "##  dimension:  " << impl.get_dimension() << '\n';
+    buffer << "##  size:       " << impl.size() << '\n';
+    buffer << '\n';
+    return buffer.str();
+}
+
+template<typename T>
 nlohmann::json Terrain<T>::to_json_grid() const {
     const size_t dim = impl.get_dimension();
     const double precision = impl.get_precision();
