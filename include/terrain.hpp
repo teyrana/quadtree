@@ -74,6 +74,8 @@ public:
 
     cell_value_t search(const Point& p) const;
 
+    std::string summary() const;
+
 private:
     ///! \brief 
     bool load_grid(nlohmann::json grid );

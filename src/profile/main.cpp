@@ -10,6 +10,8 @@
 
 using std::cerr;
 
+#include <cxxopts/cxxopts.hpp>
+
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
 
@@ -40,6 +42,21 @@ const json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", bo
 
 constexpr size_t test_seed = 55;
 static std::mt19937 generator;
+
+
+cxxopts::Options command_line_options("TerrainProfile", "Run metrics and speed tests of the terrain library");
+
+void configure_parser_options(cxxopts::Options& opts){
+    // define command line options
+    opts.add_options()
+        // ("d,debug", "Enable debugging")
+        ("i,input", "input json path", cxxopts::value<std::string>())
+        ("c,count", "Iteration Count", cxxopts::value<size_t>())
+        ("tree", "Use the QuadTree backend", cxxopts::value<bool>())
+        ("grid", "Use the Grid backend", cxxopts::value<bool>())
+        ("o,image", "Output image filen name", cxxopts::value<std::string>())
+    ;
+}
 
 template <typename T>
 void profile_terrain(T& terrain, const size_t iteration_limit){
@@ -76,13 +93,19 @@ int main(int argc, char* argv[]){
     std::unique_ptr<std::istream> document_stream;
     size_t trial_size = 10;
     
-    if( 1 == argc ){
+    configure_parser_options(command_line_options);
+    auto result = command_line_options.parse(argc, argv);
+
+    
+    // configure input:
+    if( 0 == result.count("input")){
+        cerr << "  ## using default input.\n";
         // load default json source data
         filename = "<default>";
         document_stream.reset(new std::istringstream(source.dump()));
-    }else if( 1 < argc ){
-        filename = argv[1];
-        cerr << "    ## Selected file:       " << filename << endl;
+    }else if( 0 < result.count("input")){
+        filename = result["opt"].as<std::string>();
+        cerr << "  ## File input; with:  " << filename << endl;
 
         struct stat buf;
         if( stat(filename.c_str(), &buf) == -1){
@@ -90,75 +113,75 @@ int main(int argc, char* argv[]){
             return -1;
         }
         std::ifstream document_stream = std::ifstream(filename);
-
-        if( 2 < argc ){
-            filename = argv[1];
-            trial_size = atoi(argv[2]);
-            cerr << "    ## Selected Trial Size: " << trial_size << endl;
-        }
     }
 
-    if(false){ // Profiling Grid
-        Terrain<Grid> grid;
-
-        auto start_load = std::chrono::high_resolution_clock::now(); 
-        if( ! grid.load(*document_stream)){
-            cerr << "!!!! error while loading into the grid!!!!\n";
-            cerr << grid.get_error() << endl;
-            return -1;
-        }
-        auto finish_load = std::chrono::high_resolution_clock::now(); 
-        auto load_duration = std::chrono::duration_cast<std::chrono::seconds>(finish_load - start_load).count(); 
-  
-        
-        // // DEBUG
-        // grid.debug();
-        cerr << "====== Grid Stats: ======\n";
-        cerr << ">> Loaded Grid in " << load_duration << " sec \n\n";
-        cerr << "?? loaded grid." << endl;
-        cerr << "##  bounds:     " << grid.get_bounds().str() << endl;
-        cerr << "##  precision:  " << grid.get_precision() << endl;
-        cerr << "##  dimension:  " << grid.get_dimension() << endl;
-        cerr << endl;
-        
-        profile_terrain(grid, trial_size);
-
-        // cerr << "##>> saving grid to .png...\n";
-        // const std::string grid_test_filename("grid.test.png");
-        // grid.png(grid_test_filename);
+    if( 0 < result.count("count")){
+        trial_size = result["count"].as<size_t>();
+        cerr << "    ## Selected Trial Size: " << trial_size << endl;
     }
 
-    // document_stream->seekg(0);
+    
+    bool use_grid = false;
+    Terrain<Grid> grid;
+    Terrain<Tree> tree;
+    if( 0 < result.count("grid")){
+        use_grid = true;
+        cerr << "  ## Using grid.\n";
+    }else if( 0 < result.count("tree")){
+        use_grid = false;
+        cerr << "  ## Using tree.\n";
+    }
 
-    if(true){ // Profiling the quadtree
-        Terrain<Tree> tree;
-
-        cerr << ">> loading terrain ... \n";
-        const auto start_load = std::chrono::high_resolution_clock::now(); 
-        if( ! tree.load(*document_stream)){
-            cerr << "!!!! error while loading into the tree!!!!\n";
-            cerr << tree.get_error();
-            return -1;
+    bool write_output = false;
+    std::string output_path;
+    if( 0 < result.count("image")){
+        write_output = true;
+        output_path = result["image"].as<std::string>();
+        if( output_path.empty() ){
+            output_path = "terrain.output.png";
         }
-        const auto finish_load = std::chrono::high_resolution_clock::now(); 
-        const auto load_duration = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(finish_load - start_load).count())/1000;
+        cerr << "  ## Save output to: " << output_path << '\n';
+    }
 
-        // tree.debug();
-        cerr << "## Loaded in:   " << load_duration << " s \n";
-        cerr << "====== Terrain Stats: ======\n";
-        cerr << "##  bounds:     " << tree.get_bounds().str() << endl;
-        cerr << "##  loading:    " << tree.impl.get_load_factor() << endl;
-        cerr << "##  precision:  " << tree.get_precision() << endl;
-        cerr << "##  dimension:  " << tree.get_dimension() << endl;
-        cerr << "##  size:       " << tree.get_size() << endl;
-        cerr << endl;
+    // ^^^^ Configuration
+    // vvvv Execution
 
+    cerr << ">> loading terrain ... \n";
+    const auto start_load = std::chrono::high_resolution_clock::now(); 
+    
+    bool load_success;
+    if(use_grid){
+        load_success = grid.load(*document_stream);
+    }else{
+        load_success = tree.load(*document_stream);
+    }
+    if(!load_success){
+        cerr << "!!!! error while loading into the tree!!!!\n";
+        cerr << tree.get_error();
+        return -1;
+    }
+    const auto finish_load = std::chrono::high_resolution_clock::now(); 
+    const auto load_duration = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(finish_load - start_load).count())/1000;
+    cerr << "<< Loaded in:   " << load_duration << " s \n";
+
+    // tree.debug();
+    if(use_grid){
+        cerr << grid.summary();
         profile_terrain(tree, trial_size);
-
-        // cerr << "##>> saving tree to .png...\n";
-        // const std::string tree_test_filename("tree.test.png");
-        // tree.png(tree_test_filename);
+    }else{
+        cerr << tree.summary();
+        profile_terrain(tree, trial_size);
     }
+
+    if(write_output){
+        cerr << "##>> writing output...\n";
+        if(use_grid){
+            grid.png(output_path);
+        }else{
+            tree.png(output_path);
+        }
+    }
+
       
     return 0;
 }
