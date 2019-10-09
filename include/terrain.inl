@@ -289,7 +289,7 @@ bool Terrain<T>::load_polygons(nlohmann::json allow_doc, nlohmann::json block_do
     const cell_value_t block_value = 0x99;
 
     impl.fill(block_value);
-    
+
     for( auto& poly : allowed_polygons ){
         fill(poly, allow_value);
     }
@@ -297,6 +297,8 @@ bool Terrain<T>::load_polygons(nlohmann::json allow_doc, nlohmann::json block_do
     for( auto& poly : blocked_polygons ){
         fill(poly, block_value);
     }
+
+    impl.prune();
 
     return true;
 }
