@@ -237,14 +237,20 @@ void Node::prune() {
     southeast->prune();
     southwest->prune();
 
-    auto nev = get_northeast()->get_value();
-    auto nwv = get_northwest()->get_value();
-    auto sev = get_southeast()->get_value();
-    auto swv = get_southwest()->get_value();
+    if( get_northeast()->is_leaf() && 
+        get_northwest()->is_leaf() && 
+        get_southeast()->is_leaf() &&
+        get_southwest()->is_leaf())
+    {
+        auto nev = get_northeast()->get_value();
+        auto nwv = get_northwest()->get_value();
+        auto sev = get_southeast()->get_value();
+        auto swv = get_southwest()->get_value();
 
-    if( (nev == nwv) && (nwv == sev) && (sev == swv )){
-        reset();
-        set_value(nev);
+        if( (nev == nwv) && (nwv == sev) && (sev == swv )){
+            reset();
+            set_value(nev);
+        }
     }
 }
 
