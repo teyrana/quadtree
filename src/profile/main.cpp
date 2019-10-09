@@ -100,17 +100,21 @@ int main(int argc, char* argv[]){
     if(false){ // Profiling Grid
         Terrain<Grid> grid;
 
+        auto start_load = std::chrono::high_resolution_clock::now(); 
         if( ! grid.load(*document_stream)){
             cerr << "!!!! error while loading into the grid!!!!\n";
             cerr << grid.get_error() << endl;
             return -1;
         }
-
-        cerr << "?? loaded grid." << endl;
+        auto finish_load = std::chrono::high_resolution_clock::now(); 
+        auto load_duration = std::chrono::duration_cast<std::chrono::seconds>(finish_load - start_load).count(); 
+  
         
         // // DEBUG
         // grid.debug();
         cerr << "====== Grid Stats: ======\n";
+        cerr << ">> Loaded Grid in " << load_duration << " sec \n\n";
+        cerr << "?? loaded grid." << endl;
         cerr << "##  bounds:     " << grid.get_bounds().str() << endl;
         cerr << "##  precision:  " << grid.get_precision() << endl;
         cerr << "##  dimension:  " << grid.get_dimension() << endl;
@@ -128,13 +132,17 @@ int main(int argc, char* argv[]){
     if(true){ // Profiling the quadtree
         Terrain<Tree> tree;
 
+        const auto start_load = std::chrono::high_resolution_clock::now(); 
         if( ! tree.load(*document_stream)){
             cerr << "!!!! error while loading into the tree!!!!\n";
             cerr << tree.get_error();
             return -1;
         }
+        const auto finish_load = std::chrono::high_resolution_clock::now(); 
+        const auto load_duration = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(finish_load - start_load).count());
 
         // tree.debug();
+        cerr << ">> Loaded Tree in " << load_duration << " ms\n";
         cerr << "====== Tree Stats: ======\n";
         cerr << "##  bounds:     " << tree.get_bounds().str() << endl;
         cerr << "##  loading:    " << tree.impl.get_load_factor() << endl;
