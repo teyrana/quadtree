@@ -27,7 +27,7 @@ using terrain::Terrain;
 
 constexpr double boundary_width = 4096.;   // overall boundary
 constexpr double diamond_width =  1024.;
-constexpr double desired_precision = 1.;
+constexpr double desired_precision = 100.;
 // =====
 constexpr Point center(boundary_width/2, boundary_width/2);
 json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]){
         }
     }
 
-    { // Profiling Grid
+    if(false){ // Profiling Grid
         Terrain<Grid> grid;
 
         if( ! grid.load(*document_stream)){
@@ -119,12 +119,13 @@ int main(int argc, char* argv[]){
         profile_terrain(grid, trial_size);
 
         // cerr << "##>> saving grid to .png...\n";
-        // const std::string grid_test_filename("tree.test.png");
+        // const std::string grid_test_filename("grid.test.png");
         // grid.png(grid_test_filename);
     }
 
-    document_stream->seekg(0);
-    { // Profiling the quadtree
+    // document_stream->seekg(0);
+
+    if(true){ // Profiling the quadtree
         Terrain<Tree> tree;
 
         if( ! tree.load(*document_stream)){
@@ -133,20 +134,19 @@ int main(int argc, char* argv[]){
             return -1;
         }
 
-
         // tree.debug();
         cerr << "====== Tree Stats: ======\n";
         cerr << "##  bounds:     " << tree.get_bounds().str() << endl;
-        // BROKEN! TODO: FIXME!!
-        //cerr << "##  loading:    " << tree.impl.get_load_factor() << endl;
+        cerr << "##  loading:    " << tree.impl.get_load_factor() << endl;
         cerr << "##  precision:  " << tree.get_precision() << endl;
         cerr << "##  dimension:  " << tree.get_dimension() << endl;
+        cerr << "##  size:       " << tree.get_size() << endl;
         cerr << endl;
 
         profile_terrain(tree, trial_size);
 
         // cerr << "##>> saving tree to .png...\n";
-        // const std::string tree_test_filename("grid.test.png");
+        // const std::string tree_test_filename("tree.test.png");
         // tree.png(tree_test_filename);
     }
       

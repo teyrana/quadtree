@@ -122,7 +122,7 @@ TARGET_LINK_LIBRARIES(${TEST_EXE} ${TEST_LINKAGE})
 
 
 # ============= Build Profiling Program  =================
-SET(PROFILE_EXE treeprof)
+SET(PROFILE_EXE proftree)
 SET(PROFILE_SOURCES src/profile/main.cpp)
 
 # We don't YET need this:
