@@ -17,6 +17,7 @@ This project uses CMake as its primary build system. `build.sh` in the base dire
 
 ### Dependencies
 This project makes use of several libraries:
+- Eigen Math / Linear Algebra Library[7] - http://eigen.tuxfamily.org/index.php?title=Main_Page
 - nlohmann/json [4] - header-only json I/O libray.  Vendored at `vendor/nlohmann/json`.
 - libpng [5] - [optional] Used to output the contents of a quadtree or grid as an image (grayscale height map).
 - Google Test Framework [6]- used to run all of the development tests
@@ -29,3 +30,6 @@ References
 - [4] [nlohmann/json](https://github.com/nlohmann/json)
 - [5] [libpng](http://www.libpng.org/)
 - [6] [Google Test Framework](https://github.com/google/googletest)
+- [7] [Eigen library](http://eigen.tuxfamily.org/index.php?title=Main_Page)
+
+

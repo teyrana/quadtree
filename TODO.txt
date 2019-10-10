@@ -5,8 +5,6 @@
 [ ] GridLayout -> snap sizes:
     to powers of 2 vs. powers of 4
 
-[ ] migrate to Eigen library:
-    http://eigen.tuxfamily.org/index.php?title=Main_Page
 [ ] migrate do gdal for file i/o
     https://gdal.org/
 
