@@ -77,6 +77,10 @@ size_t Grid::get_dimension() const {
     return layout->dimension;
 }
 
+size_t Grid::get_memory_usage() const { 
+    return layout->dimension * layout->dimension * sizeof(cell_value_t);
+}
+
 double Grid::get_precision() const {
     return layout->precision;
 }

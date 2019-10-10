@@ -96,7 +96,9 @@ public:
     size_t get_dimension() const;
   
     constexpr double get_load_factor() const { return 1.0; }
-    
+
+    size_t get_memory_usage() const;
+
     ///! the spacing of each cell === center-to-center distance. === cell-width.
     double get_precision() const;
 

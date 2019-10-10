@@ -160,7 +160,8 @@ TEST( QuadTreeTest, CalculateMemoryUsage){
     EXPECT_EQ(sizeof(Tree), 16);
     EXPECT_EQ(sizeof(Bounds), 24);   // :(
     EXPECT_EQ(sizeof(Layout), 48);   // :(
-    EXPECT_EQ(sizeof(Node), 64);     // :((   
+    EXPECT_EQ(sizeof(Node), 64);     // :((
+
 }
     
 TEST( QuadTreeTest, CalculateLoadFactor){

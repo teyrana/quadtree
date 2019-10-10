@@ -94,6 +94,10 @@ double Tree::get_load_factor() const {
     return static_cast<double>(count) / static_cast<double>(complete);
 }
 
+size_t Tree::get_memory_usage() const {
+    return size() * sizeof(Node);
+}
+
 double Tree::get_precision() const { 
     return layout->precision;
 }
