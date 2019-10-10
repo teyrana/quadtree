@@ -141,7 +141,29 @@ TEST( QuadTreeTest, LoadValidTree){
     ASSERT_TRUE( tree.root->get_southwest()->is_leaf());
 }
 
-TEST( QuadTreeTest, MeasureLoadFactor){
+TEST( QuadTreeTest, CalculateFullLoading){
+    EXPECT_EQ( Tree::calculate_complete_tree(0), 1);
+    EXPECT_EQ( Tree::calculate_complete_tree(1), 5);
+    EXPECT_EQ( Tree::calculate_complete_tree(2), 21);
+    ASSERT_EQ( Tree::calculate_complete_tree(3), 85);
+    ASSERT_EQ( Tree::calculate_complete_tree(4), 341);
+    ASSERT_EQ( Tree::calculate_complete_tree(5), 1365);
+}
+
+TEST( QuadTreeTest, CalculateMemoryUsage){
+    Tree tree;
+    Terrain terrain(tree);
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
+    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+
+    EXPECT_EQ(sizeof(Terrain<Tree>), 32);
+    EXPECT_EQ(sizeof(Tree), 16);
+    EXPECT_EQ(sizeof(Bounds), 24);   // :(
+    EXPECT_EQ(sizeof(Layout), 48);   // :(
+    EXPECT_EQ(sizeof(Node), 64);     // :((   
+}
+    
+TEST( QuadTreeTest, CalculateLoadFactor){
     Tree tree;
     Terrain terrain(tree);
     EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
@@ -172,15 +194,9 @@ TEST( QuadTreeTest, MeasureLoadFactor){
     ASSERT_TRUE( tree.root->get_northeast()->get_southeast()->get_southeast()->is_leaf());
     ASSERT_TRUE( tree.root->get_southwest()->is_leaf());
 
-    ASSERT_EQ( tree.get_height(), 4);
+    ASSERT_EQ( tree.get_height(), 3);
     ASSERT_EQ( tree.size(), 13);
-
-    ASSERT_EQ( tree.calculate_full_loading(1), 1);
-    ASSERT_EQ( tree.calculate_full_loading(2), 5);
-    ASSERT_EQ( tree.calculate_full_loading(3), 21);
-    ASSERT_EQ( tree.calculate_full_loading(4), 85);
-    
-    ASSERT_NEAR( tree.get_load_factor(),  0.1530, 1e-4);
+    ASSERT_NEAR( tree.get_load_factor(),  0.03812, 1e-4);
 }
 
 TEST(QuadTreeTest, LoadGridFromJSON) {
@@ -211,7 +227,8 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     ASSERT_TRUE(Bounds({1,1},256) == terrain.get_bounds());
     
     {// test tree shape
-        EXPECT_EQ(tree.get_height(), 4);
+        EXPECT_EQ(tree.get_height(), 3);
+        EXPECT_EQ(tree.size(), 41);
         EXPECT_FALSE(tree.root->is_leaf());
 
         // spot check #1: RT-NE-SW-quadrant
