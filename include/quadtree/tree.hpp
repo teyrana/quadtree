@@ -57,7 +57,7 @@ public:
      */
     ~Tree();
 
-    static size_t calculate_full_loading(const size_t height);
+    static size_t calculate_complete_tree(const size_t height);
 
     /**
      * Returns true if the point at (x, y) exists in the tree.
@@ -172,7 +172,7 @@ private:
 private:
     friend class QuadTreeTest_ConstructDefault_Test;
     friend class QuadTreeTest_LoadValidTree_Test;
-    friend class QuadTreeTest_MeasureLoadFactor_Test;
+    friend class QuadTreeTest_CalculateLoadFactor_Test;
     friend class QuadTreeTest_LoadGridFromJSON_Test;
     friend class QuadTreeTest_WriteLoadCycle_Test;
     friend class QuadTreeTest_TestSearchExplicitTree_Test;

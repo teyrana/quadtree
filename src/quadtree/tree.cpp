@@ -72,19 +72,26 @@ size_t Tree::get_dimension() const {
     return layout->dimension;
 }
 
-size_t Tree::calculate_full_loading(const size_t height){
-    size_t full = 1;
-    for(size_t n = 1; n < height; ++n){
-        full += std::pow(4,n);
-    }
-    return full;
+size_t Tree::calculate_complete_tree(const size_t height){
+
+    // see: https://en.wikipedia.org/wiki/M-ary_tree
+    //      # properties of M-ary trees
+    //
+    //    m == branching_factor == 4  ///< for a quadtree, this is trivially 4
+    //
+    //       (h+1)
+    //     m        - 1
+    // N = ---------------
+    //        m - 1
+    // 
+    return ( pow(4,height+1) - 1 )/3;
 }
 
 double Tree::get_load_factor() const {
     const size_t height = root->get_height();
     const size_t count = root->get_count();
-    const size_t full = calculate_full_loading(height);
-    return static_cast<double>(count) / static_cast<double>(full);
+    const size_t complete = calculate_complete_tree(height);
+    return static_cast<double>(count) / static_cast<double>(complete);
 }
 
 double Tree::get_precision() const { 
@@ -123,7 +130,7 @@ void Tree::fill(const cell_value_t fill_value){
 }
 
 size_t Tree::get_height() const {
-    return root->get_height();
+    return root->get_height() - 1;
 }
 
 const Layout& Tree::get_layout() const {
