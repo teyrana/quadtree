@@ -103,6 +103,8 @@ public:
 
     double get_load_factor() const; 
     
+    size_t get_memory_usage() const;
+
     double get_precision() const;
 
     /**

@@ -438,11 +438,9 @@ template<typename T>
 std::string Terrain<T>::summary() const {
     std::ostringstream buffer;
     buffer << "====== Terrain Stats: ======\n";
-    buffer << "##  bounds:     " << impl.get_bounds().str() << '\n';
-    buffer << "##  loading:    " << impl.get_load_factor() << '\n';
-    buffer << "##  precision:  " << impl.get_precision() << '\n';
-    buffer << "##  dimension:  " << impl.get_dimension() << '\n';
-    buffer << "##  size:       " << impl.size() << '\n';
+    buffer << "##  bounds:       " << impl.get_bounds().str() << "  precision:  " << impl.get_precision() << '\n';
+    buffer << "##  size:         " << impl.size() <<  " nodes  ===   " << impl.get_memory_usage() << " bytes\n";
+    buffer << "##  compression:  " << impl.get_load_factor() << '\n';
     buffer << '\n';
     return buffer.str();
 }
