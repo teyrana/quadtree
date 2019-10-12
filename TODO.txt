@@ -7,6 +7,7 @@
 
 [ ] migrate do gdal for file i/o
     https://gdal.org/
+[ ] attempt std::variant for quadtree::Node
 
 
 See Also:
