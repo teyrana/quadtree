@@ -5,12 +5,13 @@
 #include "geometry/bounds.hpp"
 
 using std::isnan;
+
 using terrain::geometry::Bounds;
 
 TEST(BoundsTest, ConstructDefault) {
     Bounds bounds;
-    EXPECT_TRUE( isnan(bounds.center.x) );
-    EXPECT_TRUE( isnan(bounds.center.y) );
+    EXPECT_TRUE( isnan(bounds.center[0]) );
+    EXPECT_TRUE( isnan(bounds.center[1]) );
     EXPECT_TRUE( isnan(bounds.half_width) );
 
     EXPECT_TRUE( isnan(bounds.get_x_max() ));
@@ -22,8 +23,8 @@ TEST(BoundsTest, ConstructDefault) {
 TEST(BoundsTest, ConstructByCenterAndSize) {
     Bounds bounds({1.0, 2.0}, 5.0);
     
-    ASSERT_DOUBLE_EQ(bounds.center.x,     1.0);
-    ASSERT_DOUBLE_EQ(bounds.center.y,     2.0);
+    ASSERT_DOUBLE_EQ(bounds.center[0],     1.0);
+    ASSERT_DOUBLE_EQ(bounds.center[1],     2.0);
     ASSERT_DOUBLE_EQ(bounds.half_width,   2.5);
 
     EXPECT_DOUBLE_EQ(bounds.get_x_max(),  3.5);

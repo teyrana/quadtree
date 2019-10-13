@@ -51,20 +51,20 @@ MESSAGE( STATUS "    with name: ${SHAPE_LIB_LINKAGE}")
 include_directories(include)
 SET(LIB_HEADERS include/terrain.hpp include/terrain.inl
                 include/geometry/bounds.hpp
-                include/geometry/layout.hpp include/geometry/layout.inl
-                include/geometry/point.hpp
+                include/geometry/layout.hpp
                 include/geometry/polygon.hpp
                 include/grid/grid.hpp
                 include/quadtree/node.hpp
                 include/quadtree/tree.hpp)
-
+                
 SET(LIB_SOURCES 
                 src/geometry/bounds.cpp
-                src/geometry/point.cpp
+                src/geometry/layout.cpp
                 src/geometry/polygon.cpp
                 src/grid/grid.cpp
                 src/quadtree/node.cpp
-                src/quadtree/tree.cpp)
+                src/quadtree/tree.cpp
+                )
 
 # ============= Quad Tree Library =================
 SET(QUAD_TREE_LIB_NAME quadtree)
@@ -100,12 +100,11 @@ enable_testing()
 SET(TEST_EXE testtree) 
 SET(TEST_SOURCES    test/geometry/bounds.cpp
                     test/geometry/layout.cpp
-                    test/geometry/point.cpp
                     test/geometry/polygon.cpp
                     test/grid/grid.cpp
                     test/quadtree/node.cpp
-                    test/quadtree/tree.cpp)
-
+                    test/quadtree/tree.cpp                    )
+                    
 SET(TEST_LINKAGE ${QUAD_TREE_LIB_NAME} gtest gtest_main ) 
 
 MESSAGE( STATUS "Generating tests for ${LIB_NAME}") 

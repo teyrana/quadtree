@@ -13,7 +13,6 @@
 
 #include "cell_value.hpp"
 #include "geometry/bounds.hpp"
-#include "geometry/point.hpp"
 
 using terrain::cell_value_t;
 
@@ -25,24 +24,22 @@ enum NodeQuadrant {NW, NE, SW, SE};
 class Node {
 public:
     Node() = delete;
-    // Node(const geometry::Point& _center, const double _height);
+    // Node(const Eigen::Vector2d& _center, const double _height);
     Node(const geometry::Bounds& _bounds, const cell_value_t value);
 
     //Node(double cx, double cy, double _new_height, double h);  //alternate function signature
 
     ~Node();
 
-    bool contains(const geometry::Point& at) const;
+    bool contains(const Eigen::Vector2d& at) const;
 
     void draw(std::ostream& sink, const std::string& prefix, const std::string& as) const ;
 
     void fill(const cell_value_t fill_value);
 
     const geometry::Bounds& get_bounds() const;
-    const geometry::Point& get_center() const;
+    const Eigen::Vector2d& get_center() const;
     size_t get_count() const;
-    double x() const;
-    double y() const;
     size_t get_height() const;
     Node* get_northeast() const;
     Node* get_northwest() const;
@@ -59,7 +56,7 @@ public:
      * @param {quadtree::Node} n2 the other node to interpolate
      * @return {cell_value_t} The resultant value
      */
-    cell_value_t interpolate_linear(const geometry::Point& at, const Node& n2) const;
+    cell_value_t interpolate_linear(const Eigen::Vector2d& at, const Node& n2) const;
 
     /** 
      * Performs bilinear-interpolation: 
@@ -71,21 +68,24 @@ public:
      * @param {quadtree::Node} yn y-neighbor node to interpolate with
      * @return {cell_value_t} The resultant value
      */
-    cell_value_t interpolate_bilinear(const geometry::Point& at, 
-                             const Node& xn,
-                             const Node& dn,
-                             const Node& yn) const;
+    cell_value_t interpolate_bilinear(const Eigen::Vector2d& at, 
+                                      const Node& xn,
+                                      const Node& dn,
+                                      const Node& yn) const;
 
     bool load(const nlohmann::json& doc);
 
     constexpr static double snap_center_distance = 0.5;
-    bool nearby(const geometry::Point& p) const;
-    bool nearby(const geometry::Point& p, const double threshold) const;
+    bool nearby(const Eigen::Vector2d& p) const;
+    bool nearby(const Eigen::Vector2d& p, const double threshold) const;
+
+    double operator[](const size_t index);
+    const double operator[](const size_t index) const;
 
     ///! \brief coalesce groups of leaf nodes with identice values (for some value of "identical")
     void prune();
 
-    Node& search(const geometry::Point& at);
+    Node& search(const Eigen::Vector2d& at);
 
     void split();
 

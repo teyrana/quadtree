@@ -7,16 +7,16 @@
 #include <iostream>
 #include <string>
 
-#include "nlohmann/json/json_fwd.hpp"
+#include <Eigen/Geometry>
 
-#include "point.hpp"
+#include "nlohmann/json/json_fwd.hpp"
 
 namespace terrain::geometry {
 class Bounds {
 public:
-    constexpr Bounds():
+    Bounds():
         center(NAN,NAN),half_width(NAN) {}
-    constexpr Bounds(const Point& _center, const double _width):
+    Bounds(const Eigen::Vector2d _center, const double _width): 
         center(_center), half_width(_width/2) {}
 
     // definitely _not_ constexpr ;)
@@ -24,7 +24,7 @@ public:
 
     void clear();
 
-    bool contains(const Point& at) const;
+    bool contains(const Eigen::Vector2d& at) const;
 
     bool operator!=(const Bounds& other) const;
     bool operator==(const Bounds& other) const;
@@ -51,8 +51,8 @@ public:
     // used for comparisons
     constexpr static double epsilon = 1e-6;
 
-    Point center;
-    // (defined in alphabetical order)
+    Eigen::Vector2d center;
+
     double half_width;
 
 };

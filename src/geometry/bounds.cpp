@@ -6,9 +6,10 @@
 #include <sstream>
 #include <string>
 
+#include <Eigen/Geometry>
+
 #include "nlohmann/json/json.hpp"
 
-#include "geometry/point.hpp"
 #include "geometry/bounds.hpp"
 
 using std::abs;
@@ -17,7 +18,8 @@ using std::endl;
 using std::max;
 using std::string;
 
-using terrain::geometry::Point;
+using Eigen::Vector2d;
+
 using terrain::geometry::Bounds;
 
 Bounds::Bounds(nlohmann::json& doc){
@@ -25,18 +27,18 @@ Bounds::Bounds(nlohmann::json& doc){
 }
 
 void Bounds::clear() {
-    center.clear();
-    half_width = NAN;
+    center.setZero();
+    half_width = 1.;
 }
 
-bool Bounds::contains(const Point& at) const {
+bool Bounds::contains(const Vector2d& at) const {
     // outside x-bounds:
-    if( (at.x < center.x - half_width) || (at.x > center.x + half_width) ){
+    if( (at[0] < center[0] - half_width) || (at[0] > center[0] + half_width) ){
         return false;
     }
 
     // outside y-bounds:
-    if( (at.y < center.y - half_width) || (at.y > center.y + half_width) ){ 
+    if( (at[1] < center[1] - half_width) || (at[1] > center[1] + half_width) ){ 
         return false;
     }
     
@@ -48,19 +50,19 @@ double Bounds::get_size() const {
 }
 
 double Bounds::get_x_max() const {
-    return center.x + half_width;
+    return center[0] + half_width;
 }
 
 double Bounds::get_x_min() const {
-    return center.x - half_width;
+    return center[0] - half_width;
 }
 
 double Bounds::get_y_max() const {
-    return center.y + half_width;
+    return center[1] + half_width;
 }
 
 double Bounds::get_y_min() const {
-    return center.y - half_width;
+    return center[1] - half_width;
 }
 
 double Bounds::get_width() const {
@@ -80,8 +82,8 @@ bool Bounds::load(nlohmann::json& doc) {
         return false;
     }
 
-    center.x = doc[x_key].get<double>();
-    center.y = doc[y_key].get<double>();
+    center[0] = doc[x_key].get<double>();
+    center[1] = doc[y_key].get<double>();
     half_width = doc[width_key].get<double>() * 0.5;
 
     return true;
@@ -92,8 +94,7 @@ bool Bounds::operator!=(const Bounds& other) const {
 }
 
 bool Bounds::operator==(const Bounds& other) const {
-    return ( this->center.near(other.center)) &&
-           (Bounds::epsilon > std::abs(this->half_width - other.half_width));
+    return ( this->center.isApprox(other.center)) &&  (Bounds::epsilon > std::abs(this->half_width - other.half_width));
 }
 
 double Bounds::snapx( double x) const {
@@ -106,14 +107,14 @@ double Bounds::snapy( double y) const {
 
 string Bounds::str() const {
     std::ostringstream sink; 
-    sink << "@" << center.str() << " \u00B1" << half_width;
+    sink << "@" << center[0] << ", " << center[1] << " \u00B1" << half_width;
     return sink.str();
 }
 
 nlohmann::json Bounds::to_json() const {
     nlohmann::json buf; 
-    buf["x"] = center.x;
-    buf["y"] = center.y;
+    buf["x"] = center[0];
+    buf["y"] = center[1];
     buf["width"] = half_width * 2.0;
     return buf;
 }

@@ -12,6 +12,8 @@ using std::string;
 using std::cerr;
 using std::endl;
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
 
@@ -19,7 +21,6 @@ using nlohmann::json;
 
 using namespace terrain;
 using geometry::Bounds;
-using geometry::Point;
 using quadtree::Tree;
 using quadtree::Node;
 
@@ -27,7 +28,7 @@ using quadtree::Node;
 static cell_value_t scratch;
 
 Tree::Tree(): 
-    Tree(layout->default_bounds, layout->default_precision)
+    Tree(Layout::default_layout.bounds, layout->default_precision)
 {}
 
 Tree::Tree(const Bounds& _bounds, const double _precision):
@@ -38,16 +39,16 @@ Tree::~Tree(){
     root.release();
 }
 
-bool Tree::contains(const Point& p) const {
+bool Tree::contains(const Eigen::Vector2d& p) const {
     const auto& bounds = get_bounds();
 
-    const double cx = bounds.center.x;
-    const double cy = bounds.center.y;
+    const double cx = bounds.center[0];
+    const double cy = bounds.center[1];
     const double dim = bounds.half_width;
 
-    if((p.x < (cx - dim)) || ((cx + dim) < p.x)){
+    if((p[0] < (cx - dim)) || ((cx + dim) < p[0])){
         return false;
-    }else if((p.y < (cy - dim)) || ((cy + dim) < p.y)){
+    }else if((p[1] < (cy - dim)) || ((cy + dim) < p[1])){
         return false;
     }
 
@@ -102,27 +103,27 @@ double Tree::get_precision() const {
     return layout->precision;
 }
 
-cell_value_t Tree::interp(const Point& at) const {
+cell_value_t Tree::interp(const Eigen::Vector2d& at) const {
     const Node& near = root->search(at);
 
     // cout << "@@" << at << "    near: " << near.get_bounds() << " = " << near.get_value() << endl;
 
-    // if point is outside the tree, entirely
+    // if Eigen::Vector2d is outside the tree, entirely
     if( ! contains(at)){
         return cell_default_value;
     }
 
-    // if the point is near-to-center if the nearest node:
+    // if the Eigen::Vector2d is near-to-center if the nearest node:
     if( near.nearby(at)){
         return near.get_value();
     }
 
-    const Point& cn = near.get_center();
-    const double dx = std::copysign(1.0, (at.x - cn.x)) * 2 * near.get_bounds().half_width;
-    const double dy = std::copysign(1.0, (at.y - cn.y)) * 2 * near.get_bounds().half_width;
-    const Node& n2 = root->search({cn.x + dx, cn.y     });
-    const Node& n3 = root->search({cn.x + dx, cn.y + dy});
-    const Node& n4 = root->search({cn.x     , cn.y + dy});
+    const Eigen::Vector2d& cn = near.get_center();
+    const double dx = std::copysign(1.0, (at[0] - cn[0])) * 2 * near.get_bounds().half_width;
+    const double dy = std::copysign(1.0, (at[1] - cn[1])) * 2 * near.get_bounds().half_width;
+    const Node& n2 = root->search({cn[0] + dx, cn[1]     });
+    const Node& n3 = root->search({cn[0] + dx, cn[1] + dy});
+    const Node& n4 = root->search({cn[0]     , cn[1] + dy});
 
     const auto& interp = near.interpolate_bilinear(at, n2, n3, n4);
 
@@ -165,7 +166,7 @@ void Tree::reset(const Bounds new_bounds, const double new_precision){
     root->split(layout->precision);
 }
 
-cell_value_t& Tree::search(const Point& p) {
+cell_value_t& Tree::search(const Eigen::Vector2d& p) {
     if(contains(p)){
         return root->search(p).get_value();
     }
@@ -174,7 +175,7 @@ cell_value_t& Tree::search(const Point& p) {
     return scratch;
 }
 
-cell_value_t Tree::search(const Point& p) const {
+cell_value_t Tree::search(const Eigen::Vector2d& p) const {
     if(contains(p)){
         return root->search(p).get_value();
     }

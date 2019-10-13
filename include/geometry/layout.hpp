@@ -1,12 +1,13 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#ifndef _GEOMETRY_SQUARE_GRID_LAYOUT_HPP_
-#define _GEOMETRY_SQUARE_GRID_LAYOUT_HPP_
+#ifndef _GRID_LAYOUT_HPP_
+#define _GRID_LAYOUT_HPP_
 
 #include <string>
 
-#include "point.hpp"
+#include <Eigen/Geometry>
+
 #include "bounds.hpp"
 
 namespace terrain::geometry {
@@ -14,14 +15,9 @@ namespace terrain::geometry {
 ///! \brief SquareLayout is used to encapsulate common logic about how to layout a square grid
 class Layout {
 public:
-    constexpr Layout();
-    constexpr Layout(const Bounds& _bounds, const double _precision);
+    Layout();
+    Layout(const Bounds& _bounds, const double _precision);
     
-
-    // constexpr Layout& operator=(Layout layout) { 
-
-    // constexpr geometry::Point anchor() const;
-
 
     // // NYI
     // bool operator!=(const Bounds& other) const;
@@ -37,20 +33,20 @@ public:
     // used for comparisons
     constexpr static double epsilon = 1e-6;
     // default values
-    constexpr static Bounds default_bounds = {{0,0}, 1.0};
+    constexpr static double default_width = 1.0;
     constexpr static size_t default_dimension = 1.0;
     constexpr static double default_precision = 1.0;
     constexpr static size_t default_size = 1.0;
 
-    // constexpr static Layout default_layout = {{{0,0}, 1}, 1};
-    
+    const static Layout default_layout;
+
 private:
     ///! dimension * precision = width
     ///! \brief snaps this precision to match the next-power-of-2 dimension that covers the width
-    constexpr static size_t snap_dimension(const double width, const double precision);
+    static size_t snap_dimension(const double width, const double precision);
 
     ///! \brief
-    constexpr static double snap_precision(const double width, const double dimension);
+    static double snap_precision(const double width, const double dimension);
 
 // properties
 public:
@@ -62,6 +58,4 @@ public:
 
 } // namespace terrain::geometry
 
-#include "layout.inl"
-
-#endif // #ifdef _GEOMETRY_SQUARE_GRID_LAYOUT_HPP_
+#endif // #ifdef _GRID_LAYOUT_HPP_

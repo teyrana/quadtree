@@ -7,7 +7,8 @@
 
 using std::vector;
 
-using terrain::geometry::Point;
+using Eigen::Vector2d;
+
 using terrain::geometry::Polygon;
 
 
@@ -17,21 +18,22 @@ TEST(PolygonTest, DefaultConfiguration) {
     const Polygon shape;
 
     const auto& bounds = shape.get_bounds();
-    EXPECT_DOUBLE_EQ(bounds.center.x,    0.5);
-    EXPECT_DOUBLE_EQ(bounds.center.y,    0.5);
+    EXPECT_DOUBLE_EQ(bounds.center[0],    0.5);
+    EXPECT_DOUBLE_EQ(bounds.center[1],    0.5);
     ASSERT_DOUBLE_EQ(bounds.get_x_max(), 1.);
     ASSERT_DOUBLE_EQ(bounds.get_x_min(), 0.);
     ASSERT_DOUBLE_EQ(bounds.get_y_max(), 1.);
     ASSERT_DOUBLE_EQ(bounds.get_y_min(), 0.);
 
     const auto& points = shape.points;
-    ASSERT_TRUE(points[0].near({0,0}));
-    ASSERT_TRUE(points[1].near({1,0}));
-    ASSERT_TRUE(points[2].near({1,1}));
-    ASSERT_TRUE(points[3].near({0,1}));
+    ASSERT_TRUE(points[0].isApprox(Vector2d(0,0)));
+    ASSERT_TRUE(points[1].isApprox(Vector2d(1,0)));
+    ASSERT_TRUE(points[2].isApprox(Vector2d(1,1)));
+    ASSERT_TRUE(points[3].isApprox(Vector2d(0,1)));
 }
 
-TEST(PolygonTest, LoadList) {
+#include <iostream>
+TEST(PolygonTest, LoadList_5Point) {
     // Note:  this polygen is configured as CW:
     //    it will be enclosed, and reversed, internally
     Polygon shape( {{ 3, 4},
@@ -40,9 +42,12 @@ TEST(PolygonTest, LoadList) {
                     { 9, 5},
                     { 5, 6}});
 
+    // DEBUG
+    //shape.write_yaml(std::cerr, "    ");
+    
     const auto& bounds = shape.bounds;
-    ASSERT_NEAR(bounds.center.x,     7.5, 1e-6);
-    ASSERT_NEAR(bounds.center.y,     7.5, 1e-6);
+    ASSERT_NEAR(bounds.center[0],     7.5, 1e-6);
+    ASSERT_NEAR(bounds.center[1],     7.5, 1e-6);
     ASSERT_NEAR(bounds.half_width,   4.5, 1e-6);
 
     ASSERT_NEAR(bounds.get_x_max(), 12.0, 1e-6);
@@ -52,12 +57,15 @@ TEST(PolygonTest, LoadList) {
 }
 
 
-TEST(PolygonTest, LoadInitializerList) {
+TEST(PolygonTest, LoadList_DiamondRhombus) {
     Polygon shape({{1,0},{0,1},{-1,0},{0,-1}});
 
+    // DEBUG
+    //shape.write_yaml(std::cerr, "    ");
+
     const auto& bounds = shape.bounds;
-    ASSERT_NEAR(bounds.center.x,     0.0, 1e-6);
-    ASSERT_NEAR(bounds.center.y,     0.0, 1e-6);
+    ASSERT_NEAR(bounds.center[0],     0.0, 1e-6);
+    ASSERT_NEAR(bounds.center[1],     0.0, 1e-6);
     ASSERT_NEAR(bounds.half_width,   1.0, 1e-6);
 
     ASSERT_NEAR(bounds.get_x_max(),  1.0, 1e-6);
@@ -78,8 +86,8 @@ TEST(PolygonTest, LoadInitializerList) {
 //     ASSERT_DOUBLE_EQ(bounds.min.y, -200);
 //     ASSERT_DOUBLE_EQ(bounds.max.y,  200);
 //     ASSERT_DOUBLE_EQ(bounds.margin,  20);
-//     ASSERT_DOUBLE_EQ(bounds.center.x, 0);
-//     ASSERT_DOUBLE_EQ(bounds.center.y, 0);
+//     ASSERT_DOUBLE_EQ(bounds.center[0], 0);
+//     ASSERT_DOUBLE_EQ(bounds.center[1], 0);
 //     ASSERT_TRUE(bounds.is_convex);
 
 //     // ====== ====== Graphics Message Output ====== ======

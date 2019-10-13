@@ -6,6 +6,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
 
@@ -27,7 +29,7 @@ using terrain::quadtree::Node;
 //     Node({{NAN, NAN}, NAN}, 0)
 // {}
 
-// Node::Node(const Point& _center, const double _width, const cell_value_t _value):
+// Node::Node(const Eigen::Vector2d& _center, const double _width, const cell_value_t _value):
 //     bounds(_center, _width), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
 // {}
 
@@ -42,7 +44,7 @@ Node::Node(const Bounds& _bounds, const cell_value_t _value):
 //   quadtree_bounds_extend(node->bounds, minx, miny);
 // }
 
-bool Node::contains(const Point& at) const {
+bool Node::contains(const Eigen::Vector2d& at) const {
     return bounds.contains(at);
 }
 
@@ -78,7 +80,7 @@ const Bounds& Node::get_bounds() const {
     return bounds;
 }
 
-const Point& Node::get_center() const {
+const Eigen::Vector2d& Node::get_center() const {
     return bounds.center;
 }
 
@@ -137,20 +139,20 @@ cell_value_t Node::get_value() const {
     return this->value;
 }
 
-cell_value_t Node::interpolate_linear(const Point& at, const Node& node2) const {
+cell_value_t Node::interpolate_linear(const Eigen::Vector2d& at, const Node& node2) const {
     if(this == &node2){
         return this->get_value();
     }
     const auto& node1 = *this;
 
     // distances from query point to each interpolation point
-    const double dist1 = at.distance(node1.bounds.center);
-    const double dist2 = at.distance(node2.bounds.center);
+    const double dist1 = (node1.bounds.center - at).norm();
+    const double dist2 = (node2.bounds.center - at).norm();
 
     // this is not perfect, but it's a reasonable heuristic
     // ... in particular, it will return odd values at large distances
     // ... arguably, this should return a NAN value instead -- for not-applicable
-    const double dist12 = this->bounds.center.distance(node2.bounds.center);
+    const double dist12 = (bounds.center - node2.bounds.center).norm();
     if(dist12 < dist1){
         return node2.value;
     }else if( dist12 < dist2){
@@ -166,7 +168,7 @@ cell_value_t Node::interpolate_linear(const Point& at, const Node& node2) const 
 }
 
 
-cell_value_t Node::interpolate_bilinear(const Point& at, 
+cell_value_t Node::interpolate_bilinear(const Eigen::Vector2d& at, 
                                         const Node& xn,
                                         const Node& dn,
                                         const Node& yn) const 
@@ -180,19 +182,19 @@ cell_value_t Node::interpolate_bilinear(const Point& at,
     // test for degenerate cases:
     if( &xn == &dn ){
         // top or bottom border
-        return interpolate_linear({at.x, xn.y()}, xn);
+        return interpolate_linear({at[0], xn[1]}, xn);
     }else if( &yn  == &dn ){
         // left or right border
-        return interpolate_linear({yn.x(), at.y}, yn);
+        return interpolate_linear({yn[0], at[1]}, yn);
     }
 
     // calculate full bilinear interpolation:
-    const Point upper_point(at.x, xn.y());
+    const Eigen::Vector2d upper_point(at[0], xn[1]);
     const Node upper_node({upper_point, 
                                2*bounds.half_width},
                                this->interpolate_linear(upper_point, xn));
 
-    const Point lower_point(at.x, yn.y());
+    const Eigen::Vector2d lower_point(at[0], yn[1]);
     const Node lower_node({lower_point, 
                                2*bounds.half_width},
                                yn.interpolate_linear(lower_point, dn));
@@ -219,12 +221,20 @@ bool Node::load(const nlohmann::json& doc){
     }
 }
 
-bool Node::nearby(const Point& p) const {
+bool Node::nearby(const Eigen::Vector2d& p) const {
     return nearby(p, snap_center_distance);
 }
 
-bool Node::nearby(const Point& p, const double threshold) const {
-    return (snap_center_distance > bounds.center.distance(p));
+bool Node::nearby(const Eigen::Vector2d& p, const double threshold) const {
+    return (snap_center_distance > (p - bounds.center).norm());
+}
+
+double Node::operator[](const size_t index){
+    return bounds.center[index];
+}
+
+const double Node::operator[](const size_t index) const {
+    return bounds.center[index];
 }
 
 void Node::prune() {
@@ -254,19 +264,19 @@ void Node::prune() {
     }
 }
 
-Node& Node::search(const Point& p) {
+Node& Node::search(const Eigen::Vector2d& p) {
     if(is_leaf()){
         return *this;
     }
 
-    if(p.x > bounds.center.x){
-        if( p.y > bounds.center.y){
+    if(p[0] > bounds.center[0]){
+        if( p[1] > bounds.center[1]){
             return this->northeast->search(p);
         }else{
             return this->southeast->search(p);
         }
     }else{
-        if( p.y > bounds.center.y){
+        if( p[1] > bounds.center[1]){
             return this->northwest->search(p);
         }else{
             return this->southwest->search(p);
@@ -286,15 +296,15 @@ void Node::reset(){
 }
 
 void Node::split(){
-    const Point& ctr = bounds.center;
+    const Eigen::Vector2d& ctr = bounds.center;
     const double& qw = bounds.half_width/2; ///< quarter-width
 
     value = NAN;
 
-    this->northeast = make_unique<Node>(Bounds({ctr.x + qw, ctr.y + qw}, bounds.half_width), value);
-    this->northwest = make_unique<Node>(Bounds({ctr.x - qw, ctr.y + qw}, bounds.half_width), value);
-    this->southeast = make_unique<Node>(Bounds({ctr.x + qw, ctr.y - qw}, bounds.half_width), value);
-    this->southwest = make_unique<Node>(Bounds({ctr.x - qw, ctr.y - qw}, bounds.half_width), value);
+    this->northeast = make_unique<Node>(Bounds({ctr[0] + qw, ctr[1] + qw}, bounds.half_width), value);
+    this->northwest = make_unique<Node>(Bounds({ctr[0] - qw, ctr[1] + qw}, bounds.half_width), value);
+    this->southeast = make_unique<Node>(Bounds({ctr[0] + qw, ctr[1] - qw}, bounds.half_width), value);
+    this->southwest = make_unique<Node>(Bounds({ctr[0] - qw, ctr[1] - qw}, bounds.half_width), value);
 }
 
 void Node::split(const double precision){
@@ -334,14 +344,6 @@ std::string Node::to_string() const {
     std::ostringstream buf;
     buf << this->to_json();
     return buf.str();
-}
-
-double Node::x() const {
-    return bounds.center.x;
-}
-
-double Node::y() const {
-    return bounds.center.y;
 }
 
 Node::~Node() {

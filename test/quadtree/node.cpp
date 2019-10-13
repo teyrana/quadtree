@@ -11,8 +11,8 @@ namespace terrain::quadtree {
 TEST(NodeTest, ConstructByCenterAndSize) {
     Node n({{1.0, 2.0}, 3.0}, 0);
     
-    ASSERT_DOUBLE_EQ(n.bounds.center.x,    1.0);
-    ASSERT_DOUBLE_EQ(n.bounds.center.y,    2.0);
+    ASSERT_DOUBLE_EQ(n.bounds.center[0],    1.0);
+    ASSERT_DOUBLE_EQ(n.bounds.center[1],    2.0);
     ASSERT_DOUBLE_EQ(n.bounds.half_width,  1.5);
 
     ASSERT_TRUE( n.is_leaf() );
@@ -49,26 +49,26 @@ TEST(NodeTest, SplitNode){
     ASSERT_FALSE(n.is_leaf());
 
     Node& neq = *n.northeast.get();
-    ASSERT_DOUBLE_EQ(neq.bounds.center.x,    11.0);
-    ASSERT_DOUBLE_EQ(neq.bounds.center.y,    21.0);
+    ASSERT_DOUBLE_EQ(neq.bounds.center[0],    11.0);
+    ASSERT_DOUBLE_EQ(neq.bounds.center[1],    21.0);
     ASSERT_DOUBLE_EQ(neq.bounds.half_width,   1.0);
     ASSERT_TRUE( neq.is_leaf() );
 
     Node& nwq = *n.northwest.get();
-    ASSERT_DOUBLE_EQ(nwq.bounds.center.x,     9.0);
-    ASSERT_DOUBLE_EQ(nwq.bounds.center.y,    21.0);
+    ASSERT_DOUBLE_EQ(nwq.bounds.center[0],     9.0);
+    ASSERT_DOUBLE_EQ(nwq.bounds.center[1],    21.0);
     ASSERT_DOUBLE_EQ(nwq.bounds.half_width,   1.0);
     ASSERT_TRUE( nwq.is_leaf() );
 
     Node& swq = *n.southwest.get();
-    ASSERT_DOUBLE_EQ(swq.bounds.center.x,     9.0);
-    ASSERT_DOUBLE_EQ(swq.bounds.center.y,    19.0);
+    ASSERT_DOUBLE_EQ(swq.bounds.center[0],     9.0);
+    ASSERT_DOUBLE_EQ(swq.bounds.center[1],    19.0);
     ASSERT_DOUBLE_EQ(swq.bounds.half_width,   1.0);
     ASSERT_TRUE( swq.is_leaf() );
 
     Node& seq = *n.southeast.get();
-    ASSERT_DOUBLE_EQ(seq.bounds.center.x,    11.0);
-    ASSERT_DOUBLE_EQ(seq.bounds.center.y,    19.0);
+    ASSERT_DOUBLE_EQ(seq.bounds.center[0],    11.0);
+    ASSERT_DOUBLE_EQ(seq.bounds.center[1],    19.0);
     ASSERT_DOUBLE_EQ(seq.bounds.half_width,   1.0);
     ASSERT_TRUE( seq.is_leaf() );
 }

@@ -12,16 +12,16 @@ using std::cerr;
 
 #include <cxxopts/cxxopts.hpp>
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
 
-#include "geometry/point.hpp"
 #include "geometry/bounds.hpp"
 #include "grid/grid.hpp"
 #include "quadtree/tree.hpp"
 #include "terrain.hpp"
 
-using terrain::geometry::Point;
 using terrain::geometry::Bounds;
 using terrain::grid::Grid;
 using terrain::quadtree::Tree;
@@ -31,14 +31,14 @@ constexpr double boundary_width = 4096.;   // overall boundary
 constexpr double diamond_width =  2048.;
 constexpr double desired_precision = 1.0;
 // =====
-constexpr Point center(boundary_width/2, boundary_width/2);
+const Eigen::Vector2d center(boundary_width/2, boundary_width/2);
 constexpr double diamond_width_2 = diamond_width/2;
-const json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
+const json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
                       {"precision", desired_precision},
-                      {"allow", {{{center.x + diamond_width_2, center.y},
-                                  {center.x                  , center.y + diamond_width_2 },
-                                  {center.x - diamond_width_2, center.y},
-                                  {center.x                  , center.y - diamond_width_2 }}}}};
+                      {"allow", {{{center[0] + diamond_width_2, center[1]},
+                                  {center[0]                  , center[1] + diamond_width_2 },
+                                  {center[0] - diamond_width_2, center[1]},
+                                  {center[0]                  , center[1] - diamond_width_2 }}}}};
 
 constexpr size_t test_seed = 55;
 static std::mt19937 generator;

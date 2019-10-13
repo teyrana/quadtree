@@ -13,11 +13,12 @@
 #include <cmath>
 #include <memory>
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json_fwd.hpp>
 
 #include "geometry/bounds.hpp"
 #include "geometry/layout.hpp"
-#include "geometry/point.hpp"
 
 #include "cell_value.hpp"
 #include "quadtree/node.hpp"
@@ -47,8 +48,8 @@ public:
     /**
      * Constructs a new quad tree.
      *
-     * @param {Point} x, y coordinates of tree's center point.
-     * @param {double} tree width.  Tree is square. (i.e. height === width)
+     * @param x, y coordinates of tree's center point.
+     * @param tree width.  Tree is square. (i.e. height === width)
      */
     Tree(const Bounds& _bounds, const double _precision);
 
@@ -66,7 +67,7 @@ public:
      * @param {double} y The y-coordinate.
      * @return {bool} Whether the tree contains a point at (x, y).
      */
-    bool contains(const geometry::Point& p) const;
+    bool contains(const Eigen::Vector2d& p) const;
 
     /**
      * Draws a simple debug representation of this tree to the given
@@ -82,7 +83,7 @@ public:
      * @param {double} y The y-coordinate.
      * @return {cell_value_t} The resultant value
      */
-    cell_value_t interp(const Point& at) const;
+    cell_value_t interp(const Eigen::Vector2d& at) const;
 
     ///! \brief sets all leaf nodes to the given value
     ///! \param fill_value - value to write
@@ -112,7 +113,7 @@ public:
      *
      * @param {std::istream} input stream containing the serialization text
      */
-    void load_polygon(const std::vector<Point>& source);
+    void load_polygon(const std::vector<Eigen::Vector2d>& source);
 
     /**
      * Loads a representation of a tree from the data source.  The the form source is assumed to
@@ -124,16 +125,6 @@ public:
     bool load_tree(const nlohmann::json& tree);
 
     void prune();
-
-    /**
-     * Removes a point from (x, y) if it exists.
-     *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @return {V} The value of the node that was removed, or null if the
-     *         node doesn't exist.
-     */
-    bool remove(double x, double y);
 
     ///! \brief resets _the tree_ to fully populate the bounds at the given precision
     ///! 
@@ -150,9 +141,9 @@ public:
      *                 exist.
      * @return {cell_value_t} The value of the node, if available; or the default value.
      */
-    cell_value_t search(const Point& p) const;
+    cell_value_t search(const Eigen::Vector2d& p) const;
 
-    cell_value_t& search(const Point& p);
+    cell_value_t& search(const Eigen::Vector2d& p);
     size_t size() const;
 
     ///! \brief generates a json structure, describing the tree itself
@@ -177,9 +168,8 @@ private:
     friend class QuadTreeTest_CalculateLoadFactor_Test;
     friend class QuadTreeTest_LoadGridFromJSON_Test;
     friend class QuadTreeTest_WriteLoadCycle_Test;
-    friend class QuadTreeTest_TestSearchExplicitTree_Test;
-    friend class QuadTreeTest_TestInterpolateTree_Test;
-    friend class QuadTreeTest_TestSearchImplicitTree_Test;
+    friend class QuadTreeTest_SearchExplicitTree_Test;
+    friend class QuadTreeTest_InterpolateTree_Test;
 
 };
 } // namespace terrain::quadtree

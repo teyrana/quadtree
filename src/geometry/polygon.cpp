@@ -8,6 +8,8 @@
 #include <iostream>
 #include <vector>
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json.hpp>
 
 #include "geometry/polygon.hpp"
@@ -19,7 +21,8 @@ using std::endl;
 using std::ostream;
 using std::string;
 
-using terrain::geometry::Point;
+using Eigen::Vector2d;
+
 using terrain::geometry::Polygon;
 
 //---------------------------------------------------------------
@@ -39,13 +42,13 @@ Polygon::Polygon(nlohmann::json doc){
     load(doc);
 }
 
-Polygon::Polygon(std::vector<Point>& init){
+Polygon::Polygon(std::vector<Vector2d>& init){
     load(init);
 }
 
-Polygon::Polygon(std::initializer_list<Point> init_list)
+Polygon::Polygon(std::initializer_list<Vector2d> init_list)
 {
-    std::vector<Point> pts = init_list;
+    std::vector<Vector2d> pts = init_list;
 
     load(pts);
 }
@@ -67,17 +70,17 @@ void Polygon::complete(){
     }
 }
 
-void Polygon::emplace(const Point p){  
+void Polygon::emplace(const Vector2d p){  
     points.emplace_back(p);
 }
 
 void Polygon::enclose_polygon(){
     // ensure that polygon loops back
-    const auto& first_point = points[0];
-    const auto& last_point = points[points.size()-1];
+    const auto& first_Vector2d = points[0];
+    const auto& last_Vector2d = points[points.size()-1];
 
-    if( ! first_point.near(last_point)){
-        points.emplace_back(first_point);
+    if( ! first_Vector2d.isApprox(last_Vector2d)){
+        points.emplace_back(first_Vector2d);
     }
 }
 
@@ -94,7 +97,7 @@ bool Polygon::is_right_handed() const {
     for( uint i = 0; i < (points.size()-1); ++i ){
         auto& p1 = points[i];
         auto& p2 = points[i+1];
-        sum += (p1.x*p2.y) - (p1.y*p2.x);
+        sum += (p1[0] * p2[1]) - (p1[1]*p2[0]);
     }
 
     // // The shoelace formula includes a divide-by-2 step; ... but we don't
@@ -110,7 +113,7 @@ bool Polygon::is_right_handed() const {
     }
 }
 
-bool Polygon::load(std::vector<Point> source){
+bool Polygon::load(std::vector<Vector2d> source){
     // if the new polygon contains insufficient points, abort and clear.
     if(4 > source.size()){
         return false;
@@ -130,7 +133,7 @@ bool Polygon::load(nlohmann::json doc){
 
         size_t pair_index = 0;
         for( auto& pair : doc){
-            Point p(pair[0].get<double>(), pair[1].get<double>());
+            Vector2d p(pair[0].get<double>(), pair[1].get<double>());
             points[pair_index] = p;
             ++pair_index;
         }
@@ -143,11 +146,11 @@ bool Polygon::load(nlohmann::json doc){
     return false;
 }
 
-Point& Polygon::operator[](const size_t index){
+Vector2d& Polygon::operator[](const size_t index){
     return points[index];
 }
 
-const Point& Polygon::operator[](const size_t index) const {
+const Vector2d& Polygon::operator[](const size_t index) const {
     return points[index];
 }
 
@@ -167,18 +170,24 @@ void Polygon::set_default(){
 void Polygon::update_bounds() {
     bounds.clear();
 
-    Point max(FLT_MIN, FLT_MIN);
-    Point min(FLT_MAX, FLT_MAX);
+    Vector2d max(FLT_MIN, FLT_MIN);
+    Vector2d min(FLT_MAX, FLT_MAX);
+    
     for( uint i = 0; i < points.size(); ++i ){
         auto& p = points[i];
-        max.x = std::max(max.x, p.x);
-        max.y = std::max(max.y, p.y);
-        min.x = std::min(min.x, p.x);
-        min.y = std::min(min.y, p.y);
+        max[0] = std::max(max[0], p[0]);
+        max[1] = std::max(max[1], p[1]);
+        min[0] = std::min(min[0], p[0]);
+        min[1] = std::min(min[1], p[1]);
     }
 
-    bounds.center = Point::average(min,max);
-    bounds.half_width = std::max(max.x - min.x, max.y - min.y)/2;
+    // the center is simply the midpoint between the extreme bounds:
+    bounds.center = (min + max) / 2 ;
+
+    auto r1 = max - min;
+    auto r2 = r1.maxCoeff();
+
+    bounds.half_width = r2 / 2;
 }
 
 
@@ -186,11 +195,11 @@ void Polygon::write_yaml(std::ostream& sink, string indent) const {
     sink << indent << "points: \n";
     for( uint i = 0; i < points.size(); ++i ){
         auto& p = points[i];
-        sink << indent << "    - " << p.x << ", " << p.y << '\n';
+        sink << indent << "    - " << p[0] << ", " << p[1] << '\n';
     }
 
     sink << indent << "bounds: \n";
-    sink << indent << "    center: [" << bounds.center.x << ", " << bounds.center.y << "]\n";
+    sink << indent << "    center: [" << bounds.center[0] << ", " << bounds.center[1] << "]\n";
     sink << indent << "    x: [" << bounds.get_x_min() << ", " << bounds.get_x_max() << "]\n";
     sink << indent << "    y: [" << bounds.get_y_min() << ", " << bounds.get_y_max() << "]\n";
 

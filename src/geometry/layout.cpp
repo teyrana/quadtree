@@ -1,18 +1,23 @@
 // The MIT License 
 // (c) 2019 Daniel Williams
 
-#include "bounds.hpp"
+#include <Eigen/Dense>
+
+#include "geometry/bounds.hpp"
+#include "geometry/layout.hpp"
 
 namespace terrain::geometry {
 
-constexpr Layout::Layout(): 
-    bounds(default_bounds), 
+const Layout Layout::default_layout = {{{0,0}, Layout::default_width}, Layout::default_precision};
+
+Layout::Layout(): 
+    bounds({0,0}, default_width), 
     dimension(default_dimension), 
     precision(default_precision),
     size(default_size)
 {}
 
-constexpr Layout::Layout(const Bounds& _bounds, const double _precision): 
+Layout::Layout(const Bounds& _bounds, const double _precision): 
     bounds(_bounds), 
     dimension(snap_dimension(bounds.width(), _precision)), 
     precision(snap_precision(bounds.width(), dimension)),
@@ -25,7 +30,7 @@ constexpr Layout::Layout(const Bounds& _bounds, const double _precision):
 
 ///! dimension * precision = width
 ///! \brief snaps this precision to match the next-power-of-2 dimension that covers the width
-constexpr size_t Layout::snap_dimension(const double width, const double precision){
+size_t Layout::snap_dimension(const double width, const double precision){
     const double dimension_estimate = width / precision;
 
     // coerce the dimension to the next-higher power-of-2
@@ -37,7 +42,7 @@ constexpr size_t Layout::snap_dimension(const double width, const double precisi
 }
 
 ///! dimension * precision = width
-constexpr double Layout::snap_precision(const double width, const double dimension){
+double Layout::snap_precision(const double width, const double dimension){
     return width / dimension;
 }
 
