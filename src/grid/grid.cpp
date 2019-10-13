@@ -19,11 +19,15 @@ using std::setw;
 using std::string;
 using std::unique_ptr;
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json.hpp>
 
 #include "geometry/layout.hpp"
 
 #include "grid/grid.hpp"
+
+using Eigen::Vector2d;
 
 using terrain::geometry::Bounds;
 using terrain::geometry::Polygon;
@@ -36,7 +40,7 @@ static cell_value_t scratch;
 
 
 Grid::Grid(): 
-    Grid(Layout::default_bounds, Layout::default_precision)
+    Grid(Layout::default_layout.bounds, Layout::default_precision)
 {
     reset();
 }
@@ -48,12 +52,12 @@ Grid::Grid(const Bounds& _bounds, double _precision):
 }
 
 
-const Point Grid::anchor() const {
+const Vector2d Grid::anchor() const {
     const double width_2 = layout->bounds.half_width;
-    return layout->bounds.center.sub({width_2, width_2});
+    return layout->bounds.center - Vector2d(width_2, width_2);
 }
 
-bool Grid::contains(const Point& p) const {
+bool Grid::contains(const Vector2d& p) const {
     return layout->bounds.contains(p);
 }
 
@@ -95,10 +99,10 @@ void Grid::reset(const Bounds new_bounds, const double new_precision){
     reset();
 }
 
-cell_value_t& Grid::search(const Point& p) {
+cell_value_t& Grid::search(const Vector2d& p) {
     if(contains(p)){
-        const size_t x_index = (p.x - layout->bounds.center.x + layout->bounds.half_width)/layout->precision;
-        const size_t y_index = (p.y - layout->bounds.center.y + layout->bounds.half_width)/layout->precision;
+        const size_t x_index = (p[0] - layout->bounds.center[0] + layout->bounds.half_width)/layout->precision;
+        const size_t y_index = (p[1] - layout->bounds.center[1] + layout->bounds.half_width)/layout->precision;
         return get_cell(x_index, y_index);
     }
 
@@ -106,10 +110,10 @@ cell_value_t& Grid::search(const Point& p) {
     return scratch;
 }
 
-cell_value_t Grid::search(const Point& p) const {
+cell_value_t Grid::search(const Vector2d& p) const {
     if(contains(p)){
-        const size_t x_index = (p.x - layout->bounds.center.x + layout->bounds.half_width)/layout->precision;
-        const size_t y_index = (p.y - layout->bounds.center.y + layout->bounds.half_width)/layout->precision;
+        const size_t x_index = (p[0] - layout->bounds.center[0] + layout->bounds.half_width)/layout->precision;
+        const size_t y_index = (p[1] - layout->bounds.center[1] + layout->bounds.half_width)/layout->precision;
         return get_cell(x_index, y_index);
     }
 

@@ -13,6 +13,8 @@ using std::cerr;
 using std::endl;
 using std::string;
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json.hpp>
 
 #ifdef ENABLE_LIBPNG
@@ -24,6 +26,8 @@ using std::string;
 #include "geometry/polygon.hpp"
 #include "grid/grid.hpp"
 #include "terrain.hpp"
+
+using Eigen::Vector2d;
 
 using terrain::geometry::Bounds;
 using terrain::geometry::Polygon;
@@ -109,15 +113,15 @@ void inline Terrain<T>::fill(const Polygon& poly, const cell_value_t fill_value)
         // generate a list of line-segment crossings from the polygon
         std::vector<double> crossings;
         for (int i=0; i < poly.size()-1; ++i) {
-            const Point& p1 = poly[i];
-            const Point& p2 = poly[i+1];
+            const Vector2d& p1 = poly[i];
+            const Vector2d& p2 = poly[i+1];
 
-            const double y_max = std::max(p1.y, p2.y);
-            const double y_min = std::min(p1.y, p2.y);
+            const double y_max = std::max(p1[1], p2[1]);
+            const double y_min = std::min(p1[1], p2[1]);
             // if y is in range:
             if( (y_min <= y) && (y < y_max) ){
                 // construct x-coordinate that crosses this line:
-                auto value = p1.x + (y - p1.y) * (p2.x-p1.x)/(p2.y - p1.y);
+                auto value = p1[0] + (y - p1[1]) * (p2[0]-p1[0])/(p2[1] - p1[1]);
                 crossings.emplace_back(value);
             }
         }
@@ -308,9 +312,9 @@ std::vector<Polygon> Terrain<T>::make_polygons(nlohmann::json doc){
     std::vector<Polygon> result(static_cast<size_t>(doc.size()));
     if(0 < result.size()){
         size_t polygon_index = 0;
-        for( auto& poly_doc : doc){
-            result[polygon_index] = {poly_doc};
-        }
+	for( auto& poly_doc : doc){
+	    result[polygon_index] = {Polygon(poly_doc)};
+	}
     }
     return result;
 }
@@ -430,7 +434,7 @@ bool Terrain<T>::png(FILE* dest){
 }
 
 template<typename T>
-cell_value_t Terrain<T>::search(const Point& p) const {
+cell_value_t Terrain<T>::search(const Vector2d& p) const {
     return impl.search(p);
 }
 
@@ -456,14 +460,14 @@ nlohmann::json Terrain<T>::to_json_grid() const {
     nlohmann::json grid;
 
     for(size_t yi=0; yi < dim; ++yi){
-        const double y = ((dim-yi-1)*precision + prec_2 + bounds.center.y - bounds.half_width);
+        const double y = ((dim-yi-1)*precision + prec_2 + bounds.center[1] - bounds.half_width);
         // cerr << "    @[" << yi << "] => (" << y << ")" << endl;
         if(grid[yi].is_null()){
             grid[yi] = nlohmann::json::array();
         }
     
         for(size_t xi=0; xi < dim; ++xi){
-            const double x = (xi * precision + prec_2 + bounds.center.x - bounds.half_width);
+            const double x = (xi * precision + prec_2 + bounds.center[0] - bounds.half_width);
             grid[yi][xi] = impl.search({x,y});
             // cerr << "        @[" << xi << ", " << yi << "] => (" << x << ", " << y << ") => " << static_cast<int>(value) << endl;
         }

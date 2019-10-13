@@ -11,13 +11,13 @@
 #include <string>
 #include <vector>
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json_fwd.hpp>
 
 #include "geometry/bounds.hpp"
-#include "geometry/point.hpp"
 
 using terrain::geometry::Bounds;
-using terrain::geometry::Point;
 
 namespace terrain::geometry {
 
@@ -26,13 +26,13 @@ public:
     Polygon();
     Polygon(size_t initial_capacity);
     Polygon(nlohmann::json doc);
-    Polygon(std::vector<Point>& init);
-    Polygon(std::initializer_list<Point> init);
+    Polygon(std::vector<Eigen::Vector2d>& init);
+    Polygon(std::initializer_list<Eigen::Vector2d> init);
 
     // clears the internal point vector
     void clear();
 
-    void emplace(const Point p);
+    void emplace(const Eigen::Vector2d p);
 
     // Retrieves the precomputed center of the polygon:
     // Currently, this is a naive, unweighted average of the polygon points.
@@ -44,18 +44,14 @@ public:
     // Currently, this is a naive, unweighted average of the polygon points.
     // \return was the load successful? 
     // \sidef
-    bool load(std::vector<Point> source);
+    bool load(std::vector<Eigen::Vector2d> source);
 
     bool load(nlohmann::json doc);
 
-    Point& operator[](const size_t index);
+    Eigen::Vector2d& operator[](const size_t index);
 
-    const Point& operator[](const size_t index) const;
+    const Eigen::Vector2d& operator[](const size_t index) const;
 
-    // const std::vector<Point>& get_points() const { return points;}
-    
-    //std::vector<Point>& segments();
-    
     size_t size() const;
     
     // dumps the contains points to stderr
@@ -84,13 +80,13 @@ protected:
     void update_bounds();
 
 protected: // Configuration parameters
-    std::vector<Point> points;    ///< Main data store for this class.  Contains the vertices of the polygon
+    std::vector<Eigen::Vector2d> points;    ///< Main data store for this class.  Contains the vertices of the polygon
     Bounds bounds;                ///< x,y bounds at the (approximate) center of the polygon
 
 private:
     friend class PolygonTest_DefaultConfiguration_Test;
-    friend class PolygonTest_LoadList_Test;
-    friend class PolygonTest_LoadInitializerList_Test;
+    friend class PolygonTest_LoadList_5Point_Test;
+    friend class PolygonTest_LoadList_DiamondRhombus_Test;
     
     // friend class PolygonTests_TestHandedness_Test;
     // friend class PolygonTests_InBoundingBoxByX_Test;

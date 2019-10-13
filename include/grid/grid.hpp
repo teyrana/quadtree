@@ -10,17 +10,17 @@
 #include <string>
 #include <vector>
 
+#include <Eigen/Geometry>
+
 #include "nlohmann/json/json.hpp"
 
 #include "geometry/bounds.hpp"
-#include "geometry/point.hpp"
 #include "geometry/polygon.hpp"
 #include "geometry/layout.hpp"
 
 #include "cell_value.hpp"
 
 using terrain::geometry::Bounds;
-using terrain::geometry::Point;
 using terrain::geometry::Polygon;
 
 using terrain::cell_value_t;
@@ -49,16 +49,16 @@ public:
      */
     ~Grid(){};
 
-    const Point anchor() const;
+    const Eigen::Vector2d anchor() const;
 
 
     /**
      * Returns true if the point at (x, y) exists in the tree.
      *
-     * @param {Point} The p to test
-     * @return {bool} Whether the tree contains the given point
+     * @param The p to test
+     * @return Whether the tree contains the given point
      */
-    bool contains(const Point& p) const;
+    bool contains(const Eigen::Vector2d& p) const;
 
     ///! \brief Draws a simple debug representation of this grid to stderr
     void debug() const;
@@ -107,12 +107,12 @@ public:
     void reset();
     void reset(const Bounds bounds, const double new_precision);
 
-    ///! \brief Access the value at an (x, y) point
+    ///! \brief Access the value at an (x, y) Eigen::Vector2d
     ///!
-    ///! \param point - the x,y coordinates to search at:
+    ///! \param Eigen::Vector2d - the x,y coordinates to search at:
     ///! \return reference to the cell value
-    cell_value_t& search(const Point& p);
-    cell_value_t  search(const Point& p) const;
+    cell_value_t& search(const Eigen::Vector2d& p);
+    cell_value_t  search(const Eigen::Vector2d& p) const;
 
     ///! \brief the _total_ number of cells in this grid === (width * height)
     size_t size() const;

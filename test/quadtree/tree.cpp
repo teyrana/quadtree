@@ -5,12 +5,13 @@
 #include <string>
 #include <vector>
 
+#include <Eigen/Geometry>
+
 #include <gtest/gtest.h>
 
 #include <nlohmann/json/json.hpp>
 
 #include "geometry/layout.hpp"
-#include "geometry/point.hpp"
 #include "geometry/polygon.hpp"
 #include "quadtree/tree.hpp"
 #include "terrain.hpp"
@@ -20,12 +21,13 @@ using std::endl;
 using std::string;
 using std::vector;
 
+using Eigen::Vector2d;
+
 using nlohmann::json;
 
-using terrain::geometry::Point;
 using terrain::geometry::Bounds;
 
-const Bounds& default_bounds = terrain::geometry::Layout::default_bounds;
+const Bounds& default_bounds = terrain::geometry::Layout::default_layout.bounds;
 
 namespace terrain::quadtree {
 
@@ -37,8 +39,8 @@ TEST(QuadTreeTest, ConstructDefault) {
     EXPECT_TRUE( default_bounds == terrain.get_bounds());
     
     // // DEBUG for line above
-    // ASSERT_DOUBLE_EQ(terrain.get_bounds().center.x,  0);
-    // ASSERT_DOUBLE_EQ(terrain.get_bounds().center.y,  0);
+    // ASSERT_DOUBLE_EQ(terrain.get_bounds().center[0],  0);
+    // ASSERT_DOUBLE_EQ(terrain.get_bounds().center[1],  0);
     // ASSERT_DOUBLE_EQ(terrain.get_bounds().width(),  32);
 
     EXPECT_TRUE( tree.root->is_leaf() );
@@ -60,7 +62,6 @@ TEST(QuadTreeTest, ConstructByCenterAndSize) {
     // (4) out of bounds in both x AND y
     ASSERT_FALSE(tree.contains({130,130}));
 }
-
 
 TEST( QuadTreeTest, ConstructAndSetBounds) {
     Tree tree({{5,3}, 17}, 1.);
@@ -158,9 +159,10 @@ TEST( QuadTreeTest, CalculateMemoryUsage){
 
     EXPECT_EQ(sizeof(Terrain<Tree>), 32);
     EXPECT_EQ(sizeof(Tree), 16);
-    EXPECT_EQ(sizeof(Bounds), 24);   // :(
-    EXPECT_EQ(sizeof(Layout), 48);   // :(
-    EXPECT_EQ(sizeof(Node), 64);     // :((
+    EXPECT_EQ(sizeof(Vector2d), 16);
+    EXPECT_EQ(sizeof(Bounds), 32);   // :(
+    EXPECT_EQ(sizeof(Layout), 64);   // :(
+    EXPECT_EQ(sizeof(Node), 80);     // :((
 
 }
     
@@ -238,8 +240,8 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
         ASSERT_DOUBLE_EQ(check1->get_value(), 0);
 
         auto& check1_bounds = check1->get_bounds();
-        ASSERT_DOUBLE_EQ(check1_bounds.center.x,   33);
-        ASSERT_DOUBLE_EQ(check1_bounds.center.y,   33);
+        ASSERT_DOUBLE_EQ(check1_bounds.center[0],   33);
+        ASSERT_DOUBLE_EQ(check1_bounds.center[1],   33);
         ASSERT_DOUBLE_EQ(check1_bounds.width(),    64);
 
         // spot check #2: RT-NW-NE-NW quadrant
@@ -248,8 +250,8 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
         ASSERT_DOUBLE_EQ(check2->get_value(), 88);
 
         auto& check2_bounds = check2->get_bounds();
-        ASSERT_DOUBLE_EQ(check2_bounds.center.x,  -47);
-        ASSERT_DOUBLE_EQ(check2_bounds.center.y,  113);
+        ASSERT_DOUBLE_EQ(check2_bounds.center[0],  -47);
+        ASSERT_DOUBLE_EQ(check2_bounds.center[1],  113);
         ASSERT_DOUBLE_EQ(check2_bounds.width(),    32);
     }
  
@@ -293,14 +295,14 @@ TEST(QuadTreeTest, LoadPolygonFromJSON) {
     constexpr double diamond_width = 8.;
     constexpr double desired_precision = 1.0;
     // =====
-    constexpr Point center(boundary_width/2, boundary_width/2);
-    constexpr Bounds expected_bounds(center, boundary_width);
-    json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
+    const Vector2d center(boundary_width/2, boundary_width/2);
+    const Bounds expected_bounds(center, boundary_width);
+    json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
                     {"precision", desired_precision},
-                    {"allow", {{{center.x + diamond_width, center.y},
-                                {center.x                , center.y + diamond_width},
-                                {center.x - diamond_width, center.y},
-                                {center.x                , center.y - diamond_width}}}}};
+                    {"allow", {{{center[0] + diamond_width, center[1]},
+                                {center[0]                , center[1] + diamond_width},
+                                {center[0] - diamond_width, center[1]},
+                                {center[0]                , center[1] - diamond_width}}}}};
     std::istringstream stream(source.dump());
 
     // // DEBUG
@@ -394,8 +396,8 @@ TEST( QuadTreeTest, WriteLoadCycle){
     // test contents of test_tree
     { // test bounds:
         auto& bounds = load_terrain.get_bounds();
-        ASSERT_DOUBLE_EQ(bounds.center.x,    11);
-        ASSERT_DOUBLE_EQ(bounds.center.y,    11);
+        ASSERT_DOUBLE_EQ(bounds.center[0],    11);
+        ASSERT_DOUBLE_EQ(bounds.center[1],    11);
         ASSERT_DOUBLE_EQ(bounds.width(),  128);
     }
     { // test tree shape
@@ -422,7 +424,7 @@ TEST( QuadTreeTest, WriteLoadCycle){
     }
 }
     
-TEST( QuadTreeTest, TestSearchExplicitTree) {
+TEST( QuadTreeTest, SearchExplicitTree) {
     Tree tree({{0,0}, 100}, 50);
     Terrain terrain(tree);
     tree.root->split();
@@ -469,7 +471,7 @@ struct TestPoint{
     constexpr TestPoint(const double _x, const double _y, const cell_value_t _value): x(_x), y(_y), value(_value) {}
 };
 
-TEST( QuadTreeTest, TestInterpolateTree){
+TEST( QuadTreeTest, InterpolateTree){
     Tree tree({{1,1}, 64}, 1.0);
     Terrain terrain(tree);
     tree.root->split();
@@ -538,13 +540,13 @@ TEST( QuadTreeTest, SavePNG) {
     // constexpr double desired_precision = 0.25;  ///< displays cleanly
 
     // =====
-    constexpr Point center(boundary_width/2, boundary_width/2);
-    json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
+    const Vector2d center(boundary_width/2, boundary_width/2);
+    json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
                     {"precision", desired_precision},
-                    {"allow", {{{center.x + diamond_width, center.y},
-                                {center.x                , center.y + diamond_width},
-                                {center.x - diamond_width, center.y},
-                                {center.x                , center.y - diamond_width}}}}};
+                    {"allow", {{{center[0] + diamond_width, center[1]},
+                                {center[0]                , center[1] + diamond_width},
+                                {center[0] - diamond_width, center[1]},
+                                {center[0]                , center[1] - diamond_width}}}}};
     std::istringstream stream(source.dump());
 
     ASSERT_TRUE(terrain.load(stream));

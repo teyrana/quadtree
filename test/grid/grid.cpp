@@ -17,9 +17,10 @@ using std::endl;
 using std::isnan;
 using std::string;
 
+using Eigen::Vector2d;
 using nlohmann::json;
 
-const static Bounds& default_bounds = terrain::geometry::Layout::default_bounds;
+const static Bounds& default_bounds = terrain::geometry::Layout::default_layout.bounds;
 
 namespace terrain::grid {
 
@@ -47,8 +48,8 @@ TEST(GridTest, ConstructWithSizeSpacingCenter) {
  
     const auto& bounds = terr.get_bounds();
     EXPECT_DOUBLE_EQ( bounds.half_width,  2.);
-    EXPECT_DOUBLE_EQ( bounds.center.x,    3.);
-    EXPECT_DOUBLE_EQ( bounds.center.y,    3.);
+    EXPECT_DOUBLE_EQ( bounds.center[0],    3.);
+    EXPECT_DOUBLE_EQ( bounds.center[1],    3.);
 
     EXPECT_DOUBLE_EQ( terr.get_precision(), 1.0);
 
@@ -165,24 +166,24 @@ TEST(GridTest, LoadPolygonFromJSON) {
     constexpr double diamond_width = 6.;
     constexpr double desired_precision = 1.0;
     // =====
-    constexpr Point center(boundary_width/2, boundary_width/2);
-    constexpr Bounds expected_bounds(center, boundary_width);
-    json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
+    const Vector2d center(boundary_width/2, boundary_width/2);
+    const Bounds expected_bounds(center, boundary_width);
+    json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
                     {"precision", desired_precision},
-                    {"allow", {{{center.x + diamond_width, center.y},
-                                {center.x                , center.y + diamond_width},
-                                {center.x - diamond_width, center.y},
-                                {center.x                , center.y - diamond_width}}}}};
+                    {"allow", {{{center[0] + diamond_width, center[1]},
+                                {center[0]                , center[1] + diamond_width},
+                                {center[0] - diamond_width, center[1]},
+                                {center[0]                , center[1] - diamond_width}}}}};
     std::istringstream stream(source.dump());
 
     ASSERT_TRUE(terrain.load(stream));
     
     // // DEBUG
-    // cerr << "======\n" << source.dump(4) << "\n======\n" << endl;
-    // terrain.debug();
+    //cerr << "======\n" << source.dump(4) << "\n======\n" << endl;
+    //terrain.debug();
 
     EXPECT_EQ( g.get_dimension(), 16);
-    EXPECT_EQ( g.size(),     256);
+    EXPECT_EQ( g.size(),         256);
 
     EXPECT_DOUBLE_EQ( terrain.get_precision(), desired_precision);
 
@@ -230,15 +231,15 @@ TEST(GridTest, SavePNG) {
     constexpr double diamond_width = 8.;
     constexpr double desired_precision = 1.0;
     // =====
-    constexpr Point center(boundary_width/2, boundary_width/2);
-    constexpr Bounds expected_bounds(center, boundary_width);
-    constexpr double expected_dimension = boundary_width / desired_precision;
-    json source = { {"bounds", {{"x", center.x}, {"y", center.y}, {"width", boundary_width}}},
+    const Vector2d center = {boundary_width/2, boundary_width/2};
+    const Bounds expected_bounds(center, boundary_width);
+    const double expected_dimension = boundary_width / desired_precision;
+    json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
                     {"precision", desired_precision},
-                    {"allow", {{{center.x + diamond_width, center.y},
-                                {center.x                , center.y + diamond_width},
-                                {center.x - diamond_width, center.y},
-                                {center.x                , center.y - diamond_width}}}}};
+                    {"allow", {{{center[0] + diamond_width, center[1]},
+                                {center[0]                , center[1] + diamond_width},
+                                {center[0] - diamond_width, center[1]},
+                                {center[0]                , center[1] - diamond_width}}}}};
     std::istringstream stream(source.dump());
 
     ASSERT_TRUE(terrain.load(stream));

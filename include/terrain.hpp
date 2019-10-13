@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include <Eigen/Geometry>
+
 #include <nlohmann/json/json_fwd.hpp>
 
 #include "cell_value.hpp"
@@ -72,7 +74,7 @@ public:
     ///! \brief writes a json document to given output stream
     bool json(std::ostream& document);
 
-    cell_value_t search(const Point& p) const;
+    cell_value_t search(const Eigen::Vector2d& p) const;
 
     std::string summary() const;
 
