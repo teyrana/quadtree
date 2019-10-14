@@ -32,7 +32,7 @@ public:
     // clears the internal point vector
     void clear();
 
-    void emplace(const Eigen::Vector2d p);
+    void emplace(const double x, const double y);
 
     // Retrieves the precomputed center of the polygon:
     // Currently, this is a naive, unweighted average of the polygon points.
@@ -51,6 +51,8 @@ public:
     Eigen::Vector2d& operator[](const size_t index);
 
     const Eigen::Vector2d& operator[](const size_t index) const;
+
+    void push_back(const Eigen::Vector2d p);
 
     size_t size() const;
     
