@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INVOCATION_ABS_DIR=`pwd`
-BUILD_TYPE="None"
+BUILD_TYPE="RELEASE"
 CMD_LINE_ARGS=""
 
 #-------------------------------------------------------------------
