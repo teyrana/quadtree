@@ -103,19 +103,18 @@ At small scales, the grid will be the faster search method.  At larger scales, t
 
 ## Results
 
-| Dimension:     | 8192            |      4096         |     512          |
+| Dimension:     |    8192         |    4096           |     512          |
 |:---------------|:----------------|:------------------|:-----------------|
 |*Grid*          |
-|Loading Factor: |      1.         |        1.         |      1.           |
-|Load time:      |      0.8 sec    |       0.221 sec   |        0.0003 sec |
-|Memory:        |      67.1 Mb        |       16.7 Mb    |     262 kb |
-|100k searches:  |    10.7 ms      |     10.7 ms       |    10.7 ms        |
-
-| *Tree*          |
-|Loading Factor: |    0.000366267  |       0.00073     |       0.0015      |
-|Loaded in:         |   25.883 s      |       6.5 s       |       0.107 s     |
-|Memory:        |       2.0 Mb     |       1.0 Mb    |    131 kb  |
-|100k searches:  |    15.9 ms      |       16.1 ms     |       16.0 ms     |
+|Loading Factor: |       1.        |       1.          |       1.         |
+|Load time:      |       0.8 sec   |       0.221 sec   |       0.0003 sec |
+|Memory:         |      67.1 Mb    |      16.7 Mb      |     262 kb       |
+|100k searches:  |      10.7 ms    |      10.7 ms      |      10.7 ms     |
+| *Tree*         |                 |
+|Loading Factor: |       0.000366  |       0.00073     |        0.0015    |
+|Loaded in:      |      25.883 s   |       6.5 s       |        0.107 s   |
+|Memory:         |       2.0 Mb    |       1.0 Mb      |      131 kb      |
+|100k searches:  |      15.9 ms    |      16.1 ms      |       16.0 ms    |
 
 ## Discussion
 
@@ -128,7 +127,7 @@ best-case scenario, because the tree (in theory) provides a higher
 degree of compression, and definitely uses less memory .... overall.
 
 Obviously, the grid still has an edge in execution performance complexity:
-- Grid lookup is`O(1)`
+- Grid lookup is `O(1)`
 - Quadtree lookup is `O(height) ~= O(log4(grid_size))` for the quadtree.  
 
 In the real world, lookup speed still depends on cache misses.
@@ -136,4 +135,14 @@ In the real world, lookup speed still depends on cache misses.
 OTOH, the memory savings are certainly clear.  A 30x improvement in memory usage is nothing to ignore !
 
 
+# Step 2: Maintainability:  Upgrade Eigen
 
+
+load times *increased* went up to:
+
+Grid: 6.6 s 
+tree: 42.6 s 
+
+@@ dimension = 4096
+
+(probbaly because node size went up?) ==> this explains the tree, but not the grid.

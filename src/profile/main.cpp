@@ -31,14 +31,9 @@ constexpr double boundary_width = 4096.;   // overall boundary
 constexpr double diamond_width =  2048.;
 constexpr double desired_precision = 1.0;
 // =====
-const Eigen::Vector2d center(boundary_width/2, boundary_width/2);
-constexpr double diamond_width_2 = diamond_width/2;
-const json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
-                      {"precision", desired_precision},
-                      {"allow", {{{center[0] + diamond_width_2, center[1]},
-                                  {center[0]                  , center[1] + diamond_width_2 },
-                                  {center[0] - diamond_width_2, center[1]},
-                                  {center[0]                  , center[1] - diamond_width_2 }}}}};
+const json source = terrain::generate_diamond(  boundary_width,
+                                                diamond_width,
+                                                desired_precision);
 
 constexpr size_t test_seed = 55;
 static std::mt19937 generator;
@@ -164,11 +159,12 @@ int main(int argc, char* argv[]){
     const auto load_duration = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(finish_load - start_load).count())/1000;
     cerr << "<< Loaded in:   " << load_duration << " s \n";
 
-    // tree.debug();
     if(use_grid){
+        // grid.debug();
         cerr << grid.summary();
-        profile_terrain(tree, trial_size);
+        profile_terrain(grid, trial_size);
     }else{
+        // tree.debug();
         cerr << tree.summary();
         profile_terrain(tree, trial_size);
     }

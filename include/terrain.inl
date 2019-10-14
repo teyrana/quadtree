@@ -443,6 +443,7 @@ std::string Terrain<T>::summary() const {
     std::ostringstream buffer;
     buffer << "====== Terrain Stats: ======\n";
     buffer << "##  bounds:       " << impl.get_bounds().str() << "  precision:  " << impl.get_precision() << '\n';
+    buffer << "##  dimension:    " << impl.get_dimension() << endl;
     buffer << "##  size:         " << impl.size() <<  " nodes  ===   " << impl.get_memory_usage() << " bytes\n";
     buffer << "##  compression:  " << impl.get_load_factor() << '\n';
     buffer << '\n';
