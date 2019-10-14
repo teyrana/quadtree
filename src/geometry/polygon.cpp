@@ -70,8 +70,8 @@ void Polygon::complete(){
     }
 }
 
-void Polygon::emplace(const Vector2d p){  
-    points.emplace_back(p);
+void Polygon::emplace(const double x, const double y){
+    points.emplace_back(x,y);
 }
 
 void Polygon::enclose_polygon(){
@@ -152,6 +152,10 @@ Vector2d& Polygon::operator[](const size_t index){
 
 const Vector2d& Polygon::operator[](const size_t index) const {
     return points[index];
+}
+
+void Polygon::push_back(const Vector2d p){
+    points.push_back(p);
 }
 
 size_t Polygon::size() const {
