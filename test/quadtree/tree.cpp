@@ -530,23 +530,11 @@ TEST( QuadTreeTest, InterpolateTree){
 
 
 TEST( QuadTreeTest, SavePNG) {
-    quadtree::Tree tree;
-    Terrain terrain(tree);
+    Terrain<Tree> terrain;
+    const json source = generate_diamond(  16.,   // boundary_width
+                                            8.,    // diamond_width,
+                                            0.4);  // desired_precision);
 
-    constexpr double boundary_width = 16.;   // overall boundary
-    constexpr double diamond_width = 8.;
-    
-    constexpr double desired_precision = 0.4; ///< exhibits 'stripe' noise:
-    // constexpr double desired_precision = 0.25;  ///< displays cleanly
-
-    // =====
-    const Vector2d center(boundary_width/2, boundary_width/2);
-    json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
-                    {"precision", desired_precision},
-                    {"allow", {{{center[0] + diamond_width, center[1]},
-                                {center[0]                , center[1] + diamond_width},
-                                {center[0] - diamond_width, center[1]},
-                                {center[0]                , center[1] - diamond_width}}}}};
     std::istringstream stream(source.dump());
 
     ASSERT_TRUE(terrain.load(stream));

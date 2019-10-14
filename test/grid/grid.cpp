@@ -166,28 +166,23 @@ TEST(GridTest, LoadPolygonFromJSON) {
     constexpr double diamond_width = 6.;
     constexpr double desired_precision = 1.0;
     // =====
-    const Vector2d center(boundary_width/2, boundary_width/2);
-    const Bounds expected_bounds(center, boundary_width);
-    json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
-                    {"precision", desired_precision},
-                    {"allow", {{{center[0] + diamond_width, center[1]},
-                                {center[0]                , center[1] + diamond_width},
-                                {center[0] - diamond_width, center[1]},
-                                {center[0]                , center[1] - diamond_width}}}}};
+    const json source = generate_diamond( boundary_width,
+                                          diamond_width,
+                                          desired_precision);
+
     std::istringstream stream(source.dump());
 
     ASSERT_TRUE(terrain.load(stream));
-    
+
     // // DEBUG
-    //cerr << "======\n" << source.dump(4) << "\n======\n" << endl;
-    //terrain.debug();
+    // terrain.debug();
 
     EXPECT_EQ( g.get_dimension(), 16);
     EXPECT_EQ( g.size(),         256);
 
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), desired_precision);
+    EXPECT_DOUBLE_EQ( desired_precision, terrain.get_precision());
 
-    ASSERT_TRUE( expected_bounds == terrain.get_bounds());
+    ASSERT_TRUE( Bounds({8,8}, 16) == terrain.get_bounds());
 
     ASSERT_EQ( g.get_cell(4,15), 0x99);
     ASSERT_EQ( g.get_cell(4,14), 0x99);
@@ -224,34 +219,21 @@ TEST(GridTest, LoadPolygonFromJSON) {
 }
 
 TEST(GridTest, SavePNG) {
-    grid::Grid g;
-    Terrain terrain(g);
+    Terrain<Grid> terrain;
+    const json source = generate_diamond(  16.,   // boundary_width
+                                            8.,    // diamond_width,
+                                            1.0);  // desired_precision);
 
-    constexpr double boundary_width = 16.;   // overall boundary
-    constexpr double diamond_width = 8.;
-    constexpr double desired_precision = 1.0;
-    // =====
-    const Vector2d center = {boundary_width/2, boundary_width/2};
-    const Bounds expected_bounds(center, boundary_width);
-    const double expected_dimension = boundary_width / desired_precision;
-    json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
-                    {"precision", desired_precision},
-                    {"allow", {{{center[0] + diamond_width, center[1]},
-                                {center[0]                , center[1] + diamond_width},
-                                {center[0] - diamond_width, center[1]},
-                                {center[0]                , center[1] - diamond_width}}}}};
     std::istringstream stream(source.dump());
 
     ASSERT_TRUE(terrain.load(stream));
 
-    // storage
-    EXPECT_EQ( g.get_dimension(), expected_dimension);
-    EXPECT_EQ( g.size(), expected_dimension*expected_dimension);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), desired_precision);
-    EXPECT_TRUE(expected_bounds == terrain.get_bounds());
-
     // // DEBUG
     // terrain.debug();
+
+    EXPECT_TRUE(Bounds({8,8}, 16) == terrain.get_bounds());
+    EXPECT_EQ( terrain.get_dimension(), 16);
+    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.0);
 
     // const string filename("grid.test.png");
     // // Because this manually tested, turn off by default.

@@ -57,7 +57,7 @@ SET(LIB_HEADERS include/terrain.hpp include/terrain.inl
                 include/quadtree/node.hpp
                 include/quadtree/tree.hpp)
                 
-SET(LIB_SOURCES 
+SET(LIB_SOURCES src/terrain.cpp
                 src/geometry/bounds.cpp
                 src/geometry/layout.cpp
                 src/geometry/polygon.cpp
