@@ -52,6 +52,7 @@ include_directories(include)
 SET(LIB_HEADERS include/terrain.hpp include/terrain.inl
                 include/geometry/bounds.hpp
                 include/geometry/interpolate.hpp
+                include/geometry/grid_layout.hpp
                 include/geometry/layout.hpp
                 include/geometry/polygon.hpp
                 include/grid/grid.hpp
@@ -61,6 +62,7 @@ SET(LIB_HEADERS include/terrain.hpp include/terrain.inl
 SET(LIB_SOURCES src/terrain.cpp
                 src/geometry/bounds.cpp
                 src/geometry/interpolate.cpp
+                src/geometry/grid_layout.cpp
                 src/geometry/layout.cpp
                 src/geometry/polygon.cpp
                 src/grid/grid.cpp
@@ -102,6 +104,7 @@ enable_testing()
 SET(TEST_EXE testtree) 
 SET(TEST_SOURCES    test/geometry/bounds.cpp
                     test/geometry/interpolate.cpp
+                    test/geometry/grid_layout.cpp
                     test/geometry/layout.cpp
                     test/geometry/polygon.cpp
                     test/grid/grid.cpp
