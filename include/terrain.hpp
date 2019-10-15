@@ -43,14 +43,14 @@ public:
     void debug() const;
 
     // sets grid to all zeros
-    void inline fill(const cell_value_t _value);
+    void inline fill(const geometry::cell_value_t _value);
 
     /**
      * Loads the vector of points as a CCW polygon.
      *
      * @param {std::istream} input stream containing the serialization text
      */
-    void inline fill(const geometry::Polygon& source, const cell_value_t fill_value);
+    void inline fill(const geometry::Polygon& source, const geometry::cell_value_t fill_value);
 
     ///! \brief retreives the boundary information
     const geometry::Bounds& get_bounds() const;
@@ -78,7 +78,7 @@ public:
     ///! \brief writes a json document to given output stream
     bool json(std::ostream& document);
 
-    cell_value_t search(const Eigen::Vector2d& p) const;
+    geometry::cell_value_t search(const Eigen::Vector2d& p) const;
 
     std::string summary() const;
 

@@ -63,39 +63,39 @@ void Terrain<T>::debug() const {
 
     cerr << "           ======== ======== ======== ======== As Grid: ======== ======== ======== ========\n";
     // print header (x-axis-labels: 
-    cerr << "            ";
+    cerr << "               ";
     for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
-        fprintf(stderr, "%4.1f ", x);
+        fprintf(stderr, "%5.1f ", x);
     } cerr << endl;
     // print top border
-    cerr << "          +";
+    cerr << "           +";
     for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
-        fprintf(stderr, "-----");
+        fprintf(stderr, "------");
     } cerr << "---+\n";
 
     for(double y = (bounds.get_y_max() - precision/2); y > bounds.get_y_min(); y -= precision ){
         // print left header:
-        fprintf(stderr, "     %4.1f | ", y);
+        fprintf(stderr, "     %5.1f | ", y);
         for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
             auto value = impl.search({x,y});
             if( 0 < value ){
-                fprintf(stderr, "  %2X,", static_cast<int>(value) );
+                fprintf(stderr, "   %2X,", static_cast<int>(value) );
             }else{
-                cerr << "    ,";
+                cerr << "     ,";
             }
         }
-        // print left header:
-        fprintf(stderr, "  | %4.1f\n", y);
+        // print right header:
+        fprintf(stderr, "  | %5.1f\n", y);
     }
     // print bottom border
-    cerr << "          +";
+    cerr << "           +";
     for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
-        fprintf(stderr, "-----");
+        fprintf(stderr, "------");
     } cerr << "---+\n";
     // print footer: (x-axis-labels: 
-    cerr << "            ";
+    cerr << "               ";
     for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
-        fprintf(stderr, "%4.1f ", x);
+        fprintf(stderr, "%5.1f ", x);
     } cerr << endl << endl;
 }
 
@@ -199,8 +199,8 @@ bool Terrain<T>::load(std::istream& source){
 
     if(doc.is_discarded()){
         error_message = "malformed json! ignore.\n";
-	source.seekg(0);
-	// cerr << source.rdbuf() << endl;
+        source.seekg(0);
+        // cerr << source.rdbuf() << endl;
         return false;
     }else if(!doc.is_object()){
         error_message = "input should be a json _document_!!\n" + doc.dump(4) + '\n';
@@ -211,7 +211,7 @@ bool Terrain<T>::load(std::istream& source){
         error_message = "Expected '" + bounds_key + "' field in json input document!\n";
         return false;
     }else if(doc.contains(precision_key) && !doc[precision_key].is_number()){
-	error_message = "If document contains a precision value, it should be _numeric_!!\n";
+        error_message = "If document contains a precision value, it should be _numeric_!!\n";
         return false;
     }
 
@@ -244,6 +244,7 @@ bool Terrain<T>::load(std::istream& source){
     // cerr << "!! Did not detect a data structure in this JSON document!:\n";
     // cerr << doc.dump(4) << endl;
     // #endif
+
     return false;
 }
 
@@ -262,7 +263,6 @@ bool Terrain<T>::load_grid(nlohmann::json grid ){
         return false;
     }
 
-
     // populate the tree
     int row_index = impl.get_dimension() - 1;
     for(auto& row : grid){
@@ -279,8 +279,9 @@ bool Terrain<T>::load_grid(nlohmann::json grid ){
         }
         --row_index;
     }
-        
+
     impl.prune();
+
     return true;
 }
 
@@ -312,9 +313,9 @@ std::vector<Polygon> Terrain<T>::make_polygons(nlohmann::json doc){
     std::vector<Polygon> result(static_cast<size_t>(doc.size()));
     if(0 < result.size()){
         size_t polygon_index = 0;
-	for( auto& poly_doc : doc){
-	    result[polygon_index] = {Polygon(poly_doc)};
-	}
+        for( auto& poly_doc : doc){
+            result[polygon_index] = {Polygon(poly_doc)};
+        }
     }
     return result;
 }
