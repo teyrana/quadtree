@@ -6,21 +6,20 @@
 
 #define QUAD_TREE_VERSION "0.0.1"
 
-#include <cstdlib>
-#include <string>
-#include <iostream>
-
 #include <cmath>
+#include <cstdlib>
+#include <iostream>
 #include <memory>
+#include <string>
 
 #include <Eigen/Geometry>
 
 #include <nlohmann/json/json_fwd.hpp>
 
 #include "geometry/bounds.hpp"
+#include "geometry/cell_value.hpp"
 #include "geometry/layout.hpp"
 
-#include "cell_value.hpp"
 #include "quadtree/node.hpp"
 
 using std::unique_ptr;

@@ -15,15 +15,15 @@
 #include "nlohmann/json/json.hpp"
 
 #include "geometry/bounds.hpp"
+#include "geometry/cell_value.hpp"
 #include "geometry/polygon.hpp"
 #include "geometry/layout.hpp"
 
-#include "cell_value.hpp"
 
 using terrain::geometry::Bounds;
+using terrain::geometry::cell_value_t;
 using terrain::geometry::Polygon;
 
-using terrain::cell_value_t;
 
 namespace terrain::grid {
 

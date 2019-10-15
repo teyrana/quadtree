@@ -18,9 +18,8 @@
 
 #include <nlohmann/json/json_fwd.hpp>
 
-#include "cell_value.hpp"
-
 #include "geometry/bounds.hpp"
+#include "geometry/cell_value.hpp"
 #include "geometry/polygon.hpp"
 
 namespace terrain {

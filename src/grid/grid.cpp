@@ -30,6 +30,7 @@ using std::unique_ptr;
 using Eigen::Vector2d;
 
 using terrain::geometry::Bounds;
+using terrain::geometry::cell_value_t;
 using terrain::geometry::Polygon;
 using terrain::geometry::Layout;
 
@@ -106,7 +107,7 @@ cell_value_t& Grid::search(const Vector2d& p) {
         return get_cell(x_index, y_index);
     }
 
-    scratch = cell_error_value;
+    scratch = geometry::cell_error_value;
     return scratch;
 }
 
@@ -117,7 +118,7 @@ cell_value_t Grid::search(const Vector2d& p) const {
         return get_cell(x_index, y_index);
     }
 
-    return cell_default_value;
+    return geometry::cell_default_value;
 }
 
 size_t Grid::size() const {
