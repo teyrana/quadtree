@@ -162,7 +162,7 @@ TEST( QuadTreeTest, CalculateMemoryUsage){
     EXPECT_EQ(sizeof(Vector2d), 16);
     EXPECT_EQ(sizeof(Bounds), 32);   // :(
     EXPECT_EQ(sizeof(Layout), 64);   // :(
-    EXPECT_EQ(sizeof(Node), 80);     // :((
+    EXPECT_EQ(sizeof(Node), 40);
 
 }
     
@@ -219,6 +219,7 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
                  [88,  0,  0,  0, 88, 88, 88, 88],
                  [88, 88,  0,  0, 88, 88, 88, 88],
                  [88, 88, 88,  0, 88, 88, 88, 88]]} )");
+
     // test target
     ASSERT_TRUE(terrain.load(stream));
     // test target
@@ -235,26 +236,16 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
         EXPECT_FALSE(tree.root->is_leaf());
 
         // spot check #1: RT-NE-SW-quadrant
-        const auto* check1 = tree.root->get_northeast()->get_southwest();
-        ASSERT_TRUE(check1->is_leaf());
-        ASSERT_DOUBLE_EQ(check1->get_value(), 0);
-
-        auto& check1_bounds = check1->get_bounds();
-        ASSERT_DOUBLE_EQ(check1_bounds.center[0],   33);
-        ASSERT_DOUBLE_EQ(check1_bounds.center[1],   33);
-        ASSERT_DOUBLE_EQ(check1_bounds.width(),    64);
+        const auto* r_ne_sw = tree.root->get_northeast()->get_southwest();
+        ASSERT_TRUE(r_ne_sw->is_leaf());
+        ASSERT_DOUBLE_EQ(r_ne_sw->get_value(), 0);
 
         // spot check #2: RT-NW-NE-NW quadrant
-        const auto* check2 = tree.root->get_northwest()->get_northeast()->get_northwest();
-        ASSERT_TRUE(check2->is_leaf());
-        ASSERT_DOUBLE_EQ(check2->get_value(), 88);
-
-        auto& check2_bounds = check2->get_bounds();
-        ASSERT_DOUBLE_EQ(check2_bounds.center[0],  -47);
-        ASSERT_DOUBLE_EQ(check2_bounds.center[1],  113);
-        ASSERT_DOUBLE_EQ(check2_bounds.width(),    32);
+        const auto* r_ne_nw = tree.root->get_northwest()->get_northeast()->get_northwest();
+        ASSERT_TRUE(r_ne_nw->is_leaf());
+        ASSERT_DOUBLE_EQ(r_ne_nw->get_value(), 88);
     }
- 
+
     const Tree& frozen = tree;
     EXPECT_EQ( frozen.search({  16,   16}),   0);
     EXPECT_EQ( frozen.search({  48,   48}),   0);
@@ -462,72 +453,6 @@ TEST( QuadTreeTest, SearchExplicitTree) {
     // .... Quadrant IV:
     EXPECT_EQ(tree.search({ 25, -25}), false_value);
 }
-
-struct TestPoint{
-    const double x;
-    const double y;
-    const cell_value_t value;
-
-    constexpr TestPoint(const double _x, const double _y, const cell_value_t _value): x(_x), y(_y), value(_value) {}
-};
-
-TEST( QuadTreeTest, InterpolateTree){
-    Tree tree({{1,1}, 64}, 1.0);
-    Terrain terrain(tree);
-    tree.root->split();
-
-    // Set Quadrant I:
-    tree.root->get_northeast()->set_value(0);
-    // Set Quadrdant II:
-    tree.root->get_northwest()->set_value(50);
-    // Set Quadrant III:
-    tree.root->get_southwest()->set_value(100);
-    // Set Quadrant IV:
-    tree.root->get_southeast()->set_value(50);
-
-
-    vector<TestPoint> test_cases;
-    test_cases.emplace_back( -35,    4, cell_default_value);  // Start out of bounds
-    test_cases.emplace_back( -33,    4, cell_default_value);
-    test_cases.emplace_back( -32,    4, cell_default_value);
-    test_cases.emplace_back( -31,    4,   70);  // border of tree
-    test_cases.emplace_back( -30.9,  4,   70);
-    test_cases.emplace_back( -30,    4,   70);
-    test_cases.emplace_back( -20,    4,   70);
-    test_cases.emplace_back( -17,    4,   70);
-    test_cases.emplace_back( -16,    4,   70);
-    test_cases.emplace_back( -15.1,  4,   70);
-    test_cases.emplace_back( -15.0,  4,   70);  // breakpoint - center of outer cell
-    test_cases.emplace_back( -14.9,  4,   70);
-    test_cases.emplace_back( -10,    4,   62);
-    test_cases.emplace_back( - 5,    4,   54);
-    test_cases.emplace_back(   0,    4,   47);
-    test_cases.emplace_back(   1,    4,   45);  // midpoint
-    test_cases.emplace_back(   2,    4,   43);
-    test_cases.emplace_back(  10,    4,   31);
-    test_cases.emplace_back(  14,    4,   25);
-    test_cases.emplace_back(  15,    4,   23);
-    test_cases.emplace_back(  16,    4,   22);  // breakpoint - center of outer cell
-    test_cases.emplace_back(  17,    4,   20);
-    test_cases.emplace_back(  20,    4,   20);
-    test_cases.emplace_back(  30,    4,   20);
-    test_cases.emplace_back(  31,    4,   20);
-    test_cases.emplace_back(  32,    4,   20);
-    test_cases.emplace_back(  33,    4,   20);  // border of tree
-    test_cases.emplace_back(  34,    4, cell_default_value);
-    test_cases.emplace_back(  35,    4, cell_default_value);
-
-    // =====================================
-    for( const TestPoint& expect : test_cases){
-        const auto& actual_value = tree.interp({expect.x, expect.y});
-
-        std::ostringstream buf;
-        buf << "@@  x=" << expect.x << "  y=" << expect.y << "  v=" << expect.value << endl;
-
-        ASSERT_EQ(actual_value, expect.value) << buf.str();
-    }
-}
-
 
 TEST( QuadTreeTest, SavePNG) {
     Terrain<Tree> terrain;

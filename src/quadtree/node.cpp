@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include <Eigen/Geometry>
+using Eigen::Vector2d;
 
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
@@ -26,43 +27,30 @@ using terrain::geometry::Bounds;
 using terrain::geometry::cell_value_t;
 using terrain::quadtree::Node;
 
-// Node::Node():
-//     Node({{NAN, NAN}, NAN}, 0)
-// {}
+Node::Node(): Node(NAN) {}
 
-// Node::Node(const Eigen::Vector2d& _center, const double _width, const cell_value_t _value):
-//     bounds(_center, _width), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
-// {}
-
-Node::Node(const Bounds& _bounds, const cell_value_t _value):
-    bounds(_bounds), northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
+Node::Node(const cell_value_t _value):
+    northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
 {}
 
-// QuadTreeNode::QuadTreeNode(double minx, double miny, double maxx, double maxy){
-//   if(!(node = quadtree_node_new())) return NULL;
-//   if(!(node->bounds = quadtree_bounds_new())) return NULL;
-//   quadtree_bounds_extend(node->bounds, maxx, maxy);
-//   quadtree_bounds_extend(node->bounds, minx, miny);
-// }
+void Node::draw(std::ostream& sink, const string& prefix, const string& as, const bool show_pointers) const {
 
-bool Node::contains(const Eigen::Vector2d& at) const {
-    return bounds.contains(at);
-}
-
-void Node::draw(std::ostream& sink, const string& prefix, const string& as) const {
     sink << prefix << "[" << as << "]: ";
     if(is_leaf()){
         sink << static_cast<int>(get_value());
     }
     //sink << ' ' << bounds.str();
+    if(show_pointers){
+        sink << "   @:" << this << endl;
+    }
     sink << endl;
     
     if(!is_leaf()){
         auto next_prefix = prefix + "    ";
-        northeast->draw(sink, next_prefix, "NE");
-        northwest->draw(sink, next_prefix, "NW");
-        southeast->draw(sink, next_prefix, "SE");
-        southwest->draw(sink, next_prefix, "SW");
+        northeast->draw(sink, next_prefix, "NE", show_pointers);
+        northwest->draw(sink, next_prefix, "NW", show_pointers);
+        southeast->draw(sink, next_prefix, "SE", show_pointers);
+        southwest->draw(sink, next_prefix, "SW", show_pointers);
     }
 }
 
@@ -75,14 +63,6 @@ void Node::fill(const cell_value_t fill_value){
         southeast->fill(fill_value);
         southwest->fill(fill_value);
     }
-}
-
-const Bounds& Node::get_bounds() const {
-    return bounds;
-}
-
-const Eigen::Vector2d& Node::get_center() const {
-    return bounds.center;
 }
 
 size_t Node::get_count() const {
@@ -140,72 +120,6 @@ cell_value_t Node::get_value() const {
     return this->value;
 }
 
-cell_value_t Node::interpolate_linear(const Eigen::Vector2d& at, const Node& node2) const {
-    if(this == &node2){
-        return this->get_value();
-    }
-    const auto& node1 = *this;
-
-    // distances from query point to each interpolation point
-    const double dist1 = (node1.bounds.center - at).norm();
-    const double dist2 = (node2.bounds.center - at).norm();
-
-    // this is not perfect, but it's a reasonable heuristic
-    // ... in particular, it will return odd values at large distances
-    // ... arguably, this should return a NAN value instead -- for not-applicable
-    const double dist12 = (bounds.center - node2.bounds.center).norm();
-    if(dist12 < dist1){
-        return node2.value;
-    }else if( dist12 < dist2){
-        return node1.value;
-    }
-
-    const double combined_distance = dist1 + dist2;
-    const double normdist1 = 1 - dist1 / combined_distance;
-    const double normdist2 = 1 - dist2 / combined_distance;
-    const double interp_value = (normdist1*node1.value + normdist2*node2.value);
-
-    return round(interp_value);
-}
-
-
-cell_value_t Node::interpolate_bilinear(const Eigen::Vector2d& at, 
-                                        const Node& xn,
-                                        const Node& dn,
-                                        const Node& yn) const 
-{
-    // cout << "    ==>>             @" << at << endl;
-    // cout << "    ==>> this:       " << *this << "    = " << get_value() << endl;
-    // cout << "    ==>> xn:         " << xn << "    = " << xn.get_value() << endl;
-    // cout << "    ==>> dn:         " << dn << "    = " << dn.get_value() << endl;
-    // cout << "    ==>> yn:         " << yn << "    = " << yn.get_value() << endl;
-
-    // test for degenerate cases:
-    if( &xn == &dn ){
-        // top or bottom border
-        return interpolate_linear({at[0], xn[1]}, xn);
-    }else if( &yn  == &dn ){
-        // left or right border
-        return interpolate_linear({yn[0], at[1]}, yn);
-    }
-
-    // calculate full bilinear interpolation:
-    const Eigen::Vector2d upper_point(at[0], xn[1]);
-    const Node upper_node({upper_point, 
-                               2*bounds.half_width},
-                               this->interpolate_linear(upper_point, xn));
-
-    const Eigen::Vector2d lower_point(at[0], yn[1]);
-    const Node lower_node({lower_point, 
-                               2*bounds.half_width},
-                               yn.interpolate_linear(lower_point, dn));
-
-    // cout << "         >>(U): " << upper_node << "    = " << upper_node.get_value() << endl;
-    // cout << "         >>(L): " << lower_node << "    = " << lower_node.get_value() << endl;
-
-    return upper_node.interpolate_linear(at, lower_node);
-}
-
 bool Node::load(const nlohmann::json& doc){
     reset();
     if(doc.is_object()){
@@ -220,22 +134,6 @@ bool Node::load(const nlohmann::json& doc){
         this->set_value(doc.get<double>());
         return true;
     }
-}
-
-bool Node::nearby(const Eigen::Vector2d& p) const {
-    return nearby(p, snap_center_distance);
-}
-
-bool Node::nearby(const Eigen::Vector2d& p, const double threshold) const {
-    return (snap_center_distance > (p - bounds.center).norm());
-}
-
-double Node::operator[](const size_t index){
-    return bounds.center[index];
-}
-
-const double Node::operator[](const size_t index) const {
-    return bounds.center[index];
 }
 
 void Node::prune() {
@@ -265,22 +163,30 @@ void Node::prune() {
     }
 }
 
-Node& Node::search(const Eigen::Vector2d& p) {
+Node& Node::search(const Eigen::Vector2d& p, const geometry::Bounds bounds) {
     if(is_leaf()){
         return *this;
     }
 
+    const Vector2d& center = bounds.center; 
+    const double quarter_width = bounds.half_width/2;
+    const double half_width = bounds.half_width;
+
     if(p[0] > bounds.center[0]){
         if( p[1] > bounds.center[1]){
-            return this->northeast->search(p);
+            Bounds next_bounds(center + Vector2d(quarter_width, quarter_width), half_width);
+            return this->northeast->search(p, next_bounds);
         }else{
-            return this->southeast->search(p);
+            Bounds next_bounds(center + Vector2d(quarter_width, -quarter_width), half_width);
+            return this->southeast->search(p, next_bounds);
         }
     }else{
         if( p[1] > bounds.center[1]){
-            return this->northwest->search(p);
+            Bounds next_bounds(center + Vector2d(-quarter_width, quarter_width), half_width);
+            return this->northwest->search(p, next_bounds);
         }else{
-            return this->southwest->search(p);
+            Bounds next_bounds(center + Vector2d(-quarter_width, -quarter_width), half_width);
+            return this->southwest->search(p, next_bounds);
         }
     }
 }
@@ -297,19 +203,18 @@ void Node::reset(){
 }
 
 void Node::split(){
-    const Eigen::Vector2d& ctr = bounds.center;
-    const double& qw = bounds.half_width/2; ///< quarter-width
+    if(is_leaf()){
+        value = NAN;
 
-    value = NAN;
-
-    this->northeast = make_unique<Node>(Bounds({ctr[0] + qw, ctr[1] + qw}, bounds.half_width), value);
-    this->northwest = make_unique<Node>(Bounds({ctr[0] - qw, ctr[1] + qw}, bounds.half_width), value);
-    this->southeast = make_unique<Node>(Bounds({ctr[0] + qw, ctr[1] - qw}, bounds.half_width), value);
-    this->southwest = make_unique<Node>(Bounds({ctr[0] - qw, ctr[1] - qw}, bounds.half_width), value);
+        this->northeast = make_unique<Node>(value);
+        this->northwest = make_unique<Node>(value);
+        this->southeast = make_unique<Node>(value);
+        this->southwest = make_unique<Node>(value);
+    }
 }
 
-void Node::split(const double precision){
-    if(2 * bounds.half_width <= precision){
+void Node::split(const double precision, const double width){
+    if(precision >= width){
         return;
     }
     
@@ -317,10 +222,12 @@ void Node::split(const double precision){
         split();
     }
 
-    this->northeast->split(precision);
-    this->northwest->split(precision);
-    this->southeast->split(precision);
-    this->southwest->split(precision);
+    const double half_width = width / 2;
+
+    this->northeast->split(precision, half_width);
+    this->northwest->split(precision, half_width);
+    this->southeast->split(precision, half_width);
+    this->southwest->split(precision, half_width);
 }
 
 nlohmann::json Node::to_json() const {

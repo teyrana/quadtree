@@ -73,7 +73,7 @@ public:
      * output stream. 
      *
      */
-    void debug_tree() const;
+    void debug_tree(const bool show_pointer) const;
 
     /**
      * Gets the value of the point at (x, y).  If the point is not close to the center of a node, this function interpolates or extrapolates an appropriate value.

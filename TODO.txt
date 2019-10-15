@@ -1,14 +1,17 @@
 [ ] Write short profiling main
     [ ] (?) adds switch for memory vs speed
 [ ] excise Bounds from each node
-[ ] merge Bounds -><- Layout
-[ ] GridLayout -> snap sizes:
-    to powers of 2 vs. powers of 4
+    [WIP][XP]
+    [ ] GridLayout -> snap sizes:
+        to powers of 2 vs. powers of 4
 
+[ ] merge Bounds -><- Layout
+    [WIP][XP]
 [ ] migrate do gdal for file i/o
     https://gdal.org/
-[ ] attempt std::variant for quadtree::Node
-
+[ ] change Node::split(double,double) to depth-first instead of
+    breadth-first  (better peak memory usage)
+    
 
 See Also:
 ====

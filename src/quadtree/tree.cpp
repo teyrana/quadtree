@@ -32,7 +32,7 @@ Tree::Tree():
 {}
 
 Tree::Tree(const Bounds& _bounds, const double _precision):
-    layout(new Layout(_bounds, _precision)), root(std::make_unique<Node>(_bounds, 0))
+    layout(new Layout(_bounds, _precision)), root(std::make_unique<Node>(0))
 {}
 
 Tree::~Tree(){
@@ -55,13 +55,13 @@ bool Tree::contains(const Eigen::Vector2d& p) const {
     return true;
 }
 
-void Tree::debug_tree() const {
+void Tree::debug_tree(const bool show_pointers=false) const {
     cerr << "====== Quad Tree: ======\n";
     cerr << "##  bounds:     " << get_bounds().str() << endl;
     cerr << "##  height:     " << get_height() << endl;
     cerr << "##  precision:  " << get_precision() << endl;
 
-    root->draw(cerr, "    ", "RT");
+    root->draw(cerr, "    ", "RT", show_pointers);
     cerr << endl;
 }
 
@@ -74,7 +74,6 @@ size_t Tree::get_dimension() const {
 }
 
 size_t Tree::calculate_complete_tree(const size_t height){
-
     // see: https://en.wikipedia.org/wiki/M-ary_tree
     //      # properties of M-ary trees
     //
@@ -104,7 +103,6 @@ double Tree::get_precision() const {
 }
 
 cell_value_t Tree::interp(const Eigen::Vector2d& at) const {
-    const Node& near = root->search(at);
 
     // cout << "@@" << at << "    near: " << near.get_bounds() << " = " << near.get_value() << endl;
 
@@ -113,21 +111,18 @@ cell_value_t Tree::interp(const Eigen::Vector2d& at) const {
         return cell_default_value;
     }
 
-    // if the Eigen::Vector2d is near-to-center if the nearest node:
-    if( near.nearby(at)){
-        return near.get_value();
-    }
+    // const Node& near = root->search(at, get_bounds());
+//     const Eigen::Vector2d& cn = near.get_center();
+//     const double dx = std::copysign(1.0, (at[0] - cn[0])) * 2 * near.get_bounds().half_width;
+//     const double dy = std::copysign(1.0, (at[1] - cn[1])) * 2 * near.get_bounds().half_width;
+//     const Node& n2 = root->search({cn[0] + dx, cn[1]     }, get_bounds());
+//     const Node& n3 = root->search({cn[0] + dx, cn[1] + dy}, get_bounds());
+//     const Node& n4 = root->search({cn[0]     , cn[1] + dy}, get_bounds());
 
-    const Eigen::Vector2d& cn = near.get_center();
-    const double dx = std::copysign(1.0, (at[0] - cn[0])) * 2 * near.get_bounds().half_width;
-    const double dy = std::copysign(1.0, (at[1] - cn[1])) * 2 * near.get_bounds().half_width;
-    const Node& n2 = root->search({cn[0] + dx, cn[1]     });
-    const Node& n3 = root->search({cn[0] + dx, cn[1] + dy});
-    const Node& n4 = root->search({cn[0]     , cn[1] + dy});
+//     const auto& interp = near.interpolate_bilinear(at, n2, n3, n4);
+    // return interp;
 
-    const auto& interp = near.interpolate_bilinear(at, n2, n3, n4);
-
-    return interp;
+    return NAN;
 }
 
 void Tree::fill(const cell_value_t fill_value){
@@ -162,22 +157,22 @@ void Tree::reset(const Bounds new_bounds, const double new_precision){
 
     layout.reset(new geometry::Layout(new_bounds, new_precision));
 
-    root = std::make_unique<Node>(layout->bounds, 0);
-    root->split(layout->precision);
+    root = std::make_unique<Node>(0);
+    root->split(layout->precision, layout->bounds.width());
 }
 
 cell_value_t& Tree::search(const Eigen::Vector2d& p) {
     if(contains(p)){
-        return root->search(p).get_value();
+        return root->search(p, get_bounds() ).get_value();
     }
-
+    
     scratch = cell_error_value;
     return scratch;
 }
 
 cell_value_t Tree::search(const Eigen::Vector2d& p) const {
     if(contains(p)){
-        return root->search(p).get_value();
+        return root->search(p, get_bounds()).get_value();
     }
     return cell_default_value;
 }
