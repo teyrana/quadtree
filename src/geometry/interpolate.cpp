@@ -18,73 +18,74 @@ using std::unique_ptr;
 
 using Eigen::Vector2d;
 
-using terrain::geometry::cell_value_t;
-using terrain::geometry::Sample;
 
+namespace terrain::geometry {
 
-
-cell_value_t interpolate_linear(const Eigen::Vector2d& at, const Node& node2) const {
-    if(this == &node2){
-        return this->get_value();
+cell_value_t interpolate_linear(const Eigen::Vector2d& to, const Sample& s1, const Sample& s2){
+    if(s1.at.isApprox(s2.at)){
+        return s1.is;
     }
-    const auto& node1 = *this;
 
     // distances from query point to each interpolation point
-    const double dist1 = (node1.bounds.center - at).norm();
-    const double dist2 = (node2.bounds.center - at).norm();
+    const double dist1 = (s1.at - to).norm();
+    const double dist2 = (s2.at - to).norm();
 
-    // this is not perfect, but it's a reasonable heuristic
+    // If the point is farther than from a point than the distance between the two interpolation points, 
+    //     return the value at one of the end-points.
+    // This is not perfect, but it's a reasonable heuristic.
     // ... in particular, it will return odd values at large distances
     // ... arguably, this should return a NAN value instead -- for not-applicable
-    const double dist12 = (bounds.center - node2.bounds.center).norm();
+    const double dist12 = (s1.at - s2.at).norm();
     if(dist12 < dist1){
-        return node2.value;
+        return s2.is;
     }else if( dist12 < dist2){
-        return node1.value;
+        return s1.is;
     }
 
     const double combined_distance = dist1 + dist2;
     const double normdist1 = 1 - dist1 / combined_distance;
     const double normdist2 = 1 - dist2 / combined_distance;
-    const double interp_value = (normdist1*node1.value + normdist2*node2.value);
+    const double interp_value = (normdist1*s1.is + normdist2*s2.is);
 
     return round(interp_value);
 }
 
-
-cell_value_t interpolate_bilinear(const Eigen::Vector2d& at, 
-                                        const Node& xn,
-                                        const Node& dn,
-                                        const Node& yn) const 
+cell_value_t interpolate_bilinear(  const Eigen::Vector2d& to, 
+                                    const Sample& ne,
+                                    const Sample& nw,
+                                    const Sample& sw,
+                                    const Sample& se)
 {
-    // cout << "    ==>>             @" << at << endl;
-    // cout << "    ==>> this:       " << *this << "    = " << get_value() << endl;
-    // cout << "    ==>> xn:         " << xn << "    = " << xn.get_value() << endl;
-    // cout << "    ==>> dn:         " << dn << "    = " << dn.get_value() << endl;
-    // cout << "    ==>> yn:         " << yn << "    = " << yn.get_value() << endl;
+    // cerr << "    ==>>  to:    @" << to[0] << ", " << to[1] << endl;
+    // cerr << "        - NE:     " << ne.at[0] << ", " << ne.at[1] << " = " << (int)ne.is << endl;
+    // cerr << "        - NW:     " << nw.at[0] << ", " << nw.at[1] << " = " << (int)nw.is << endl;
+    // cerr << "        - SW:     " << sw.at[0] << ", " << sw.at[1] << " = " << (int)sw.is << endl;
+    // cerr << "        - SE:     " << se.at[0] << ", " << se.at[1] << " = " << (int)se.is << endl;
 
-    // test for degenerate cases:
-    if( &xn == &dn ){
-        // top or bottom border
-        return interpolate_linear({at[0], xn[1]}, xn);
-    }else if( &yn  == &dn ){
-        // left or right border
-        return interpolate_linear({yn[0], at[1]}, yn);
-    }
+    // not necessary ?
+    // // test for degenerate cases:
+    // if( &sx == &sd ){
+    //     // top or bottom border
+    //     return interpolate_linear(to, {to[0], xn.at[1]}, xn);
+    // }else if( &sy  == &sd ){
+    //     // left or right border
+    //     return interpolate_linear({yn[0], to[1]}, yn);
+    // }
 
     // calculate full bilinear interpolation:
-    const Eigen::Vector2d upper_point(at[0], xn[1]);
-    const Node upper_node({upper_point, 
-                               2*bounds.half_width},
-                               this->interpolate_linear(upper_point, xn));
+    const Eigen::Vector2d upper_point = {to[0], (nw.at[1] + ne.at[1])/2};
+    const Sample upper_sample = { upper_point,
+                                  interpolate_linear(upper_point, nw, ne)};
 
-    const Eigen::Vector2d lower_point(at[0], yn[1]);
-    const Node lower_node({lower_point, 
-                               2*bounds.half_width},
-                               yn.interpolate_linear(lower_point, dn));
 
-    // cout << "         >>(U): " << upper_node << "    = " << upper_node.get_value() << endl;
-    // cout << "         >>(L): " << lower_node << "    = " << lower_node.get_value() << endl;
+    const Eigen::Vector2d lower_point = {to[0], (sw.at[1] + se.at[1])/2};
+    const Sample lower_sample = { lower_point,
+                                interpolate_linear(lower_point, sw, se) };
 
-    return upper_node.interpolate_linear(at, lower_node);
+    // cerr << "        ::Upper:    " << upper_point[0] << ", " << upper_point[1] << " = " << (int)upper_sample.is << endl;
+    // cerr << "        ::Lower:    " << lower_point[0] << ", " << lower_point[1] << " = " << (int)lower_sample.is << endl;
+
+    return interpolate_linear(to, upper_sample, lower_sample);
 }
+
+} // namespace terrain::geometry

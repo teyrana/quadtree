@@ -4,14 +4,10 @@
 #ifndef _INTERPOLATE_HPP_
 #define _INTERPOLATE_HPP_
 
-#include <cstdint>
-#include <iostream>
-#include <string>
+#include <Eigen/Geometry>
 
-#include "cell_value.hpp"
-#include "geometry/interpolate.hpp"
-
-using terrain::cell_value_t;
+#include "geometry/cell_value.hpp"
+#include "geometry/sample.hpp"
 
 namespace terrain::geometry {
 
@@ -22,22 +18,22 @@ namespace terrain::geometry {
  * @param {quadtree::Node} n2 the other node to interpolate
  * @return {cell_value_t} The resultant value
  */
-cell_value_t interpolate_linear(const Eigen::Vector2d& at, const Node& n2) const;
+cell_value_t interpolate_linear( const Eigen::Vector2d& at, const Sample& s1, const Sample& s2);
 
 /**
  * Performs bilinear-interpolation: 
  * http://en.wikipedia.org/wiki/Bilinear_Interpolation
  * 
- * @param {Point} the x,y coordinates to interpolate at.
- * @param {quadtree::Node} xn x-neighbor node to interpolate with
- * @param {quadtree::Node} dn diagonal-neighbor node to interpolate with
- * @param {quadtree::Node} yn y-neighbor node to interpolate with
- * @return {cell_value_t} The resultant value
+ * Warning: Undefined behavior, if interpolation happens outside of the rectangle defined by the 4 samples
+ * 
+ * @param the x,y coordinates to interpolate at.
+ * @param ne quadrant sample point
+ * @param nw quadrant sample point
+ * @param sw quadrant sample point
+ * @param se quadrant sample point
+ * @return resultant value
  */
-cell_value_t interpolate_bilinear(const Eigen::Vector2d& at, 
-                                    const Node& xn,
-                                    const Node& dn,
-                                    const Node& yn) const;
+cell_value_t interpolate_bilinear( const Eigen::Vector2d& at, const Sample& ne, const Sample& nw, const Sample& sw, const Sample& se);
 
 } // namespace terrain::geometry
 
