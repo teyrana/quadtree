@@ -11,10 +11,10 @@
 
 #include <nlohmann/json/json_fwd.hpp>
 
-#include "cell_value.hpp"
+#include "geometry/cell_value.hpp"
 #include "geometry/bounds.hpp"
 
-using terrain::cell_value_t;
+using terrain::geometry::cell_value_t;
 
 namespace terrain::quadtree {
 

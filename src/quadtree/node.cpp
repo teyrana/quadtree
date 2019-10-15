@@ -11,7 +11,7 @@
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
 
-#include "cell_value.hpp"
+#include "geometry/cell_value.hpp"
 #include "quadtree/node.hpp"
 
 using std::addressof;
@@ -22,7 +22,8 @@ using std::ostream;
 using std::string;
 using std::unique_ptr;
 
-using namespace terrain::geometry;
+using terrain::geometry::Bounds;
+using terrain::geometry::cell_value_t;
 using terrain::quadtree::Node;
 
 // Node::Node():

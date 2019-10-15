@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-namespace terrain {
+namespace terrain::geometry {
 
 // // sized to fit in:  4 x sizeof(void*) on this platform, 
 // // compact POD.
@@ -27,6 +27,6 @@ typedef uint8_t cell_value_t;
 constexpr cell_value_t cell_error_value   = 0xAB;
 constexpr cell_value_t cell_default_value = 0x99;
     
-} // namespace terrain
+} // namespace terrain::geometry
 
 #endif // _CELL_VALUE_HPP_
