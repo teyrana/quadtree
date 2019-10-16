@@ -136,6 +136,10 @@ bool Node::load(const nlohmann::json& doc){
     }
 }
 
+bool Node::operator==(const Node& other) const {
+    return static_cast<const void*>(this) == static_cast<const void*>(&other);
+}
+
 void Node::prune() {
     if( is_leaf() ){
         return;

@@ -47,10 +47,7 @@ public:
 
     bool load(const nlohmann::json& doc);
 
-    constexpr static double snap_center_distance = 0.5;
-
-    // bool nearby(const Eigen::Vector2d& p) const;
-    // bool nearby(const Eigen::Vector2d& p, const double threshold) const;
+    bool operator==(const Node& other) const;
 
     ///! \brief coalesce groups of leaf nodes with identice values (for some value of "identical")
     void prune();
@@ -83,8 +80,6 @@ private:
 
     cell_value_t value;
 
-private:
-    friend std::ostream& operator<<(std::ostream& s, const Node& n);
 private:
     friend class NodeTest_ConstructDefault_Test;
     friend class NodeTest_ConstructByCenterAndSize_Test;
