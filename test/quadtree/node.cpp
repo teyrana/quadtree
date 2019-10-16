@@ -37,6 +37,13 @@ TEST(NodeTest, SetGet) {
     ASSERT_EQ(n.get_value(), 24);
 }
 
+TEST(NodeTest, OperatorEquals){
+    Node n1(NAN);
+    Node n2(NAN);
+    ASSERT_TRUE( n1 == n1 );
+    ASSERT_FALSE( n1 == n2 );
+}
+
 TEST(NodeTest, SplitNodeImperative){
     Node n(NAN);
 
