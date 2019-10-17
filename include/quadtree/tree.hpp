@@ -19,6 +19,7 @@
 #include "geometry/bounds.hpp"
 #include "geometry/cell_value.hpp"
 #include "geometry/layout.hpp"
+#include "geometry/sample.hpp"
 
 #include "quadtree/node.hpp"
 
@@ -69,6 +70,17 @@ public:
     bool contains(const Eigen::Vector2d& p) const;
 
     /**
+     * retrieve the value of the requested point `p`. 
+     *
+     * @param {double} x The x-coordinate.
+     * @param {double} y The y-coordinate.
+     * @param {cell_value_t} opt_default The default value to return if the node doesn't
+     *                 exist.
+     * @return {cell_value_t} The value of the node, if available; or the default value.
+     */
+    cell_value_t classify(const Eigen::Vector2d& p) const;
+
+    /**
      * Draws a simple debug representation of this tree to the given
      * output stream. 
      *
@@ -87,6 +99,8 @@ public:
     ///! \brief sets all leaf nodes to the given value
     ///! \param fill_value - value to write
     void fill(const cell_value_t fill_value);
+
+    cell_value_t operator()(const double x, const double y);
 
     /**
      * Get the overall bounds of this tree
@@ -130,20 +144,25 @@ public:
     ///! \param bounds - new bounds to describe
     ///! \param precision - describe the bounds to at least this precision
     void reset(const Bounds bounds, const double new_precision);
-    
-    /**
-     * Gets the value of the point at (x, y) or null if the point is empty.
-     *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @param {cell_value_t} opt_default The default value to return if the node doesn't
-     *                 exist.
-     * @return {cell_value_t} The value of the node, if available; or the default value.
-     */
-    cell_value_t search(const Eigen::Vector2d& p) const;
 
-    cell_value_t& search(const Eigen::Vector2d& p);
+    ///! \brief Classify what value the requested point `p` has.
+    ///!
+    ///! This method is designed for use with an interpolation algorithm.
+    ///! 
+    ///! \param location to sample near
+    ///! @return the point-value-pair _actually_ contained in the tree.
+    Sample sample(const Eigen::Vector2d& p);
+    
     size_t size() const;
+
+    ///! \brief store a value in the tree, at point `p`
+    ///! 
+    ///! This is the primary method to populate a useable tree.
+    ///!
+    ///! \param p - the x,y coordinates to write to
+    ///! \param new_value - the value to write at point 'p'
+    ///! \return success - fails if out-of-bounds.
+    bool store(const Eigen::Vector2d& p, const cell_value_t new_value);
 
     ///! \brief generates a json structure, describing the tree itself
     nlohmann::json to_json_tree() const;

@@ -107,15 +107,20 @@ public:
     void reset();
     void reset(const Bounds bounds, const double new_precision);
 
+    ///! \brief Retrieve the value at an (x, y) Eigen::Vector2d
+    ///!
+    ///! \param Eigen::Vector2d - the x,y coordinates to search at
+    ///! \return the cell value
+    cell_value_t classify(const Eigen::Vector2d& p) const;
+
+    ///! \brief the _total_ number of cells in this grid === (width * height)
+    size_t size() const;
+
     ///! \brief Access the value at an (x, y) Eigen::Vector2d
     ///!
     ///! \param Eigen::Vector2d - the x,y coordinates to search at:
     ///! \return reference to the cell value
-    cell_value_t& search(const Eigen::Vector2d& p);
-    cell_value_t  search(const Eigen::Vector2d& p) const;
-
-    ///! \brief the _total_ number of cells in this grid === (width * height)
-    size_t size() const;
+    bool store(const Eigen::Vector2d& p, const cell_value_t new_value);
 
     bool to_png(const std::string filename) const;
 

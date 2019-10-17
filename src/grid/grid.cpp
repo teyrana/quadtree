@@ -36,10 +36,6 @@ using terrain::geometry::Layout;
 
 using terrain::grid::Grid;
 
-// a read-only value, used to absorb out-of-bounds writes
-static cell_value_t scratch;
-
-
 Grid::Grid(): 
     Grid(Layout::default_layout.bounds, Layout::default_precision)
 {
@@ -60,6 +56,16 @@ const Vector2d Grid::anchor() const {
 
 bool Grid::contains(const Vector2d& p) const {
     return layout->bounds.contains(p);
+}
+
+cell_value_t Grid::classify(const Vector2d& p) const {
+    if(contains(p)){
+        const size_t x_index = (p[0] - layout->bounds.center[0] + layout->bounds.half_width)/layout->precision;
+        const size_t y_index = (p[1] - layout->bounds.center[1] + layout->bounds.half_width)/layout->precision;
+        return get_cell(x_index, y_index);
+    }
+
+    return geometry::cell_default_value;
 }
 
 void Grid::fill(const cell_value_t value){
@@ -100,29 +106,19 @@ void Grid::reset(const Bounds new_bounds, const double new_precision){
     reset();
 }
 
-cell_value_t& Grid::search(const Vector2d& p) {
-    if(contains(p)){
-        const size_t x_index = (p[0] - layout->bounds.center[0] + layout->bounds.half_width)/layout->precision;
-        const size_t y_index = (p[1] - layout->bounds.center[1] + layout->bounds.half_width)/layout->precision;
-        return get_cell(x_index, y_index);
-    }
-
-    scratch = geometry::cell_error_value;
-    return scratch;
-}
-
-cell_value_t Grid::search(const Vector2d& p) const {
-    if(contains(p)){
-        const size_t x_index = (p[0] - layout->bounds.center[0] + layout->bounds.half_width)/layout->precision;
-        const size_t y_index = (p[1] - layout->bounds.center[1] + layout->bounds.half_width)/layout->precision;
-        return get_cell(x_index, y_index);
-    }
-
-    return geometry::cell_default_value;
-}
-
 size_t Grid::size() const {
     return storage.size();
+}
+
+bool Grid::store(const Vector2d& p, const cell_value_t new_value) {
+    if(contains(p)){
+        const size_t x_index = (p[0] - layout->bounds.center[0] + layout->bounds.half_width)/layout->precision;
+        const size_t y_index = (p[1] - layout->bounds.center[1] + layout->bounds.half_width)/layout->precision;
+        get_cell(x_index, y_index) = new_value;
+        return true;
+    }
+
+    return false;
 }
 
 double Grid::width() const {

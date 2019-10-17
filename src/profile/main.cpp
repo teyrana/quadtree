@@ -71,7 +71,7 @@ void profile_terrain(T& terrain, const size_t iteration_limit){
         const double y = static_cast<double>(generator()) / generator.max() * max + min;
         //std::cout << "random value: x: " << x << ", " << y << '\n';
 
-        dump = terrain.search({x,y});
+        dump = terrain.classify({x,y});
         //std::cout << "             =>: " << static_cast<int>(value) << '\n';
     }
     auto stop = std::chrono::high_resolution_clock::now(); 
