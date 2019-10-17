@@ -24,9 +24,6 @@ using geometry::Bounds;
 using quadtree::Tree;
 using quadtree::Node;
 
-
-static cell_value_t scratch;
-
 Tree::Tree(): 
     Tree(Layout::default_layout.bounds, layout->default_precision)
 {}
@@ -53,6 +50,14 @@ bool Tree::contains(const Eigen::Vector2d& p) const {
     }
 
     return true;
+}
+
+cell_value_t Tree::classify(const Eigen::Vector2d& p) const {
+    if(contains(p)){
+        return root->search(p, get_bounds()).get_value();
+    }
+
+    return cell_default_value;
 }
 
 void Tree::debug_tree(const bool show_pointers=false) const {
@@ -161,20 +166,19 @@ void Tree::reset(const Bounds new_bounds, const double new_precision){
     root->split(layout->precision, layout->bounds.width());
 }
 
-cell_value_t& Tree::search(const Eigen::Vector2d& p) {
-    if(contains(p)){
-        return root->search(p, get_bounds() ).get_value();
-    }
-    
-    scratch = cell_error_value;
-    return scratch;
+Sample Tree::sample(const Eigen::Vector2d& p) {
+    // if(contains(p)){
+    //     ?
+    // }
+    return {};
 }
 
-cell_value_t Tree::search(const Eigen::Vector2d& p) const {
+bool Tree::store(const Eigen::Vector2d& p, const cell_value_t new_value) {
     if(contains(p)){
-        return root->search(p, get_bounds()).get_value();
+        root->search(p, get_bounds() ).get_value() = new_value;
+        return true;
     }
-    return cell_default_value;
+    return false;
 }
 
 size_t Tree::size() const {

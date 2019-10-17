@@ -50,6 +50,11 @@ Terrain<T>::Terrain(T& _ref):
 {}
 
 template<typename T>
+cell_value_t Terrain<T>::classify(const Vector2d& p) const {
+    return impl.classify(p);
+}
+
+template<typename T>
 void Terrain<T>::debug() const {
     const Bounds& bounds = impl.get_bounds();
     const double precision = impl.get_precision();
@@ -139,7 +144,7 @@ void inline Terrain<T>::fill(const Polygon& poly, const cell_value_t fill_value)
             const double start_x = bounds.snapx(crossings[crossing_index]);
             const double end_x = bounds.snapx(crossings[crossing_index+1]);
             for( double x = start_x; x < end_x; x += precision){
-                impl.search({x,y}) = fill_value;
+                impl.store({x,y}, fill_value);
             }
         }
     }
@@ -273,7 +278,7 @@ bool Terrain<T>::load_grid(nlohmann::json grid ){
         for(auto& cell : row){
             double x = bounds.get_x_min() + (column_index + 0.5) * precision;
 
-            impl.search({x,y}) = cell.get<int>();
+            impl.store({x,y}, cell.get<int>());
 
             ++column_index;
         }
@@ -404,7 +409,7 @@ bool Terrain<T>::png(FILE* dest){
         double y = bounds.get_y_min() + (yj + 0.5)* pixel_increment;
         for( int xi = 0; xi < image_width; ++xi){
             double x = bounds.get_x_min() + (xi + 0.5)* pixel_increment;
-            buffer[yj*image_width + xi] = impl.search({x,y});
+            buffer[yj*image_width + xi] = impl.classify({x,y});
         }
         row_pointers[image_width - 1 - yj] = &(buffer[yj*image_width]);
     }
@@ -432,11 +437,6 @@ bool Terrain<T>::png(FILE* dest){
     cerr << "libpng is disabled!! Could not save."
     return false;
 #endif //#ifdef ENABLE_LIBPNG
-}
-
-template<typename T>
-cell_value_t Terrain<T>::search(const Vector2d& p) const {
-    return impl.search(p);
 }
 
 template<typename T>
@@ -470,7 +470,7 @@ nlohmann::json Terrain<T>::to_json_grid() const {
     
         for(size_t xi=0; xi < dim; ++xi){
             const double x = (xi * precision + prec_2 + bounds.center[0] - bounds.half_width);
-            grid[yi][xi] = impl.search({x,y});
+            grid[yi][xi] = impl.classify({x,y});
             // cerr << "        @[" << xi << ", " << yi << "] => (" << x << ", " << y << ") => " << static_cast<int>(value) << endl;
         }
     }

@@ -39,6 +39,8 @@ public:
 
     Terrain(T& _ref);
 
+    geometry::cell_value_t classify(const Eigen::Vector2d& p) const;
+
     ///! \brief writes debug information to std err
     void debug() const;
 
@@ -77,8 +79,6 @@ public:
     
     ///! \brief writes a json document to given output stream
     bool json(std::ostream& document);
-
-    geometry::cell_value_t search(const Eigen::Vector2d& p) const;
 
     std::string summary() const;
 

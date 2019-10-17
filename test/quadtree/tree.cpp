@@ -247,35 +247,35 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     }
 
     const Tree& frozen = tree;
-    EXPECT_EQ( frozen.search({  16,   16}),   0);
-    EXPECT_EQ( frozen.search({  48,   48}),   0);
-    EXPECT_EQ( frozen.search({  72,   72}),  88);
-    EXPECT_EQ( frozen.search({ 104,  104}),  88);
+    EXPECT_EQ( frozen.classify({  16,   16}),   0);
+    EXPECT_EQ( frozen.classify({  48,   48}),   0);
+    EXPECT_EQ( frozen.classify({  72,   72}),  88);
+    EXPECT_EQ( frozen.classify({ 104,  104}),  88);
 
     // [-127, -95, -63, -31, 1, 33, 65, 97, 129]
-    EXPECT_EQ( frozen.search({ -70,  130}), 153);
-    EXPECT_EQ( frozen.search({ -70,  129}),  88);
-    EXPECT_EQ( frozen.search({ -70,   97}),  88);
-    EXPECT_EQ( frozen.search({ -70,   65}),  88);
-    EXPECT_EQ( frozen.search({ -70,   33}),   0);
-    EXPECT_EQ( frozen.search({ -70,    1}),   0);
-    EXPECT_EQ( frozen.search({ -70,  -31}),   0);
-    EXPECT_EQ( frozen.search({ -70,  -63}),  88);
-    EXPECT_EQ( frozen.search({ -70,  -95}),  88);
-    EXPECT_EQ( frozen.search({ -70, -127}),  88);
-    EXPECT_EQ( frozen.search({ -70, -130}), 153);
+    EXPECT_EQ( frozen.classify({ -70,  130}), 153);
+    EXPECT_EQ( frozen.classify({ -70,  129}),  88);
+    EXPECT_EQ( frozen.classify({ -70,   97}),  88);
+    EXPECT_EQ( frozen.classify({ -70,   65}),  88);
+    EXPECT_EQ( frozen.classify({ -70,   33}),   0);
+    EXPECT_EQ( frozen.classify({ -70,    1}),   0);
+    EXPECT_EQ( frozen.classify({ -70,  -31}),   0);
+    EXPECT_EQ( frozen.classify({ -70,  -63}),  88);
+    EXPECT_EQ( frozen.classify({ -70,  -95}),  88);
+    EXPECT_EQ( frozen.classify({ -70, -127}),  88);
+    EXPECT_EQ( frozen.classify({ -70, -130}), 153);
 
-    EXPECT_EQ( frozen.search({  15,  130}), 153);
-    EXPECT_EQ( frozen.search({  15,  129}),   0);
-    EXPECT_EQ( frozen.search({  15,   97}),   0);
-    EXPECT_EQ( frozen.search({  15,   65}),   0);
-    EXPECT_EQ( frozen.search({  15,   33}),   0);
-    EXPECT_EQ( frozen.search({  15,    1}),  88);
-    EXPECT_EQ( frozen.search({  15,  -31}),  88);
-    EXPECT_EQ( frozen.search({  15,  -63}),  88);
-    EXPECT_EQ( frozen.search({  15,  -95}),  88);
-    EXPECT_EQ( frozen.search({  15, -127}),  88);
-    EXPECT_EQ( frozen.search({  15, -130}), 153);
+    EXPECT_EQ( frozen.classify({  15,  130}), 153);
+    EXPECT_EQ( frozen.classify({  15,  129}),   0);
+    EXPECT_EQ( frozen.classify({  15,   97}),   0);
+    EXPECT_EQ( frozen.classify({  15,   65}),   0);
+    EXPECT_EQ( frozen.classify({  15,   33}),   0);
+    EXPECT_EQ( frozen.classify({  15,    1}),  88);
+    EXPECT_EQ( frozen.classify({  15,  -31}),  88);
+    EXPECT_EQ( frozen.classify({  15,  -63}),  88);
+    EXPECT_EQ( frozen.classify({  15,  -95}),  88);
+    EXPECT_EQ( frozen.classify({  15, -127}),  88);
+    EXPECT_EQ( frozen.classify({  15, -130}), 153);
 }
 
 TEST(QuadTreeTest, LoadPolygonFromJSON) {
@@ -308,39 +308,39 @@ TEST(QuadTreeTest, LoadPolygonFromJSON) {
 
     ASSERT_TRUE( expected_bounds == terrain.get_bounds());
 
-    ASSERT_EQ( tree.search({ 4.5, 15.5}), 0x99);
-    ASSERT_EQ( tree.search({ 4.5, 14.5}), 0x99);
-    ASSERT_EQ( tree.search({ 4.5, 13.5}), 0x99);
-    ASSERT_EQ( tree.search({ 4.5, 12.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5, 11.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5, 10.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5,  9.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5,  8.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5,  7.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5,  6.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5,  5.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5,  4.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5,  3.5}),    0);
-    ASSERT_EQ( tree.search({ 4.5,  2.5}), 0x99);
-    ASSERT_EQ( tree.search({ 4.5,  1.5}), 0x99);
-    ASSERT_EQ( tree.search({ 4.5,  0.5}), 0x99);
+    ASSERT_EQ( tree.classify({ 4.5, 15.5}), 0x99);
+    ASSERT_EQ( tree.classify({ 4.5, 14.5}), 0x99);
+    ASSERT_EQ( tree.classify({ 4.5, 13.5}), 0x99);
+    ASSERT_EQ( tree.classify({ 4.5, 12.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5, 11.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5, 10.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5,  9.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5,  8.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5,  7.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5,  6.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5,  5.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5,  4.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5,  3.5}),    0);
+    ASSERT_EQ( tree.classify({ 4.5,  2.5}), 0x99);
+    ASSERT_EQ( tree.classify({ 4.5,  1.5}), 0x99);
+    ASSERT_EQ( tree.classify({ 4.5,  0.5}), 0x99);
 
-    ASSERT_EQ( tree.search({  0.5, 5.5}), 0x99);
-    ASSERT_EQ( tree.search({  1.5, 5.5}), 0x99);
-    ASSERT_EQ( tree.search({  2.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({  3.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({  4.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({  5.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({  6.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({  7.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({  8.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({  9.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({ 10.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({ 11.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({ 12.5, 5.5}),    0);
-    ASSERT_EQ( tree.search({ 13.5, 5.5}), 0x99);
-    ASSERT_EQ( tree.search({ 14.5, 5.5}), 0x99);
-    ASSERT_EQ( tree.search({ 15.5, 5.5}), 0x99);
+    ASSERT_EQ( tree.classify({  0.5, 5.5}), 0x99);
+    ASSERT_EQ( tree.classify({  1.5, 5.5}), 0x99);
+    ASSERT_EQ( tree.classify({  2.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({  3.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({  4.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({  5.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({  6.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({  7.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({  8.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({  9.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({ 10.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({ 11.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({ 12.5, 5.5}),    0);
+    ASSERT_EQ( tree.classify({ 13.5, 5.5}), 0x99);
+    ASSERT_EQ( tree.classify({ 14.5, 5.5}), 0x99);
+    ASSERT_EQ( tree.classify({ 15.5, 5.5}), 0x99);
 }
 
 TEST( QuadTreeTest, WriteLoadCycle){
@@ -429,7 +429,7 @@ TEST( QuadTreeTest, SearchExplicitTree) {
     cell_value_t true_value = 14;
 
     // .... Out Of Bounds:
-    ASSERT_EQ(tree.search({110, 110}), cell_error_value);
+    ASSERT_EQ(tree.classify({110, 110}), cell_default_value);
 
     // Set Quadrant I:
     tree.root->get_northeast()->set_value(true_value);
@@ -445,14 +445,95 @@ TEST( QuadTreeTest, SearchExplicitTree) {
 
     // functional tests:
     // .... Quadrant I:
-    EXPECT_EQ(tree.search({ 25,  25}), true_value);
+    EXPECT_EQ(tree.classify({ 25,  25}), true_value);
     // .... Quadrant II:
-    EXPECT_EQ(tree.search({-25,  25}), false_value);
+    EXPECT_EQ(tree.classify({-25,  25}), false_value);
     // .... Quadrant III:
-    EXPECT_EQ(tree.search({-25, -25}), true_value);
+    EXPECT_EQ(tree.classify({-25, -25}), true_value);
     // .... Quadrant IV:
-    EXPECT_EQ(tree.search({ 25, -25}), false_value);
+    EXPECT_EQ(tree.classify({ 25, -25}), false_value);
 }
+
+// TEST( QuadTreeTest, SampleTree ){
+
+//     // Set Quadrant I:
+//     const Sample ne = {{ 10, 10}, 100};
+//     // Set Quadrdant II:
+//     const Sample nw = {{  0, 10},  50};
+//     // Set Quadrant III:
+//     const Sample sw = {{  0,  0},   0};
+//     // Set Quadrant IV:
+//     const Sample se = {{ 10,  0},  50};
+
+//     // main sequence:
+//     // ASSERT_EQ( interpolate_bilinear( { 26,   4}, ne, nw, se, sw), cell_default_value);  // Start out of bounds
+//     // ASSERT_EQ( interpolate_bilinear( { 25.1, 4}, ne, nw, se, sw), cell_default_value);
+
+//     ASSERT_EQ( interpolate_bilinear( { 10,   1}, ne, nw, sw, se),   55);  // border of tree
+//     ASSERT_EQ( interpolate_bilinear( {  9.9, 1}, ne, nw, sw, se),   55);
+//     ASSERT_EQ( interpolate_bilinear( {  9,   1}, ne, nw, sw, se),   50);
+//     ASSERT_EQ( interpolate_bilinear( {  8,   1}, ne, nw, sw, se),   45);
+//     ASSERT_EQ( interpolate_bilinear( {  7,   1}, ne, nw, sw, se),   40);
+//     ASSERT_EQ( interpolate_bilinear( {  6,   1}, ne, nw, sw, se),   35);
+// ????...
+// }
+
+// TEST( QuadTreeTest, InterpolateTree){
+//     Tree tree({{1,1}, 64}, 1.0);
+//     Terrain terrain(tree);
+//     tree.root->split();
+
+//     // Set Quadrant I:
+//     tree.root->get_northeast()->set_value(0);
+//     // Set Quadrdant II:
+//     tree.root->get_northwest()->set_value(50);
+//     // Set Quadrant III:
+//     tree.root->get_southwest()->set_value(100);
+//     // Set Quadrant IV:
+//     tree.root->get_southeast()->set_value(50);
+
+
+//     vector<TestPoint> test_cases;
+//     test_cases.emplace_back( -35,    4, cell_default_value);  // Start out of bounds
+//     test_cases.emplace_back( -33,    4, cell_default_value);
+//     test_cases.emplace_back( -32,    4, cell_default_value);
+//     test_cases.emplace_back( -31,    4,   70);  // border of tree
+//     test_cases.emplace_back( -30.9,  4,   70);
+//     test_cases.emplace_back( -30,    4,   70);
+//     test_cases.emplace_back( -20,    4,   70);
+//     test_cases.emplace_back( -17,    4,   70);
+//     test_cases.emplace_back( -16,    4,   70);
+//     test_cases.emplace_back( -15.1,  4,   70);
+//     test_cases.emplace_back( -15.0,  4,   70);  // breakpoint - center of outer cell
+//     test_cases.emplace_back( -14.9,  4,   70);
+//     test_cases.emplace_back( -10,    4,   62);
+//     test_cases.emplace_back( - 5,    4,   54);
+//     test_cases.emplace_back(   0,    4,   47);
+//     test_cases.emplace_back(   1,    4,   45);  // midpoint
+//     test_cases.emplace_back(   2,    4,   43);
+//     test_cases.emplace_back(  10,    4,   31);
+//     test_cases.emplace_back(  14,    4,   25);
+//     test_cases.emplace_back(  15,    4,   23);
+//     test_cases.emplace_back(  16,    4,   22);  // breakpoint - center of outer cell
+//     test_cases.emplace_back(  17,    4,   20);
+//     test_cases.emplace_back(  20,    4,   20);
+//     test_cases.emplace_back(  30,    4,   20);
+//     test_cases.emplace_back(  31,    4,   20);
+//     test_cases.emplace_back(  32,    4,   20);
+//     test_cases.emplace_back(  33,    4,   20);  // border of tree
+//     test_cases.emplace_back(  34,    4, cell_default_value);
+//     test_cases.emplace_back(  35,    4, cell_default_value);
+
+//     // =====================================
+//     for( const TestPoint& expect : test_cases){
+//         const auto& actual_value = tree.interp({expect.x, expect.y});
+
+//         std::ostringstream buf;
+//         buf << "@@  x=" << expect.x << "  y=" << expect.y << "  v=" << expect.value << endl;
+
+//         ASSERT_EQ(actual_value, expect.value) << buf.str();
+//     }
+// }
 
 TEST( QuadTreeTest, SavePNG) {
     Terrain<Tree> terrain;
