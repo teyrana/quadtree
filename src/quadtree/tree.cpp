@@ -13,6 +13,7 @@ using std::cerr;
 using std::endl;
 
 #include <Eigen/Geometry>
+using Eigen::Vector2d;
 
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
@@ -23,6 +24,41 @@ using namespace terrain;
 using geometry::Bounds;
 using quadtree::Tree;
 using quadtree::Node;
+
+// main method for descending through a tree and returning the appropriate location / node / value 
+// note: weakly optimized; intended to be a hot path.
+void descend( const Vector2d& target, double& x_c, double& y_c, const double start_width, Node* & current_node){
+    double current_width = start_width;
+    double next_width = start_width*0.5;
+
+    while( ! current_node->is_leaf() )
+    {
+        current_width = next_width;
+        next_width *= 0.5;
+
+        if(target[0] > x_c){
+            if( target[1] > y_c){
+                x_c += next_width;
+                y_c += next_width;
+                current_node = current_node->get_northeast();
+            }else{
+                x_c += next_width;
+                y_c -= next_width;
+                current_node = current_node->get_southeast();
+            }
+        }else{
+            if( target[1] > y_c){
+                x_c -= next_width;
+                y_c += next_width;
+                current_node = current_node->get_northwest();
+            }else{
+                x_c -= next_width;
+                y_c -= next_width;
+                current_node = current_node->get_southwest();
+            }
+        }
+    }
+}
 
 Tree::Tree(): 
     Tree(Layout::default_layout.bounds, layout->default_precision)
@@ -53,44 +89,11 @@ bool Tree::contains(const Eigen::Vector2d& p) const {
 }
 
 cell_value_t Tree::classify(const Eigen::Vector2d& p) const {
-    if(contains(p)){
-        double cur_x = layout->bounds.center.x();
-        double cur_y = layout->bounds.center.y();
-        double current_width = layout->bounds.width();
-        Node* current_node = root.get();
-        double next_width = layout->bounds.half_width;
+    Eigen::Vector2d located( layout->bounds.center );
+    auto current_node = root.get();
+    descend( p, located[0], located[1], layout->bounds.width(), current_node );
 
-        while( ! current_node->is_leaf() )
-        {
-            current_width = next_width;
-            next_width *= 0.5;
-
-            if(p.x() > cur_x){
-                if( p.y() > cur_y){
-                    cur_x += next_width;
-                    cur_y += next_width;
-                    current_node = current_node->get_northeast();
-                }else{
-                    cur_x += next_width;
-                    cur_y -= next_width;
-                    current_node = current_node->get_southeast();
-                }
-            }else{
-                if( p.y() > cur_y){
-                    cur_x -= next_width;
-                    cur_y += next_width;
-                    current_node = current_node->get_northwest();
-                }else{
-                    cur_x -= next_width;
-                    cur_y -= next_width;
-                    current_node = current_node->get_southwest();
-                }
-            }
-        }
-        return current_node->get_value();
-    }
-
-    return cell_error_value;
+    return current_node->get_value();
 }
 
 void Tree::debug_tree(const bool show_pointers) const {
@@ -200,83 +203,22 @@ void Tree::reset(const Bounds new_bounds, const double new_precision){
 }
 
 Sample Tree::sample(const Eigen::Vector2d& p) const {
-    if(contains(p)){
-        Eigen::Vector2d current_location = layout->bounds.center;
-        double current_width = layout->bounds.width();
-        Node* current_node = root.get();
-        double next_width = layout->bounds.half_width;
+    Vector2d located( layout->bounds.center );
+    auto current_node = root.get();
 
-        while( ! current_node->is_leaf() )
-        {
-            current_width = next_width;
-            next_width /= 2;
+    descend( p, located[0], located[1], layout->bounds.width(), current_node );
 
-            if(p.x() > current_location.x()){
-                if( p.y() > current_location.y()){
-                    current_location += Eigen::Vector2d( next_width, next_width );
-                    current_node = current_node->get_northeast();
-                }else{
-                    current_location += Eigen::Vector2d( next_width, -next_width );
-                    current_node = current_node->get_southeast();
-                }
-            }else{
-                if( p.y() > current_location.y()){
-                    current_location += Eigen::Vector2d( -next_width,  next_width);
-                    current_node = current_node->get_northwest();
-                }else{
-                    current_location += Eigen::Vector2d( -next_width, -next_width);
-                    current_node = current_node->get_southwest();
-                }
-            }
-        }
-        return {current_location, current_node->get_value()};
-    }
-
-    return {{NAN, NAN}, cell_error_value};
+    return {located, current_node->get_value()};
 }
 
-bool Tree::store(const Eigen::Vector2d& p, const cell_value_t new_value) {
-    if(contains(p)){
-    //     root->search(p, get_bounds() ).get_value() = new_value;
-    
-        double cur_x = layout->bounds.center.x();
-        double cur_y = layout->bounds.center.y();
-        double current_width = layout->bounds.width();
-        Node* current_node = root.get();
-        double next_width = layout->bounds.half_width;
+bool Tree::store(const Vector2d& p, const cell_value_t new_value) {
+    Vector2d located( layout->bounds.center );
+    auto current_node = root.get();
 
-        while( ! current_node->is_leaf() )
-        {
-            current_width = next_width;
-            next_width *= 0.5;
+    descend( p, located[0], located[1], layout->bounds.width(), current_node );
 
-            if(p.x() > cur_x){
-                if( p.y() > cur_y){
-                    cur_x += next_width;
-                    cur_y += next_width;
-                    current_node = current_node->get_northeast();
-                }else{
-                    cur_x += next_width;
-                    cur_y -= next_width;
-                    current_node = current_node->get_southeast();
-                }
-            }else{
-                if( p.y() > cur_y){
-                    cur_x -= next_width;
-                    cur_y += next_width;
-                    current_node = current_node->get_northwest();
-                }else{
-                    cur_x -= next_width;
-                    cur_y -= next_width;
-                    current_node = current_node->get_southwest();
-                }
-            }
-        }
-        current_node->set_value(new_value);
-        return true;
-    }
-
-    return false;
+    current_node->set_value(new_value);
+    return true;
 }
 
 size_t Tree::size() const {

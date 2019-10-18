@@ -253,7 +253,7 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     EXPECT_EQ( frozen.classify({ 104,  104}),  88);
 
     // [-127, -95, -63, -31, 1, 33, 65, 97, 129]
-    EXPECT_EQ( frozen.classify({ -70,  130}), cell_error_value);
+    EXPECT_EQ( frozen.classify({ -70,  130}),  88);
     EXPECT_EQ( frozen.classify({ -70,  129}),  88);
     EXPECT_EQ( frozen.classify({ -70,   97}),  88);
     EXPECT_EQ( frozen.classify({ -70,   65}),  88);
@@ -263,9 +263,9 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     EXPECT_EQ( frozen.classify({ -70,  -63}),  88);
     EXPECT_EQ( frozen.classify({ -70,  -95}),  88);
     EXPECT_EQ( frozen.classify({ -70, -127}),  88);
-    EXPECT_EQ( frozen.classify({ -70, -130}), cell_error_value);
+    EXPECT_EQ( frozen.classify({ -70, -130}),  88);
 
-    EXPECT_EQ( frozen.classify({  15,  130}), cell_error_value);
+    EXPECT_EQ( frozen.classify({  15,  130}),   0);
     EXPECT_EQ( frozen.classify({  15,  129}),   0);
     EXPECT_EQ( frozen.classify({  15,   97}),   0);
     EXPECT_EQ( frozen.classify({  15,   65}),   0);
@@ -275,7 +275,7 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     EXPECT_EQ( frozen.classify({  15,  -63}),  88);
     EXPECT_EQ( frozen.classify({  15,  -95}),  88);
     EXPECT_EQ( frozen.classify({  15, -127}),  88);
-    EXPECT_EQ( frozen.classify({  15, -130}), cell_error_value);
+    EXPECT_EQ( frozen.classify({  15, -130}),  88);
 }
 
 TEST(QuadTreeTest, LoadPolygonFromJSON) {
@@ -428,9 +428,6 @@ TEST( QuadTreeTest, SearchExplicitTree) {
     cell_value_t false_value = 5;
     cell_value_t true_value = 14;
 
-    // .... Out Of Bounds:
-    ASSERT_EQ(tree.classify({110, 110}), cell_error_value);
-
     // Set Quadrant I:
     tree.root->get_northeast()->set_value(true_value);
     // Set Quadrdant II:
@@ -442,6 +439,9 @@ TEST( QuadTreeTest, SearchExplicitTree) {
 
     // // DEBUG
     // tree.debug();
+
+    // .... Out Of Bounds: snaps to nearest node...
+    ASSERT_EQ(tree.classify({110, 110}), true_value);
 
     // functional tests:
     // .... Quadrant I:
@@ -471,10 +471,10 @@ TEST( QuadTreeTest, SampleTree ){
     // tree.debug_tree(true);
     // terrain.debug();
 
-    // Out-Of-Bounds call
+    // Out-Of-Bounds call -- returns nearest node.
     const Sample s0 = tree.sample({  5,  5});
-    ASSERT_TRUE( s0.at.hasNaN() );
-    ASSERT_EQ( s0.is, cell_error_value);
+    ASSERT_TRUE( Vector2d(3.5, 3.5) == s0.at );
+    ASSERT_EQ( s0.is, 4);
 
     const Sample s1 = tree.sample({  0,  0});
     ASSERT_TRUE( Vector2d(0.5, 0.5) == s1.at );
