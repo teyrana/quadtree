@@ -54,10 +54,43 @@ bool Tree::contains(const Eigen::Vector2d& p) const {
 
 cell_value_t Tree::classify(const Eigen::Vector2d& p) const {
     if(contains(p)){
-        return root->search(p, get_bounds()).get_value();
+        double cur_x = layout->bounds.center.x();
+        double cur_y = layout->bounds.center.y();
+        double current_width = layout->bounds.width();
+        Node* current_node = root.get();
+        double next_width = layout->bounds.half_width;
+
+        while( ! current_node->is_leaf() )
+        {
+            current_width = next_width;
+            next_width *= 0.5;
+
+            if(p.x() > cur_x){
+                if( p.y() > cur_y){
+                    cur_x += next_width;
+                    cur_y += next_width;
+                    current_node = current_node->get_northeast();
+                }else{
+                    cur_x += next_width;
+                    cur_y -= next_width;
+                    current_node = current_node->get_southeast();
+                }
+            }else{
+                if( p.y() > cur_y){
+                    cur_x -= next_width;
+                    cur_y += next_width;
+                    current_node = current_node->get_northwest();
+                }else{
+                    cur_x -= next_width;
+                    cur_y -= next_width;
+                    current_node = current_node->get_southwest();
+                }
+            }
+        }
+        return current_node->get_value();
     }
 
-    return cell_default_value;
+    return cell_error_value;
 }
 
 void Tree::debug_tree(const bool show_pointers) const {
