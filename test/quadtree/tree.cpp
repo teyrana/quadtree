@@ -253,7 +253,7 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     EXPECT_EQ( frozen.classify({ 104,  104}),  88);
 
     // [-127, -95, -63, -31, 1, 33, 65, 97, 129]
-    EXPECT_EQ( frozen.classify({ -70,  130}), 153);
+    EXPECT_EQ( frozen.classify({ -70,  130}), cell_error_value);
     EXPECT_EQ( frozen.classify({ -70,  129}),  88);
     EXPECT_EQ( frozen.classify({ -70,   97}),  88);
     EXPECT_EQ( frozen.classify({ -70,   65}),  88);
@@ -263,9 +263,9 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     EXPECT_EQ( frozen.classify({ -70,  -63}),  88);
     EXPECT_EQ( frozen.classify({ -70,  -95}),  88);
     EXPECT_EQ( frozen.classify({ -70, -127}),  88);
-    EXPECT_EQ( frozen.classify({ -70, -130}), 153);
+    EXPECT_EQ( frozen.classify({ -70, -130}), cell_error_value);
 
-    EXPECT_EQ( frozen.classify({  15,  130}), 153);
+    EXPECT_EQ( frozen.classify({  15,  130}), cell_error_value);
     EXPECT_EQ( frozen.classify({  15,  129}),   0);
     EXPECT_EQ( frozen.classify({  15,   97}),   0);
     EXPECT_EQ( frozen.classify({  15,   65}),   0);
@@ -275,7 +275,7 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     EXPECT_EQ( frozen.classify({  15,  -63}),  88);
     EXPECT_EQ( frozen.classify({  15,  -95}),  88);
     EXPECT_EQ( frozen.classify({  15, -127}),  88);
-    EXPECT_EQ( frozen.classify({  15, -130}), 153);
+    EXPECT_EQ( frozen.classify({  15, -130}), cell_error_value);
 }
 
 TEST(QuadTreeTest, LoadPolygonFromJSON) {
@@ -429,7 +429,7 @@ TEST( QuadTreeTest, SearchExplicitTree) {
     cell_value_t true_value = 14;
 
     // .... Out Of Bounds:
-    ASSERT_EQ(tree.classify({110, 110}), cell_default_value);
+    ASSERT_EQ(tree.classify({110, 110}), cell_error_value);
 
     // Set Quadrant I:
     tree.root->get_northeast()->set_value(true_value);

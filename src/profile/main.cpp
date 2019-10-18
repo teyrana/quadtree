@@ -91,7 +91,6 @@ int main(int argc, char* argv[]){
     configure_parser_options(command_line_options);
     auto result = command_line_options.parse(argc, argv);
 
-    
     // configure input:
     if( 0 == result.count("input")){
         cerr << "  ## using default input.\n";
