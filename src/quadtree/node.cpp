@@ -167,34 +167,6 @@ void Node::prune() {
     }
 }
 
-Node& Node::search(const Eigen::Vector2d& p, const geometry::Bounds bounds) {
-    if(is_leaf()){
-        return *this;
-    }
-
-    const Vector2d& center = bounds.center; 
-    const double quarter_width = bounds.half_width/2;
-    const double half_width = bounds.half_width;
-
-    if(p[0] > bounds.center[0]){
-        if( p[1] > bounds.center[1]){
-            Bounds next_bounds(center + Vector2d(quarter_width, quarter_width), half_width);
-            return this->northeast->search(p, next_bounds);
-        }else{
-            Bounds next_bounds(center + Vector2d(quarter_width, -quarter_width), half_width);
-            return this->southeast->search(p, next_bounds);
-        }
-    }else{
-        if( p[1] > bounds.center[1]){
-            Bounds next_bounds(center + Vector2d(-quarter_width, quarter_width), half_width);
-            return this->northwest->search(p, next_bounds);
-        }else{
-            Bounds next_bounds(center + Vector2d(-quarter_width, -quarter_width), half_width);
-            return this->southwest->search(p, next_bounds);
-        }
-    }
-}
-
 void Node::set_value(cell_value_t new_value){
     this->value = new_value;
 }

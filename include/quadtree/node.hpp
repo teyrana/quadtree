@@ -27,8 +27,6 @@ public:
 
     ~Node();
 
-    bool contains(const Eigen::Vector2d& at) const;
-
     void draw(std::ostream& sink, const std::string& prefix, const std::string& as, const bool show_pointers) const;
 
     void fill(const cell_value_t fill_value);
@@ -51,8 +49,6 @@ public:
 
     ///! \brief coalesce groups of leaf nodes with identice values (for some value of "identical")
     void prune();
-
-    Node& search(const Eigen::Vector2d& at, const geometry::Bounds bounds);
 
     void split();
 
