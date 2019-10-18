@@ -135,14 +135,29 @@ In the real world, lookup speed still depends on cache misses.
 OTOH, the memory savings are certainly clear.  A 30x improvement in memory usage is nothing to ignore !
 
 
-# Step 2: Maintainability:  Upgrade Eigen
+# Step 2: Maintainability: Convert to Eigen Library
 
+Load times INCREASED.  :(
 
-load times *increased* went up to:
+|                    |    *Grid*         |   *Tree*      |
+|:-------------------|:------------------|:--------------|
+| Dimension:         |    4096           |   4096        |
+|Loading Factor:     |       1.          |      0.00073  |
+|Load time (sec)     |       6.6         |     42.6      |
+|Memory (Mb):        |      16.7         |      1.0      |
+|100k searches (ms): |      
 
-Grid: 6.6 s 
-tree: 42.6 s 
-
-@@ dimension = 4096
 
 (probbaly because node size went up?) ==> this explains the tree, but not the grid.
+
+# Phase 3:
+Reduce Node Size:
+
+
+|                    |    *Grid*         |   *Tree*      |
+|:-------------------|:------------------|:--------------|
+| Dimension:         |    4096           |   4096        |
+|Loading Factor:     |       1.          |      0.00036  |
+|Load time (sec)     |       6.8         |     91.01     |
+|Memory (Mb):        |      16.7         |      1.3      |
+|100k searches (ms): |      95.7 ms      |    264        |

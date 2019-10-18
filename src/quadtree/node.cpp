@@ -49,8 +49,8 @@ void Node::draw(std::ostream& sink, const string& prefix, const string& as, cons
         auto next_prefix = prefix + "    ";
         northeast->draw(sink, next_prefix, "NE", show_pointers);
         northwest->draw(sink, next_prefix, "NW", show_pointers);
-        southeast->draw(sink, next_prefix, "SE", show_pointers);
         southwest->draw(sink, next_prefix, "SW", show_pointers);
+        southeast->draw(sink, next_prefix, "SE", show_pointers);
     }
 }
 

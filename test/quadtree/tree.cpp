@@ -454,29 +454,44 @@ TEST( QuadTreeTest, SearchExplicitTree) {
     EXPECT_EQ(tree.classify({ 25, -25}), false_value);
 }
 
-// TEST( QuadTreeTest, SampleTree ){
+TEST( QuadTreeTest, SampleTree ){
+    quadtree::Tree tree;
+    Terrain terrain(tree);
 
-//     // Set Quadrant I:
-//     const Sample ne = {{ 10, 10}, 100};
-//     // Set Quadrdant II:
-//     const Sample nw = {{  0, 10},  50};
-//     // Set Quadrant III:
-//     const Sample sw = {{  0,  0},   0};
-//     // Set Quadrant IV:
-//     const Sample se = {{ 10,  0},  50};
+    std::istringstream stream(R"(
+        {"bounds": {"x": 2, "y": 2, "width": 4},
+         "grid":[[  1,  2,  3,  4],
+                 [  5,  6,  7,  8],
+                 [  9, 10, 11, 12],
+                 [ 13, 14, 15, 16]]} )");
 
-//     // main sequence:
-//     // ASSERT_EQ( interpolate_bilinear( { 26,   4}, ne, nw, se, sw), cell_default_value);  // Start out of bounds
-//     // ASSERT_EQ( interpolate_bilinear( { 25.1, 4}, ne, nw, se, sw), cell_default_value);
+    EXPECT_TRUE(terrain.load(stream));
 
-//     ASSERT_EQ( interpolate_bilinear( { 10,   1}, ne, nw, sw, se),   55);  // border of tree
-//     ASSERT_EQ( interpolate_bilinear( {  9.9, 1}, ne, nw, sw, se),   55);
-//     ASSERT_EQ( interpolate_bilinear( {  9,   1}, ne, nw, sw, se),   50);
-//     ASSERT_EQ( interpolate_bilinear( {  8,   1}, ne, nw, sw, se),   45);
-//     ASSERT_EQ( interpolate_bilinear( {  7,   1}, ne, nw, sw, se),   40);
-//     ASSERT_EQ( interpolate_bilinear( {  6,   1}, ne, nw, sw, se),   35);
-// ????...
-// }
+    // // DEBUG
+    // tree.debug_tree(true);
+    // terrain.debug();
+
+    // Out-Of-Bounds call
+    const Sample s0 = tree.sample({  5,  5});
+    ASSERT_TRUE( s0.at.hasNaN() );
+    ASSERT_EQ( s0.is, cell_error_value);
+
+    const Sample s1 = tree.sample({  0,  0});
+    ASSERT_TRUE( Vector2d(0.5, 0.5) == s1.at );
+    ASSERT_EQ( s1.is,  13);
+
+    const Sample s2 = tree.sample({  0.9,  0.9});
+    ASSERT_TRUE( Vector2d(0.5, 0.5) == s2.at );
+    ASSERT_EQ( s2.is,  13);
+
+    const Sample s3 = tree.sample({  2.4,  2.7});
+    ASSERT_TRUE( Vector2d(2.5, 2.5) == s3.at );
+    ASSERT_EQ( s3.is,   7);
+
+    const Sample s4 = tree.sample({  1.7,  3.3});
+    ASSERT_TRUE( Vector2d(1.5, 3.5) == s4.at );
+    ASSERT_EQ( s4.is,   2);
+}
 
 // TEST( QuadTreeTest, InterpolateTree){
 //     Tree tree({{1,1}, 64}, 1.0);

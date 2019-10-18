@@ -39,13 +39,13 @@ Tree::~Tree(){
 bool Tree::contains(const Eigen::Vector2d& p) const {
     const auto& bounds = get_bounds();
 
-    const double cx = bounds.center[0];
-    const double cy = bounds.center[1];
+    const double cx = bounds.center.x();
+    const double cy = bounds.center.y();
     const double dim = bounds.half_width;
 
-    if((p[0] < (cx - dim)) || ((cx + dim) < p[0])){
+    if((p.x() < (cx - dim)) || ((cx + dim) < p.x())){
         return false;
-    }else if((p[1] < (cy - dim)) || ((cy + dim) < p[1])){
+    }else if((p.y() < (cy - dim)) || ((cy + dim) < p.y())){
         return false;
     }
 
@@ -60,7 +60,7 @@ cell_value_t Tree::classify(const Eigen::Vector2d& p) const {
     return cell_default_value;
 }
 
-void Tree::debug_tree(const bool show_pointers=false) const {
+void Tree::debug_tree(const bool show_pointers) const {
     cerr << "====== Quad Tree: ======\n";
     cerr << "##  bounds:     " << get_bounds().str() << endl;
     cerr << "##  height:     " << get_height() << endl;
@@ -118,11 +118,11 @@ cell_value_t Tree::interp(const Eigen::Vector2d& at) const {
 
     // const Node& near = root->search(at, get_bounds());
 //     const Eigen::Vector2d& cn = near.get_center();
-//     const double dx = std::copysign(1.0, (at[0] - cn[0])) * 2 * near.get_bounds().half_width;
-//     const double dy = std::copysign(1.0, (at[1] - cn[1])) * 2 * near.get_bounds().half_width;
-//     const Node& n2 = root->search({cn[0] + dx, cn[1]     }, get_bounds());
-//     const Node& n3 = root->search({cn[0] + dx, cn[1] + dy}, get_bounds());
-//     const Node& n4 = root->search({cn[0]     , cn[1] + dy}, get_bounds());
+//     const double dx = std::copysign(1.0, (at.x() - cn.x())) * 2 * near.get_bounds().half_width;
+//     const double dy = std::copysign(1.0, (at.y() - cn.y())) * 2 * near.get_bounds().half_width;
+//     const Node& n2 = root->search({cn.x() + dx, cn.y()     }, get_bounds());
+//     const Node& n3 = root->search({cn.x() + dx, cn.y() + dy}, get_bounds());
+//     const Node& n4 = root->search({cn.x()     , cn.y() + dy}, get_bounds());
 
 //     const auto& interp = near.interpolate_bilinear(at, n2, n3, n4);
     // return interp;
@@ -166,11 +166,40 @@ void Tree::reset(const Bounds new_bounds, const double new_precision){
     root->split(layout->precision, layout->bounds.width());
 }
 
-Sample Tree::sample(const Eigen::Vector2d& p) {
-    // if(contains(p)){
-    //     ?
-    // }
-    return {};
+Sample Tree::sample(const Eigen::Vector2d& p) const {
+    if(contains(p)){
+        Eigen::Vector2d current_location = layout->bounds.center;
+        double current_width = layout->bounds.width();
+        Node* current_node = root.get();
+        double next_width = layout->bounds.half_width;
+
+        while( ! current_node->is_leaf() )
+        {
+            current_width = next_width;
+            next_width /= 2;
+
+            if(p.x() > current_location.x()){
+                if( p.y() > current_location.y()){
+                    current_location += Eigen::Vector2d( next_width, next_width );
+                    current_node = current_node->get_northeast();
+                }else{
+                    current_location += Eigen::Vector2d( next_width, -next_width );
+                    current_node = current_node->get_southeast();
+                }
+            }else{
+                if( p.y() > current_location.y()){
+                    current_location += Eigen::Vector2d( -next_width,  next_width);
+                    current_node = current_node->get_northwest();
+                }else{
+                    current_location += Eigen::Vector2d( -next_width, -next_width);
+                    current_node = current_node->get_southwest();
+                }
+            }
+        }
+        return {current_location, current_node->get_value()};
+    }
+
+    return {{NAN, NAN}, cell_error_value};
 }
 
 bool Tree::store(const Eigen::Vector2d& p, const cell_value_t new_value) {
