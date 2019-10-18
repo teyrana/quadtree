@@ -25,8 +25,7 @@
 namespace terrain {
 
 ///! \brief generates a sample json document, used for creating debug terrain
-nlohmann::json generate_diamond(const double boundary_width,
-                                const double diamond_width,
+nlohmann::json generate_diamond(const double width,
                                 const double desired_precision);
 
 template<typename T>

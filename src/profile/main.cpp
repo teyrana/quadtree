@@ -27,13 +27,10 @@ using terrain::grid::Grid;
 using terrain::quadtree::Tree;
 using terrain::Terrain;
 
-constexpr double boundary_width = 4096.;   // overall boundary
-constexpr double diamond_width =  2048.;
+constexpr double boundary_width = 4096.;
 constexpr double desired_precision = 1.0;
 // =====
-const json source = terrain::generate_diamond(  boundary_width,
-                                                diamond_width,
-                                                desired_precision);
+const json source = terrain::generate_diamond(  boundary_width, desired_precision);
 
 constexpr size_t test_seed = 55;
 static std::mt19937 generator;
@@ -124,6 +121,9 @@ int main(int argc, char* argv[]){
     }else if( 0 < result.count("tree")){
         use_grid = false;
         cerr << "  ## Using tree.\n";
+    }else{
+        use_grid = false;
+        cerr << "  ## default to tree.\n";
     }
 
     bool write_output = false;

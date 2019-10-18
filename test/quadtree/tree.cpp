@@ -283,17 +283,10 @@ TEST(QuadTreeTest, LoadPolygonFromJSON) {
     Terrain terrain(tree);
 
     constexpr double boundary_width = 16.;   // overall boundary
-    constexpr double diamond_width = 8.;
     constexpr double desired_precision = 1.0;
     // =====
-    const Vector2d center(boundary_width/2, boundary_width/2);
-    const Bounds expected_bounds(center, boundary_width);
-    json source = { {"bounds", {{"x", center[0]}, {"y", center[1]}, {"width", boundary_width}}},
-                    {"precision", desired_precision},
-                    {"allow", {{{center[0] + diamond_width, center[1]},
-                                {center[0]                , center[1] + diamond_width},
-                                {center[0] - diamond_width, center[1]},
-                                {center[0]                , center[1] - diamond_width}}}}};
+    json source = generate_diamond( boundary_width, desired_precision);
+
     std::istringstream stream(source.dump());
 
     // // DEBUG
@@ -306,6 +299,7 @@ TEST(QuadTreeTest, LoadPolygonFromJSON) {
 
     EXPECT_DOUBLE_EQ( terrain.get_precision(), desired_precision);
 
+    const Bounds expected_bounds({boundary_width/2, boundary_width/2}, boundary_width);
     ASSERT_TRUE( expected_bounds == terrain.get_bounds());
 
     ASSERT_EQ( tree.classify({ 4.5, 15.5}), 0x99);
@@ -553,7 +547,6 @@ TEST( QuadTreeTest, SampleTree ){
 TEST( QuadTreeTest, SavePNG) {
     Terrain<Tree> terrain;
     const json source = generate_diamond(  16.,   // boundary_width
-                                            8.,    // diamond_width,
                                             0.4);  // desired_precision);
 
     std::istringstream stream(source.dump());

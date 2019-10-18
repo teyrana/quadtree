@@ -163,11 +163,9 @@ TEST(GridTest, LoadPolygonFromJSON) {
     Terrain terrain(g);
 
     constexpr double boundary_width = 16.;   // overall boundary
-    constexpr double diamond_width = 6.;
     constexpr double desired_precision = 1.0;
     // =====
     const json source = generate_diamond( boundary_width,
-                                          diamond_width,
                                           desired_precision);
 
     std::istringstream stream(source.dump());
@@ -187,23 +185,23 @@ TEST(GridTest, LoadPolygonFromJSON) {
     ASSERT_EQ( g.get_cell(4,15), 0x99);
     ASSERT_EQ( g.get_cell(4,14), 0x99);
     ASSERT_EQ( g.get_cell(4,13), 0x99);
-    ASSERT_EQ( g.get_cell(4,12), 0x99);
-    ASSERT_EQ( g.get_cell(4,11), 0x99);
+    ASSERT_EQ( g.get_cell(4,12),    0);
+    ASSERT_EQ( g.get_cell(4,11),    0);
     ASSERT_EQ( g.get_cell(4, 9),    0);
     ASSERT_EQ( g.get_cell(4, 8),    0);
     ASSERT_EQ( g.get_cell(4, 7),    0);
     ASSERT_EQ( g.get_cell(4, 6),    0);
     ASSERT_EQ( g.get_cell(4, 5),    0);
-    ASSERT_EQ( g.get_cell(4, 4), 0x99);
-    ASSERT_EQ( g.get_cell(4, 3), 0x99);
+    ASSERT_EQ( g.get_cell(4, 4),    0);
+    ASSERT_EQ( g.get_cell(4, 3),    0);
     ASSERT_EQ( g.get_cell(4, 2), 0x99);
     ASSERT_EQ( g.get_cell(4, 1), 0x99);
     ASSERT_EQ( g.get_cell(4, 0), 0x99);
 
     ASSERT_EQ( g.get_cell( 0, 5), 0x99);
     ASSERT_EQ( g.get_cell( 1, 5), 0x99);
-    ASSERT_EQ( g.get_cell( 2, 5), 0x99);
-    ASSERT_EQ( g.get_cell( 3, 5), 0x99);
+    ASSERT_EQ( g.get_cell( 2, 5),    0);
+    ASSERT_EQ( g.get_cell( 3, 5),    0);
     ASSERT_EQ( g.get_cell( 4, 5),    0);
     ASSERT_EQ( g.get_cell( 5, 5),    0);
     ASSERT_EQ( g.get_cell( 6, 5),    0);
@@ -211,8 +209,8 @@ TEST(GridTest, LoadPolygonFromJSON) {
     ASSERT_EQ( g.get_cell( 8, 5),    0);
     ASSERT_EQ( g.get_cell( 9, 5),    0);
     ASSERT_EQ( g.get_cell(10, 5),    0);
-    ASSERT_EQ( g.get_cell(11, 5), 0x99);
-    ASSERT_EQ( g.get_cell(12, 5), 0x99);
+    ASSERT_EQ( g.get_cell(11, 5),    0);
+    ASSERT_EQ( g.get_cell(12, 5),    0);
     ASSERT_EQ( g.get_cell(13, 5), 0x99);
     ASSERT_EQ( g.get_cell(14, 5), 0x99);
     ASSERT_EQ( g.get_cell(15, 5), 0x99);
@@ -221,7 +219,6 @@ TEST(GridTest, LoadPolygonFromJSON) {
 TEST(GridTest, SavePNG) {
     Terrain<Grid> terrain;
     const json source = generate_diamond(  16.,   // boundary_width
-                                            8.,    // diamond_width,
                                             1.0);  // desired_precision);
 
     std::istringstream stream(source.dump());
