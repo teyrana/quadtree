@@ -85,7 +85,7 @@ public:
      * output stream. 
      *
      */
-    void debug_tree(const bool show_pointer) const;
+    void debug_tree(const bool show_pointer=false) const;
 
     /**
      * Gets the value of the point at (x, y).  If the point is not close to the center of a node, this function interpolates or extrapolates an appropriate value.
@@ -151,7 +151,7 @@ public:
     ///! 
     ///! \param location to sample near
     ///! @return the point-value-pair _actually_ contained in the tree.
-    Sample sample(const Eigen::Vector2d& p);
+    Sample sample(const Eigen::Vector2d& p) const;
     
     size_t size() const;
 

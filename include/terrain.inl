@@ -82,7 +82,7 @@ void Terrain<T>::debug() const {
         // print left header:
         fprintf(stderr, "     %5.1f | ", y);
         for(double x = (bounds.get_x_min() + precision/2); x < bounds.get_x_max(); x += precision){
-            auto value = impl.search({x,y});
+            auto value = impl.classify({x,y});
             if( 0 < value ){
                 fprintf(stderr, "   %2X,", static_cast<int>(value) );
             }else{

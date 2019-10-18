@@ -18,10 +18,9 @@ using terrain::geometry::cell_value_t;
 
 namespace terrain::quadtree {
 
-enum NodeType { EMPTY, LEAF, BRANCH };
-enum NodeQuadrant {NW, NE, SW, SE};
 
 class Node {
+    enum Quadrant {NW, NE, SW, SE};
 public:
     Node();
     Node(const cell_value_t value);
@@ -37,6 +36,7 @@ public:
     size_t get_count() const;
     size_t get_height() const;
 
+    Node* get(Node::Quadrant quad) const;
     Node* get_northeast() const;
     Node* get_northwest() const;
     Node* get_southeast() const;
