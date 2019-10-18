@@ -237,9 +237,45 @@ Sample Tree::sample(const Eigen::Vector2d& p) const {
 
 bool Tree::store(const Eigen::Vector2d& p, const cell_value_t new_value) {
     if(contains(p)){
-        root->search(p, get_bounds() ).get_value() = new_value;
+    //     root->search(p, get_bounds() ).get_value() = new_value;
+    
+        double cur_x = layout->bounds.center.x();
+        double cur_y = layout->bounds.center.y();
+        double current_width = layout->bounds.width();
+        Node* current_node = root.get();
+        double next_width = layout->bounds.half_width;
+
+        while( ! current_node->is_leaf() )
+        {
+            current_width = next_width;
+            next_width *= 0.5;
+
+            if(p.x() > cur_x){
+                if( p.y() > cur_y){
+                    cur_x += next_width;
+                    cur_y += next_width;
+                    current_node = current_node->get_northeast();
+                }else{
+                    cur_x += next_width;
+                    cur_y -= next_width;
+                    current_node = current_node->get_southeast();
+                }
+            }else{
+                if( p.y() > cur_y){
+                    cur_x -= next_width;
+                    cur_y += next_width;
+                    current_node = current_node->get_northwest();
+                }else{
+                    cur_x -= next_width;
+                    cur_y -= next_width;
+                    current_node = current_node->get_southwest();
+                }
+            }
+        }
+        current_node->set_value(new_value);
         return true;
     }
+
     return false;
 }
 
