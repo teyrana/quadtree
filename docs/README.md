@@ -149,12 +149,13 @@ Load times INCREASED.  :(
 (probbaly because node size went up?) ==> this explains the tree, but not the grid.
 
 # Phase 3:
+
 Reduce Node Size:
 
 |                    |    *Grid*     |   *Tree*      |
 |:-------------------|:--------------|:--------------|
 | Dimension:         |    4096       |   4096        |
 |Loading Factor:     |       1.      |      0.000366 |
-|Load time (sec)     |       6.8     |     74.01     |
+|Load time (sec)     |       6.8     |     22.01     |
 |Memory (Mb):        |      16.7     |      1.31     |
 |100k searches (ms): |      89.9     |    106        |
