@@ -17,12 +17,10 @@ using std::cerr;
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
 
-#include "geometry/bounds.hpp"
 #include "grid/grid.hpp"
 #include "quadtree/tree.hpp"
 #include "terrain.hpp"
 
-using terrain::geometry::Bounds;
 using terrain::grid::Grid;
 using terrain::quadtree::Tree;
 using terrain::Terrain;
@@ -52,8 +50,8 @@ void configure_parser_options(cxxopts::Options& opts){
 
 template <typename T>
 void profile_terrain(T& terrain, const size_t iteration_limit){
-    const double max = terrain.get_bounds().get_x_max();
-    const double min = terrain.get_bounds().get_x_min();
+    const double max = terrain.get_layout().get_x_max();
+    const double min = terrain.get_layout().get_x_min();
 
     generator.seed(test_seed);
 
@@ -145,9 +143,9 @@ int main(int argc, char* argv[]){
     
     bool load_success;
     if(use_grid){
-        load_success = grid.load(*document_stream);
+        load_success = grid.load_from_json_stream(*document_stream);
     }else{
-        load_success = tree.load(*document_stream);
+        load_success = tree.load_from_json_stream(*document_stream);
     }
     if(!load_success){
         cerr << "!!!! error while loading into the tree!!!!\n";
@@ -171,9 +169,9 @@ int main(int argc, char* argv[]){
     if(write_output){
         cerr << "##>> writing output...\n";
         if(use_grid){
-            grid.png(output_path);
+            grid.to_png(output_path);
         }else{
-            tree.png(output_path);
+            tree.to_png(output_path);
         }
     }
 

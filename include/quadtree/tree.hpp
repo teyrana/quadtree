@@ -16,7 +16,6 @@
 
 #include <nlohmann/json/json_fwd.hpp>
 
-#include "geometry/bounds.hpp"
 #include "geometry/cell_value.hpp"
 #include "geometry/layout.hpp"
 #include "geometry/sample.hpp"
@@ -51,7 +50,7 @@ public:
      * @param x, y coordinates of tree's center point.
      * @param tree width.  Tree is square. (i.e. height === width)
      */
-    Tree(const Bounds& _bounds, const double _precision);
+    Tree(const Layout& _layout);
 
     /**
      *  Releases all memory associated with this quad tree.
@@ -102,24 +101,17 @@ public:
 
     cell_value_t operator()(const double x, const double y);
 
-    /**
-     * Get the overall bounds of this tree
-     *
-     * @return Bounds object describing the tree's overall bounds.
-     */
-    const Bounds& get_bounds() const;
-
-    size_t get_dimension() const ;
+    ///! \brief Get the overall layout of this tree
+    ///! 
+    ///! \return layout object describing the tree's overall bounds.
+    ///!
+    inline const Layout& get_layout() const { return layout; }
 
     size_t get_height() const;
-
-    const Layout& get_layout() const;
-
-    double get_load_factor() const; 
+    
+    double get_load_factor() const;
     
     size_t get_memory_usage() const;
-
-    double get_precision() const;
 
     /**
      * Loads the vector of points as a CCW polygon.
@@ -138,12 +130,14 @@ public:
     bool load_tree(const nlohmann::json& tree);
 
     void prune();
+    
+    void reset();
 
     ///! \brief resets _the tree_ to fully populate the bounds at the given precision
     ///! 
     ///! \param bounds - new bounds to describe
     ///! \param precision - describe the bounds to at least this precision
-    void reset(const Bounds bounds, const double new_precision);
+    void reset(const Layout& new_layout);
 
     ///! \brief Classify what value the requested point `p` has.
     ///!
@@ -167,16 +161,11 @@ public:
     ///! \brief generates a json structure, describing the tree itself
     nlohmann::json to_json_tree() const;
 
-    size_t get_width() const;
-
     bool write_png(const std::string filename) const;
 
 private:
-    static bool is_perimeter_cell(const Bounds& root_bounds, const Bounds& near_bounds);
-
-private:
     ///! the data layout this tree represents
-    std::unique_ptr<geometry::Layout> layout;
+    geometry::Layout layout;
 
     unique_ptr<terrain::quadtree::Node> root;
 
