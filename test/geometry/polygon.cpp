@@ -17,14 +17,6 @@ namespace terrain::geometry {
 TEST(PolygonTest, DefaultConfiguration) {
     const Polygon shape;
 
-    const auto& bounds = shape.get_bounds();
-    EXPECT_DOUBLE_EQ(bounds.center[0],    0.5);
-    EXPECT_DOUBLE_EQ(bounds.center[1],    0.5);
-    ASSERT_DOUBLE_EQ(bounds.get_x_max(), 1.);
-    ASSERT_DOUBLE_EQ(bounds.get_x_min(), 0.);
-    ASSERT_DOUBLE_EQ(bounds.get_y_max(), 1.);
-    ASSERT_DOUBLE_EQ(bounds.get_y_min(), 0.);
-
     const auto& points = shape.points;
     ASSERT_TRUE(points[0].isApprox(Vector2d(0,0)));
     ASSERT_TRUE(points[1].isApprox(Vector2d(1,0)));
@@ -43,35 +35,29 @@ TEST(PolygonTest, LoadList_5Point) {
                     { 5, 6}});
 
     // DEBUG
-    //shape.write_yaml(std::cerr, "    ");
-    
-    const auto& bounds = shape.bounds;
-    ASSERT_NEAR(bounds.center[0],     7.5, 1e-6);
-    ASSERT_NEAR(bounds.center[1],     7.5, 1e-6);
-    ASSERT_NEAR(bounds.half_width,   4.5, 1e-6);
+    // shape.write_yaml(std::cerr, "    ");
 
-    ASSERT_NEAR(bounds.get_x_max(), 12.0, 1e-6);
-    ASSERT_NEAR(bounds.get_x_min(),  3.0, 1e-6);
-    ASSERT_NEAR(bounds.get_y_max(), 12.0, 1e-6);
-    ASSERT_NEAR(bounds.get_y_min(),  3.0, 1e-6);
+    ASSERT_EQ( shape[0], Vector2d(  3,  4));
+    ASSERT_EQ( shape[1], Vector2d(  5,  6));
+    ASSERT_EQ( shape[2], Vector2d(  9,  5));
+    ASSERT_EQ( shape[3], Vector2d( 12,  8));
+    ASSERT_EQ( shape[4], Vector2d(  5, 11));
+    ASSERT_EQ( shape[5], Vector2d(  3,  4));
 }
 
 
 TEST(PolygonTest, LoadList_DiamondRhombus) {
     Polygon shape({{1,0},{0,1},{-1,0},{0,-1}});
 
-    // DEBUG
-    //shape.write_yaml(std::cerr, "    ");
+    // // DEBUG
+    // shape.write_yaml(std::cerr, "    ");
 
-    const auto& bounds = shape.bounds;
-    ASSERT_NEAR(bounds.center[0],     0.0, 1e-6);
-    ASSERT_NEAR(bounds.center[1],     0.0, 1e-6);
-    ASSERT_NEAR(bounds.half_width,   1.0, 1e-6);
+    ASSERT_EQ( shape[0], Vector2d(1,0) );
+    ASSERT_EQ( shape[1], Vector2d(0,1) );
+    ASSERT_EQ( shape[2], Vector2d(-1,0) );
+    ASSERT_EQ( shape[3], Vector2d(0,-1) );
+    ASSERT_EQ( shape[4], Vector2d(1,0) );
 
-    ASSERT_NEAR(bounds.get_x_max(),  1.0, 1e-6);
-    ASSERT_NEAR(bounds.get_x_min(), -1.0, 1e-6);
-    ASSERT_NEAR(bounds.get_y_max(),  1.0, 1e-6);
-    ASSERT_NEAR(bounds.get_y_min(), -1.0, 1e-6);
 }
 
 // TEST(BoundAreaTests, InBoundingBoxByX) {

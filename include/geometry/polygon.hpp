@@ -15,10 +15,6 @@
 
 #include <nlohmann/json/json_fwd.hpp>
 
-#include "geometry/bounds.hpp"
-
-using terrain::geometry::Bounds;
-
 namespace terrain::geometry {
 
 class Polygon {
@@ -33,12 +29,6 @@ public:
     void clear();
 
     void emplace(const double x, const double y);
-
-    // Retrieves the precomputed center of the polygon:
-    // Currently, this is a naive, unweighted average of the polygon points.
-    // \return 2D x,y point of the polygon's center
-    const Bounds& get_bounds() const;
-
 
     // Retrieves the precomputed center of the polygon:
     // Currently, this is a naive, unweighted average of the polygon points.
@@ -79,11 +69,8 @@ protected:
 
     void set_default();
 
-    void update_bounds();
-
 protected: // Configuration parameters
     std::vector<Eigen::Vector2d> points;    ///< Main data store for this class.  Contains the vertices of the polygon
-    Bounds bounds;                ///< x,y bounds at the (approximate) center of the polygon
 
 private:
     friend class PolygonTest_DefaultConfiguration_Test;

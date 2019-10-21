@@ -23,7 +23,6 @@ using std::ostream;
 using std::string;
 using std::unique_ptr;
 
-using terrain::geometry::Bounds;
 using terrain::geometry::cell_value_t;
 using terrain::quadtree::Node;
 

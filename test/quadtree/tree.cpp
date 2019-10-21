@@ -25,32 +25,41 @@ using Eigen::Vector2d;
 
 using nlohmann::json;
 
-using terrain::geometry::Bounds;
-
-const Bounds& default_bounds = terrain::geometry::Layout::default_layout.bounds;
+using terrain::geometry::Layout;
 
 namespace terrain::quadtree {
+
+static const Layout default_layout; // i.e. create with default constructor 
+
+void assert_layouts_match( const Layout& first, const Layout& second ){
+    EXPECT_DOUBLE_EQ( first.get_precision(), second.get_precision());
+    EXPECT_DOUBLE_EQ( first.get_x(),         second.get_x());
+    EXPECT_DOUBLE_EQ( first.get_y(),         second.get_y());
+    EXPECT_DOUBLE_EQ( first.get_width(),     second.get_width());
+    EXPECT_EQ(        first.get_dimension(), second.get_dimension());
+    EXPECT_EQ(        first.get_size(),      second.get_size());
+}
 
 TEST(QuadTreeTest, ConstructDefault) {
     Tree tree;
     Terrain terrain(tree);
 
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
-    
-    // // DEBUG for line above
-    // ASSERT_DOUBLE_EQ(terrain.get_bounds().center[0],  0);
-    // ASSERT_DOUBLE_EQ(terrain.get_bounds().center[1],  0);
-    // ASSERT_DOUBLE_EQ(terrain.get_bounds().width(),  32);
+    assert_layouts_match( terrain.get_layout(), default_layout);
 
+    EXPECT_TRUE( tree.root );
     EXPECT_TRUE( tree.root->is_leaf() );
 }
 
 TEST(QuadTreeTest, ConstructByCenterAndSize) {
-    Tree tree({{1,1}, 256}, 1.0);
+    Tree tree({1., 1, 1, 256});
     Terrain terrain(tree);
-
-    EXPECT_TRUE( Bounds({1,1}, 256) == terrain.get_bounds());
+    
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),         1.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),         1.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),   256.);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),      256);
+    EXPECT_EQ( terrain.get_layout().get_size(),         65536);
 
     // functional tests:
     // (1) in bounds
@@ -64,62 +73,64 @@ TEST(QuadTreeTest, ConstructByCenterAndSize) {
 }
 
 TEST( QuadTreeTest, ConstructAndSetBounds) {
-    Tree tree({{5,3}, 17}, 1.);
+    Tree tree({1., 5, 3, 17});
     Terrain terrain(tree);
 
     // pre-conditions
-    EXPECT_TRUE( Bounds({5,3}, 17) == terrain.get_bounds());
-    EXPECT_DOUBLE_EQ( 0.53125, terrain.get_precision());
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 0.53125);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),         5.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),         3.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    17.);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),       32);
+    EXPECT_EQ( terrain.get_layout().get_size(),          1024);
 
-    const Bounds new_bounds = {{1.,1}, 256};
-    const double new_precision = 32.; // this will very much get snapped down
-
+    const Layout new_layout = {32, 1.,1, 256};
+    
     // test target
-    tree.reset(new_bounds, new_precision);
+    tree.reset(new_layout);
     // test target
 
     // post-conditions
-    EXPECT_TRUE( Bounds({1,1}, 256) == terrain.get_bounds());
-    EXPECT_DOUBLE_EQ( 32.0, terrain.get_precision());
+    assert_layouts_match( terrain.get_layout(), new_layout);
 }
 
 TEST( QuadTreeTest, LoadMalformedSource){
     Tree tree;
     Terrain terrain(tree);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+
+    assert_layouts_match( terrain.get_layout(), default_layout);
+    
     
     // this is simply a malformed document.  It should not parse.
     std::istringstream source(R"({"bounds": {"x": 100, "y": 100, "width": )");
 
     // this should fail. Gracefully.
-    EXPECT_FALSE(terrain.load(source));
+    EXPECT_FALSE(terrain.load_from_json_stream(source));
 
     // these tests should be *exactly* the same as before the 'load' call
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+    assert_layouts_match( terrain.get_layout(), default_layout);
 }
 
 TEST( QuadTreeTest, LoadBoundsOnly){
     Tree tree;
     Terrain terrain(tree);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
     
+    assert_layouts_match( terrain.get_layout(), default_layout);
+
     // construct a valid document, with correct fields, but simply .. missing things: 
     std::stringstream stream(R"({"bounds": {"x": 100, "y": 100, "width": 64}} )");
 
     // this should fail. (gracefully)
-    EXPECT_FALSE(terrain.load(stream));
+    EXPECT_FALSE(terrain.load_from_json_stream(stream));
 
     // these tests should be *exactly* the same as before the 'load' call
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+    assert_layouts_match( terrain.get_layout(), default_layout);
 }
 
 TEST( QuadTreeTest, LoadValidTree){
     Tree tree;
     Terrain terrain(tree);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+    assert_layouts_match( terrain.get_layout(), default_layout);
 
     const json source = {
             {"NE", {
@@ -154,23 +165,21 @@ TEST( QuadTreeTest, CalculateFullLoading){
 TEST( QuadTreeTest, CalculateMemoryUsage){
     Tree tree;
     Terrain terrain(tree);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+    
+    assert_layouts_match( terrain.get_layout(), default_layout);
 
     EXPECT_EQ(sizeof(Terrain<Tree>), 32);
-    EXPECT_EQ(sizeof(Tree), 16);
+    EXPECT_EQ(sizeof(Layout), 56);
+    EXPECT_EQ(sizeof(Tree), 64);     // composed of: Layout, root-pointer
     EXPECT_EQ(sizeof(Vector2d), 16);
-    EXPECT_EQ(sizeof(Bounds), 32);   // :(
-    EXPECT_EQ(sizeof(Layout), 64);   // :(
     EXPECT_EQ(sizeof(Node), 40);
-
 }
     
 TEST( QuadTreeTest, CalculateLoadFactor){
     Tree tree;
     Terrain terrain(tree);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+    
+    assert_layouts_match( terrain.get_layout(), default_layout);
 
     const json source = {
         {"NE", {
@@ -206,11 +215,10 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     Tree tree;
     Terrain terrain(tree);
 
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 1.);
-    EXPECT_TRUE( default_bounds == terrain.get_bounds());
+    assert_layouts_match( terrain.get_layout(), default_layout);
 
     std::istringstream stream(R"(
-        {"bounds": {"x": 1, "y": 1, "width": 256},
+        {"layout": {"precision": 32.0, "x": 1, "y": 1, "width": 256},
          "grid":[[88, 88, 88, 88,  0, 88, 88, 88],
                  [88, 88, 88,  0,  0,  0, 88, 88],
                  [88, 88,  0,  0,  0,  0,  0, 88],
@@ -221,14 +229,18 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
                  [88, 88, 88,  0, 88, 88, 88, 88]]} )");
 
     // test target
-    ASSERT_TRUE(terrain.load(stream));
+    ASSERT_TRUE(terrain.load_from_json_stream(stream));
     // test target
 
     // // DEBUG
     // terrain.debug();
 
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 32);
-    ASSERT_TRUE(Bounds({1,1},256) == terrain.get_bounds());
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 32.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),          1.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),          1.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    256.);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),         8);
+    EXPECT_EQ( terrain.get_layout().get_size(),             64);
     
     {// test tree shape
         EXPECT_EQ(tree.get_height(), 3);
@@ -282,25 +294,27 @@ TEST(QuadTreeTest, LoadPolygonFromJSON) {
     quadtree::Tree tree;
     Terrain terrain(tree);
 
-    constexpr double boundary_width = 16.;   // overall boundary
+    constexpr double desired_width = 16.;   // overall boundary
     constexpr double desired_precision = 1.0;
     // =====
-    json source = generate_diamond( boundary_width, desired_precision);
+    json source = generate_diamond( desired_width, desired_precision);
 
     std::istringstream stream(source.dump());
 
     // // DEBUG
     // cerr << "======\n" << source.dump(4) << "\n======\n" << endl;
 
-    ASSERT_TRUE(terrain.load(stream));
+    ASSERT_TRUE(terrain.load_from_json_stream(stream));
 
     // // DEBUG
     // terrain.debug();
 
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), desired_precision);
-
-    const Bounds expected_bounds({boundary_width/2, boundary_width/2}, boundary_width);
-    ASSERT_TRUE( expected_bounds == terrain.get_bounds());
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(),  1.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),         desired_width/2);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),         desired_width/2);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),     desired_width);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),        16);
+    EXPECT_EQ( terrain.get_layout().get_size(),             256);
 
     ASSERT_EQ( tree.classify({ 4.5, 15.5}), 0x99);
     ASSERT_EQ( tree.classify({ 4.5, 14.5}), 0x99);
@@ -338,8 +352,15 @@ TEST(QuadTreeTest, LoadPolygonFromJSON) {
 }
 
 TEST( QuadTreeTest, WriteLoadCycle){
-    Tree source_tree({{11,11}, 128}, 32);
+    Tree source_tree({32, 11,11, 128});
     Terrain source_terrain(source_tree);
+
+    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_precision(), 32.);
+    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_x(),         11.);
+    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_y(),         11.);
+    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_width(),    128);
+    EXPECT_EQ( source_terrain.get_layout().get_dimension(),         4);
+    EXPECT_EQ( source_terrain.get_layout().get_size(),             16);
 
     // modify tree in a characteristic way
     source_tree.root->split();
@@ -363,7 +384,7 @@ TEST( QuadTreeTest, WriteLoadCycle){
 
     // write tree #1 to the serialization buffer
     std::stringstream buffer;
-    ASSERT_TRUE(source_terrain.json(buffer));
+    ASSERT_TRUE(source_terrain.to_json(buffer));
     
     // // DEBUG
     // cerr << buffer.str() << endl;
@@ -373,17 +394,19 @@ TEST( QuadTreeTest, WriteLoadCycle){
     Terrain load_terrain(load_tree);
 
     buffer.seekg(0);
-    ASSERT_TRUE(load_terrain.load(buffer));
+    ASSERT_TRUE(load_terrain.load_from_json_stream(buffer));
 
     // // DEBUG
     // load_tree.debug();
 
     // test contents of test_tree
-    { // test bounds:
-        auto& bounds = load_terrain.get_bounds();
-        ASSERT_DOUBLE_EQ(bounds.center[0],    11);
-        ASSERT_DOUBLE_EQ(bounds.center[1],    11);
-        ASSERT_DOUBLE_EQ(bounds.width(),  128);
+    { // test layout:
+        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_precision(), 32.);
+        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_x(),         11.);
+        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_y(),         11.);
+        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_width(),    128);
+        EXPECT_EQ( load_terrain.get_layout().get_dimension(),         4);
+        EXPECT_EQ( load_terrain.get_layout().get_size(),             16);
     }
     { // test tree shape
         auto & root = load_tree.root;
@@ -410,14 +433,18 @@ TEST( QuadTreeTest, WriteLoadCycle){
 }
     
 TEST( QuadTreeTest, SearchExplicitTree) {
-    Tree tree({{0,0}, 100}, 50);
+    Tree tree({50, 0, 0, 100});
     Terrain terrain(tree);
     tree.root->split();
 
     ASSERT_FALSE(tree.root->is_leaf());
 
-    ASSERT_TRUE(Bounds({0,0}, 100) == terrain.get_bounds());
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 50);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 50.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),          0.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),          0.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    100);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),         2);
+    EXPECT_EQ( terrain.get_layout().get_size(),              4);
 
     cell_value_t false_value = 5;
     cell_value_t true_value = 14;
@@ -453,13 +480,13 @@ TEST( QuadTreeTest, SampleTree ){
     Terrain terrain(tree);
 
     std::istringstream stream(R"(
-        {"bounds": {"x": 2, "y": 2, "width": 4},
+        {"layout": {"precision": 1, "x": 2, "y": 2, "width": 4},
          "grid":[[  1,  2,  3,  4],
                  [  5,  6,  7,  8],
                  [  9, 10, 11, 12],
                  [ 13, 14, 15, 16]]} )");
 
-    EXPECT_TRUE(terrain.load(stream));
+    EXPECT_TRUE(terrain.load_from_json_stream(stream));
 
     // // DEBUG
     // tree.debug_tree(true);
@@ -551,14 +578,17 @@ TEST( QuadTreeTest, SavePNG) {
 
     std::istringstream stream(source.dump());
 
-    ASSERT_TRUE(terrain.load(stream));
+    ASSERT_TRUE(terrain.load_from_json_stream(stream));
 
     // // DEBUG
     // terrain.debug();
 
-    EXPECT_TRUE(Bounds({8,8}, 16) == terrain.get_bounds());
-    EXPECT_EQ( terrain.get_dimension(), 64);
-    EXPECT_DOUBLE_EQ( terrain.get_precision(), 0.25);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(),  0.25);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),          8.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),          8.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),     16);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),        64);
+    EXPECT_EQ( terrain.get_layout().get_size(),           4096);
 
     // DEVEL
     // ASSERT_TRUE(false) << " !! Note: this is unique to the QuadTree storage, and is visible in both debug and png output.\n";

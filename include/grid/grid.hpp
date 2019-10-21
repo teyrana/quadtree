@@ -14,13 +14,11 @@
 
 #include "nlohmann/json/json.hpp"
 
-#include "geometry/bounds.hpp"
 #include "geometry/cell_value.hpp"
 #include "geometry/polygon.hpp"
 #include "geometry/layout.hpp"
 
-
-using terrain::geometry::Bounds;
+using terrain::geometry::Layout;
 using terrain::geometry::cell_value_t;
 using terrain::geometry::Polygon;
 
@@ -42,15 +40,12 @@ public:
      * @param {_dim} number of cells along each dimensions of this grid
      * @param {_bounds} bounds which this grid will represent
      */
-    Grid(const Bounds& _bounds, double precision);
+    Grid(const Layout& _layout);
 
     /**
      *  Releases all memory associated with this quad tree.
      */
     ~Grid(){};
-
-    const Eigen::Vector2d anchor() const;
-
 
     /**
      * Returns true if the point at (x, y) exists in the tree.
@@ -78,7 +73,7 @@ public:
      *
      * @return Bounds object describing the tree's overall bounds.
      */
-    const Bounds& get_bounds() const;
+    inline const Layout& get_layout() const { return layout; }
 
     /** 
      *                   +---+---+     +---+---+
@@ -92,9 +87,6 @@ public:
     cell_value_t& get_cell(const size_t xi, const size_t yi);
     cell_value_t get_cell(const size_t xi, const size_t yi) const ;
    
-    ///! the number of cells on each axis of the grid
-    size_t get_dimension() const;
-  
     constexpr double get_load_factor() const { return 1.0; }
 
     size_t get_memory_usage() const;
@@ -105,7 +97,7 @@ public:
     inline void prune() {};
 
     void reset();
-    void reset(const Bounds bounds, const double new_precision);
+    void reset(const Layout& _layout);
 
     ///! \brief Retrieve the value at an (x, y) Eigen::Vector2d
     ///!
@@ -124,12 +116,9 @@ public:
 
     bool to_png(const std::string filename) const;
 
-    ///! \brief the width of the represented bounds
-    double width() const;
-
 public:
     ///! the data layout this grid represents
-    std::unique_ptr<geometry::Layout> layout;
+    Layout layout;
 
     // raw array:  2D addressing is performed through the class methods
     std::vector<cell_value_t> storage;

@@ -18,10 +18,11 @@ using Eigen::Vector2d;
 #include <nlohmann/json/json.hpp>
 using nlohmann::json;
 
+#include "geometry/layout.hpp"
 #include "quadtree/tree.hpp"
 
 using namespace terrain;
-using geometry::Bounds;
+using geometry::Layout;
 using quadtree::Tree;
 using quadtree::Node;
 
@@ -60,58 +61,41 @@ void descend( const Vector2d& target, double& x_c, double& y_c, const double sta
     }
 }
 
-Tree::Tree(): 
-    Tree(Layout::default_layout.bounds, layout->default_precision)
-{}
+Tree::Tree(): Tree(Layout()) {}
 
-Tree::Tree(const Bounds& _bounds, const double _precision):
-    layout(new Layout(_bounds, _precision)), root(std::make_unique<Node>(0))
-{}
+Tree::Tree(const Layout& _layout)
+    : layout(_layout) 
+{ 
+    reset();
+}
 
 Tree::~Tree(){
     root.release();
 }
 
 bool Tree::contains(const Eigen::Vector2d& p) const {
-    const auto& bounds = get_bounds();
-
-    const double cx = bounds.center.x();
-    const double cy = bounds.center.y();
-    const double dim = bounds.half_width;
-
-    if((p.x() < (cx - dim)) || ((cx + dim) < p.x())){
-        return false;
-    }else if((p.y() < (cy - dim)) || ((cy + dim) < p.y())){
-        return false;
-    }
-
-    return true;
+    return layout.contains(p);
 }
 
 cell_value_t Tree::classify(const Eigen::Vector2d& p) const {
-    Eigen::Vector2d located( layout->bounds.center );
+    // create a R/W copy, initialized at the tree's center.
+    Eigen::Vector2d located( layout.get_center() );
+
     auto current_node = root.get();
-    descend( p, located[0], located[1], layout->bounds.width(), current_node );
+    
+    descend( p, located[0], located[1], layout.get_width(), current_node );
 
     return current_node->get_value();
 }
 
 void Tree::debug_tree(const bool show_pointers) const {
     cerr << "====== Quad Tree: ======\n";
-    cerr << "##  bounds:     " << get_bounds().str() << endl;
+    cerr << "##  bounds:     " << layout.to_string() << endl;
     cerr << "##  height:     " << get_height() << endl;
-    cerr << "##  precision:  " << get_precision() << endl;
+    cerr << "##  precision:  " << layout.get_precision() << endl;
 
     root->draw(cerr, "    ", "RT", show_pointers);
     cerr << endl;
-}
-
-const Bounds& Tree::get_bounds() const {
-    return layout->bounds;
-}
-
-size_t Tree::get_dimension() const {
-    return layout->dimension;
 }
 
 size_t Tree::calculate_complete_tree(const size_t height){
@@ -137,10 +121,6 @@ double Tree::get_load_factor() const {
 
 size_t Tree::get_memory_usage() const {
     return size() * sizeof(Node);
-}
-
-double Tree::get_precision() const { 
-    return layout->precision;
 }
 
 cell_value_t Tree::interp(const Eigen::Vector2d& at) const {
@@ -174,9 +154,6 @@ size_t Tree::get_height() const {
     return root->get_height() - 1;
 }
 
-const Layout& Tree::get_layout() const {
-    return *layout.get();
-}
 
 bool Tree::load_tree(const nlohmann::json& doc){
     if(! doc.is_object()){
@@ -190,32 +167,31 @@ void Tree::prune(){
     root->prune();
 }
 
-void Tree::reset(const Bounds new_bounds, const double new_precision){
-    if( isnan(new_precision) ){
-        root.release();
-        return;
-    }
+void Tree::reset(){
+    root = std::make_unique<Node>(0);
+}
 
-    layout.reset(new geometry::Layout(new_bounds, new_precision));
+void Tree::reset(const Layout& new_layout){
+    layout = new_layout;
 
     root = std::make_unique<Node>(0);
-    root->split(layout->precision, layout->bounds.width());
+    root->split(layout.get_precision(), layout.get_width());
 }
 
 Sample Tree::sample(const Eigen::Vector2d& p) const {
-    Vector2d located( layout->bounds.center );
+    Vector2d located( layout.get_center() );
     auto current_node = root.get();
 
-    descend( p, located[0], located[1], layout->bounds.width(), current_node );
+    descend( p, located[0], located[1], layout.get_width(), current_node );
 
     return {located, current_node->get_value()};
 }
 
 bool Tree::store(const Vector2d& p, const cell_value_t new_value) {
-    Vector2d located( layout->bounds.center );
+    Vector2d located( layout.get_center() );
     auto current_node = root.get();
 
-    descend( p, located[0], located[1], layout->bounds.width(), current_node );
+    descend( p, located[0], located[1], layout.get_width(), current_node );
 
     current_node->set_value(new_value);
     return true;
@@ -229,6 +205,3 @@ json Tree::to_json_tree() const {
     return root->to_json();
 }
 
-size_t Tree::get_width() const {
-    return layout->bounds.width();
-}

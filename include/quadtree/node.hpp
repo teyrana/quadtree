@@ -12,7 +12,6 @@
 #include <nlohmann/json/json_fwd.hpp>
 
 #include "geometry/cell_value.hpp"
-#include "geometry/bounds.hpp"
 
 using terrain::geometry::cell_value_t;
 

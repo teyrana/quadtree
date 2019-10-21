@@ -55,12 +55,9 @@ Polygon::Polygon(std::initializer_list<Vector2d> init_list)
 
 void Polygon::clear(){
     points.clear();
-    bounds.clear();
 }
 
 void Polygon::complete(){
-    update_bounds();
-
     // cerr << "====== ====== ====== " << endl;
     // write_yaml(cerr, "    ");
 
@@ -82,11 +79,6 @@ void Polygon::enclose_polygon(){
     if( ! first_Vector2d.isApprox(last_Vector2d)){
         points.emplace_back(first_Vector2d);
     }
-}
-
-
-const Bounds& Polygon::get_bounds() const {
-    return bounds;
 }
 
 bool Polygon::is_right_handed() const {
@@ -168,32 +160,7 @@ void Polygon::set_default(){
     points.emplace_back( 1, 0);
     points.emplace_back( 1, 1);
     points.emplace_back( 0, 1);
-    update_bounds();
 }
-
-void Polygon::update_bounds() {
-    bounds.clear();
-
-    Vector2d max(FLT_MIN, FLT_MIN);
-    Vector2d min(FLT_MAX, FLT_MAX);
-    
-    for( uint i = 0; i < points.size(); ++i ){
-        auto& p = points[i];
-        max[0] = std::max(max[0], p[0]);
-        max[1] = std::max(max[1], p[1]);
-        min[0] = std::min(min[0], p[0]);
-        min[1] = std::min(min[1], p[1]);
-    }
-
-    // the center is simply the midpoint between the extreme bounds:
-    bounds.center = (min + max) / 2 ;
-
-    auto r1 = max - min;
-    auto r2 = r1.maxCoeff();
-
-    bounds.half_width = r2 / 2;
-}
-
 
 void Polygon::write_yaml(std::ostream& sink, string indent) const {
     sink << indent << "points: \n";
@@ -201,10 +168,4 @@ void Polygon::write_yaml(std::ostream& sink, string indent) const {
         auto& p = points[i];
         sink << indent << "    - " << p[0] << ", " << p[1] << '\n';
     }
-
-    sink << indent << "bounds: \n";
-    sink << indent << "    center: [" << bounds.center[0] << ", " << bounds.center[1] << "]\n";
-    sink << indent << "    x: [" << bounds.get_x_min() << ", " << bounds.get_x_max() << "]\n";
-    sink << indent << "    y: [" << bounds.get_y_min() << ", " << bounds.get_y_max() << "]\n";
-
 }
