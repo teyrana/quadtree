@@ -211,6 +211,32 @@ TEST( QuadTreeTest, CalculateLoadFactor){
     ASSERT_NEAR( tree.get_load_factor(),  0.03812, 1e-4);
 }
 
+// TEST(QuadTreeTest, DescendZIndex) {
+//     Tree tree;
+//     Terrain terrain(tree);
+
+//     assert_layouts_match( terrain.get_layout(), default_layout);
+
+//     std::istringstream stream(R"(
+//         {"layout": {"precision": 1.0, "x": 0, "y": 0, "width": 4},
+//          "grid":[[  1,  2,  5,  6],
+//                  [  3,  4,  7,  8],
+//                  [  9, 10, 13, 14],
+//                  [ 11, 12, 15, 16]]} )");
+
+//     ASSERT_TRUE(terrain.load_from_json_stream(stream));
+
+//     // // DEBUG
+//     terrain.debug();
+
+//     // test target
+//     const Tree& frozen = tree;
+//     EXPECT_EQ( frozen.classify({ 1.5,  1.5}),   6);
+//     EXPECT_EQ( frozen.classify({ 0.5,  0.5}),   7);
+//     EXPECT_EQ( frozen.classify({-0.5, -0.5}),  10);
+//     EXPECT_EQ( frozen.classify({-1.5, -1.5}),  11);
+// }
+
 TEST(QuadTreeTest, LoadGridFromJSON) {
     Tree tree;
     Terrain terrain(tree);
@@ -265,29 +291,27 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
     EXPECT_EQ( frozen.classify({ 104,  104}),  88);
 
     // [-127, -95, -63, -31, 1, 33, 65, 97, 129]
-    EXPECT_EQ( frozen.classify({ -70,  130}),  88);
-    EXPECT_EQ( frozen.classify({ -70,  129}),  88);
-    EXPECT_EQ( frozen.classify({ -70,   97}),  88);
-    EXPECT_EQ( frozen.classify({ -70,   65}),  88);
-    EXPECT_EQ( frozen.classify({ -70,   33}),   0);
-    EXPECT_EQ( frozen.classify({ -70,    1}),   0);
-    EXPECT_EQ( frozen.classify({ -70,  -31}),   0);
-    EXPECT_EQ( frozen.classify({ -70,  -63}),  88);
-    EXPECT_EQ( frozen.classify({ -70,  -95}),  88);
-    EXPECT_EQ( frozen.classify({ -70, -127}),  88);
-    EXPECT_EQ( frozen.classify({ -70, -130}),  88);
+    EXPECT_EQ( frozen.classify({ -70,  130}), cell_default_value);
+    EXPECT_EQ( frozen.classify({ -70,  125}),  88);
+    EXPECT_EQ( frozen.classify({ -70,   81}),  88);
+    EXPECT_EQ( frozen.classify({ -70,   49}),  88);
+    EXPECT_EQ( frozen.classify({ -70,   15}),   0);
+    EXPECT_EQ( frozen.classify({ -70,  -15}),   0);
+    EXPECT_EQ( frozen.classify({ -70,  -45}),   0);
+    EXPECT_EQ( frozen.classify({ -70,  -75}),  88);
+    EXPECT_EQ( frozen.classify({ -70, -110}),  88);
+    EXPECT_EQ( frozen.classify({ -70, -130}), cell_default_value);
 
-    EXPECT_EQ( frozen.classify({  15,  130}),   0);
-    EXPECT_EQ( frozen.classify({  15,  129}),   0);
-    EXPECT_EQ( frozen.classify({  15,   97}),   0);
-    EXPECT_EQ( frozen.classify({  15,   65}),   0);
-    EXPECT_EQ( frozen.classify({  15,   33}),   0);
-    EXPECT_EQ( frozen.classify({  15,    1}),  88);
-    EXPECT_EQ( frozen.classify({  15,  -31}),  88);
-    EXPECT_EQ( frozen.classify({  15,  -63}),  88);
-    EXPECT_EQ( frozen.classify({  15,  -95}),  88);
-    EXPECT_EQ( frozen.classify({  15, -127}),  88);
-    EXPECT_EQ( frozen.classify({  15, -130}),  88);
+    EXPECT_EQ( frozen.classify({  15,  130}), cell_default_value);
+    EXPECT_EQ( frozen.classify({  15,  110}),   0);
+    EXPECT_EQ( frozen.classify({  15,   80}),   0);
+    EXPECT_EQ( frozen.classify({  15,   50}),   0);
+    EXPECT_EQ( frozen.classify({  15,   20}),   0);
+    EXPECT_EQ( frozen.classify({  15,  -20}),  88);
+    EXPECT_EQ( frozen.classify({  15,  -50}),  88);
+    EXPECT_EQ( frozen.classify({  15,  -80}),  88);
+    EXPECT_EQ( frozen.classify({  15, -125}),  88);
+    EXPECT_EQ( frozen.classify({  15, -130}), cell_default_value);
 }
 
 TEST(QuadTreeTest, LoadPolygonFromJSON) {
@@ -462,7 +486,7 @@ TEST( QuadTreeTest, SearchExplicitTree) {
     // tree.debug();
 
     // .... Out Of Bounds: snaps to nearest node...
-    ASSERT_EQ(tree.classify({110, 110}), true_value);
+    ASSERT_EQ(tree.classify({110, 110}), cell_default_value);
 
     // functional tests:
     // .... Quadrant I:
@@ -489,14 +513,15 @@ TEST( QuadTreeTest, SampleTree ){
     EXPECT_TRUE(terrain.load_from_json_stream(stream));
 
     // // DEBUG
-    // tree.debug_tree(true);
+    // // tree.debug_tree(true);
     // terrain.debug();
 
-    // Out-Of-Bounds call -- returns nearest node.
+    // Out-Of-Bounds call: returns nearest node.
     const Sample s0 = tree.sample({  5,  5});
     ASSERT_TRUE( Vector2d(3.5, 3.5) == s0.at );
     ASSERT_EQ( s0.is, 4);
 
+    // Normal Calls: 
     const Sample s1 = tree.sample({  0,  0});
     ASSERT_TRUE( Vector2d(0.5, 0.5) == s1.at );
     ASSERT_EQ( s1.is,  13);

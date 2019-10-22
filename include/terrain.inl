@@ -308,7 +308,7 @@ std::string Terrain<T>::summary() const {
     std::ostringstream buffer;
     buffer.imbue(std::locale(""));
     buffer << "====== Terrain Stats: ======\n";
-    buffer << "##  layout:       " << impl.get_layout().to_string() << '\n';
+    buffer << "##  center:       " << impl.get_layout().get_x() << ", " << impl.get_layout().get_y() << '\n';
     buffer << "##  dimension:    " << impl.get_layout().get_dimension() << endl;
     buffer << "##  size:         " << impl.get_layout().get_size() <<  " nodes  ===  " << impl.get_memory_usage()/1000 << " kilobytes\n";
     buffer << "##  compression:  " << impl.get_load_factor() << '\n';

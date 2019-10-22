@@ -28,7 +28,7 @@ using quadtree::Node;
 
 // main method for descending through a tree and returning the appropriate location / node / value 
 // note: weakly optimized; intended to be a hot path.
-void descend( const Vector2d& target, double& x_c, double& y_c, const double start_width, Node* & current_node){
+void descend_nearest_tracked( const Vector2d& target, double& x_c, double& y_c, const double start_width, Node* & current_node){
     double current_width = start_width;
     double next_width = start_width*0.5;
 
@@ -61,6 +61,66 @@ void descend( const Vector2d& target, double& x_c, double& y_c, const double sta
     }
 }
 
+// both bitmasks test for the bits in the MSB of the uint64_t:
+//  => Most-significant-bit, within the most-significant-byte
+constexpr uint64_t NORTH_BITMASK = static_cast<uint64_t>(0x80) << (8*7);
+//  => second-most-significant-bit, within the most-significant-byte
+constexpr uint64_t EAST_BITMASK  = static_cast<uint64_t>(0x40) << (8*7);
+
+Node* descend_blind(uint64_t z_index, Node * start_node){
+    Node* current_node = start_node;
+    while( ! current_node->is_leaf() ){
+        if( static_cast<bool>(NORTH_BITMASK & z_index) ){  // === ( y < center.y )
+            if( static_cast<bool>(EAST_BITMASK & z_index) ){  // ==== ( x > center.x ) 
+                current_node = current_node->get_northeast();
+            }else{
+                current_node = current_node->get_northwest();
+            }
+        }else{
+            if( static_cast<bool>(EAST_BITMASK & z_index) ){  // ==== ( x > center.x )
+                current_node = current_node->get_southeast();
+            }else{
+                current_node = current_node->get_southwest();
+            }
+        }
+        z_index <<= 2;
+    }
+    return current_node;
+}
+
+void descend_tracked(uint64_t z_index, double& x_c, double& y_c, const double start_width, Node* & current_node){
+    double current_width = start_width;
+    double next_width = start_width*0.5;
+
+    while( ! current_node->is_leaf() ){
+        current_width = next_width;
+        next_width *= 0.5;
+
+        if( static_cast<bool>(NORTH_BITMASK & z_index) ){
+            if( static_cast<bool>(EAST_BITMASK & z_index) ){
+                x_c += next_width;
+                y_c += next_width;
+                current_node = current_node->get_northeast();
+            }else{
+                x_c -= next_width;
+                y_c += next_width;
+                current_node = current_node->get_northwest();
+            }
+        }else{
+            if( static_cast<bool>(EAST_BITMASK & z_index) ){
+                x_c += next_width;
+                y_c -= next_width;
+                current_node = current_node->get_southeast();
+            }else{
+                x_c -= next_width;
+                y_c -= next_width;
+                current_node = current_node->get_southwest();
+            }
+        }
+        z_index <<= 2;
+    }
+}
+
 Tree::Tree(): Tree(Layout()) {}
 
 Tree::Tree(const Layout& _layout)
@@ -78,14 +138,16 @@ bool Tree::contains(const Eigen::Vector2d& p) const {
 }
 
 cell_value_t Tree::classify(const Eigen::Vector2d& p) const {
-    // create a R/W copy, initialized at the tree's center.
-    Eigen::Vector2d located( layout.get_center() );
+    if( layout.contains(p) ){
+        auto zindex = layout.zhash(p);
+        const auto start_node = root.get();
+        
+        auto current_node = descend_blind( zindex, start_node );
 
-    auto current_node = root.get();
-    
-    descend( p, located[0], located[1], layout.get_width(), current_node );
+        return current_node->get_value();
+    }
 
-    return current_node->get_value();
+    return cell_default_value;
 }
 
 void Tree::debug_tree(const bool show_pointers) const {
@@ -180,21 +242,32 @@ void Tree::reset(const Layout& new_layout){
 
 Sample Tree::sample(const Eigen::Vector2d& p) const {
     Vector2d located( layout.get_center() );
+    auto z_index = layout.zhash(p);
     auto current_node = root.get();
 
-    descend( p, located[0], located[1], layout.get_width(), current_node );
+    if( layout.contains(p) ){
+        descend_tracked( z_index, located[0], located[1], layout.get_width(), current_node );
+    }else{
+        descend_nearest_tracked( p, located[0], located[1], layout.get_width(), current_node );
+    }
 
     return {located, current_node->get_value()};
 }
 
 bool Tree::store(const Vector2d& p, const cell_value_t new_value) {
-    Vector2d located( layout.get_center() );
-    auto current_node = root.get();
+    if( layout.contains(p) ){
+        auto z_index = layout.zhash(p);
+        auto start_node = root.get();
 
-    descend( p, located[0], located[1], layout.get_width(), current_node );
+        auto current_node = descend_blind(z_index, start_node);
 
-    current_node->set_value(new_value);
-    return true;
+        // once the correct leaf node is found, store the value:
+        current_node->set_value(new_value);
+
+        return true;
+    }
+
+    return false;
 }
 
 size_t Tree::size() const {

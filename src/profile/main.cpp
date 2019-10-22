@@ -121,8 +121,8 @@ int main(int argc, char* argv[]){
         use_grid = false;
         cerr << "  ## Using tree.\n";
     }else{
-        use_grid = false;
-        cerr << "  ## default to tree.\n";
+        use_grid = true;
+        cerr << "  ## Default to grid.\n";
     }
 
     bool write_output = false;

@@ -40,7 +40,7 @@ void Node::draw(std::ostream& sink, const string& prefix, const string& as, cons
     }
     //sink << ' ' << bounds.str();
     if(show_pointers){
-        sink << "   @:" << this << endl;
+        sink << "   @:" << this;
     }
     sink << endl;
     

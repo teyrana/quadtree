@@ -173,6 +173,7 @@ private:
     friend class QuadTreeTest_ConstructDefault_Test;
     friend class QuadTreeTest_LoadValidTree_Test;
     friend class QuadTreeTest_CalculateLoadFactor_Test;
+    friend class QuadTreeTest_DescendZIndex_Test;
     friend class QuadTreeTest_LoadGridFromJSON_Test;
     friend class QuadTreeTest_WriteLoadCycle_Test;
     friend class QuadTreeTest_SearchExplicitTree_Test;

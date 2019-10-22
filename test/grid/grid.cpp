@@ -20,6 +20,8 @@ using std::string;
 using Eigen::Vector2d;
 using nlohmann::json;
 
+using terrain::geometry::cell_default_value;
+
 namespace terrain::grid {
 
 TEST(GridTest, ConstructDefault) {
@@ -148,11 +150,15 @@ TEST(GridTest, LoadGridFromJSON) {
     EXPECT_EQ( terrain.get_layout().get_dimension(), 8);
     EXPECT_EQ( terrain.get_layout().get_size(),     64);
 
+    // test by index-space:
     ASSERT_EQ( g.get_cell(0,0), 88);
     ASSERT_EQ( g.get_cell(1,1), 88);
     ASSERT_EQ( g.get_cell(2,2), 88);
-    ASSERT_EQ( g.get_cell(2,3), 88);
-    ASSERT_EQ( g.get_cell(2,4),  0);
+    ASSERT_EQ( g.get_cell(3,3), 88);
+    ASSERT_EQ( g.get_cell(4,4),  0);
+    ASSERT_EQ( g.get_cell(5,5),  0);
+    ASSERT_EQ( g.get_cell(6,6), 88);
+    ASSERT_EQ( g.get_cell(7,7), 88);
 
     ASSERT_EQ( g.get_cell(3,0), 88);
     ASSERT_EQ( g.get_cell(3,1), 88);
@@ -166,6 +172,29 @@ TEST(GridTest, LoadGridFromJSON) {
     ASSERT_EQ( g.get_cell(0,7), 88);
     ASSERT_EQ( g.get_cell(1,6), 88);
     ASSERT_EQ( g.get_cell(2,5),  0);
+
+    // test by query-space
+    ASSERT_EQ( g.classify({ 0.5, 0.5}), 88);
+    ASSERT_EQ( g.classify({ 1.5, 1.5}), 88);
+    ASSERT_EQ( g.classify({ 2.5, 2.5}), 88);
+    ASSERT_EQ( g.classify({ 3.5, 3.5}), 88);
+    ASSERT_EQ( g.classify({ 4.5, 4.5}),  0);
+    ASSERT_EQ( g.classify({ 5.5, 5.5}),  0);
+    ASSERT_EQ( g.classify({ 6.5, 6.5}), 88);
+    ASSERT_EQ( g.classify({ 7.5, 7.5}), 88);
+    ASSERT_EQ( g.classify({ 8.5, 8.5}), cell_default_value);
+    ASSERT_EQ( g.classify({ 9.5, 9.5}), cell_default_value);
+
+    ASSERT_EQ( g.classify({ 3.5, 0.5}), 88);
+    ASSERT_EQ( g.classify({ 3.5, 1.5}), 88);
+    ASSERT_EQ( g.classify({ 3.5, 2.5}), 88);
+    ASSERT_EQ( g.classify({ 3.5, 3.5}), 88);
+    ASSERT_EQ( g.classify({ 3.5, 4.5}),  0);
+    ASSERT_EQ( g.classify({ 3.5, 5.5}),  0);
+    ASSERT_EQ( g.classify({ 3.5, 6.5}),  0);
+    ASSERT_EQ( g.classify({ 3.5, 7.5}), 88);
+    ASSERT_EQ( g.classify({ 3.5, 8.5}), cell_default_value);
+
 }
 
 TEST(GridTest, LoadPolygonFromJSON) {
