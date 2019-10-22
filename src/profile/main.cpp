@@ -73,6 +73,7 @@ void profile_terrain(T& terrain, const size_t iteration_limit){
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count(); 
   
+    std::cout.imbue(std::locale(""));
     std::cout << "<< Finished testing:\n";
     std::cout << "   Ran " << iteration << " iterations in " << duration << " \u03BCs \n\n";
 }

@@ -306,10 +306,11 @@ std::vector<Polygon> Terrain<T>::make_polygons_from_json(nlohmann::json doc){
 template<typename T>
 std::string Terrain<T>::summary() const {
     std::ostringstream buffer;
+    buffer.imbue(std::locale(""));
     buffer << "====== Terrain Stats: ======\n";
     buffer << "##  layout:       " << impl.get_layout().to_string() << '\n';
     buffer << "##  dimension:    " << impl.get_layout().get_dimension() << endl;
-    buffer << "##  size:         " << impl.get_layout().get_size() <<  " nodes  ===   " << impl.get_memory_usage() << " bytes\n";
+    buffer << "##  size:         " << impl.get_layout().get_size() <<  " nodes  ===  " << impl.get_memory_usage()/1000 << " kilobytes\n";
     buffer << "##  compression:  " << impl.get_load_factor() << '\n';
     buffer << '\n';
     return buffer.str();
