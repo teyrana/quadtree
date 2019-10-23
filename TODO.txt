@@ -1,8 +1,10 @@
-[ ] merge Bounds -><- Layout -> GridLayout
-    [ ] replace {Bounds, Layout} => GridLayout
-[ ] Layout:
-    [ ] Implement lat/lon -> geohash
-    [ ] Implement geohash -> i,j
+[ ] evaluate Z-Order hash vs simple row-major
+  [ ] evaluate quadtree against hashing / indexing methods
+  [ ] refactor how the quadtree uses z-indexing
+  see:
+        https://en.wikipedia.org/wiki/Z-order_curve
+        http://blog.christianperone.com/2015/08/googles-s2-geometry-on-the-sphere-cells-and-hilbert-curve/?a=2
+
 
 [ ] migrate do gdal for file i/o
     https://gdal.org/
