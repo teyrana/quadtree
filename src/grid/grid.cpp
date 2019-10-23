@@ -32,7 +32,6 @@ using Eigen::Vector2d;
 using terrain::geometry::cell_value_t;
 using terrain::geometry::Polygon;
 using terrain::geometry::Layout;
-
 using terrain::grid::Grid;
 
 Grid::Grid(): 
@@ -54,11 +53,7 @@ bool Grid::contains(const Vector2d& p) const {
 
 cell_value_t Grid::classify(const Vector2d& p) const {
     if(contains(p)){
-	const double width_2 = layout.get_half_width();
-	const double precision = layout.get_precision();
-        const size_t x_index = (p[0] - layout.get_x() + width_2)/precision;
-        const size_t y_index = (p[1] - layout.get_y() + width_2)/precision;
-        return get_cell(x_index, y_index);
+        return storage[layout.rhash(static_cast<uint32_t>(p.x()), static_cast<uint32_t>(p.y()))];
     }
 
     return geometry::cell_default_value;
@@ -69,11 +64,11 @@ void Grid::fill(const cell_value_t value){
 }
 
 cell_value_t& Grid::get_cell(const size_t xi, const size_t yi) {
-    return storage[xi + yi * layout.get_dimension()];
+    return storage[layout.rhash(static_cast<uint32_t>(xi), static_cast<uint32_t>(yi))];
 }
 
 cell_value_t Grid::get_cell(const size_t xi, const size_t yi) const {
-    return storage[xi + yi * layout.get_dimension()];
+    return storage[layout.rhash(static_cast<uint32_t>(xi), static_cast<uint32_t>(yi))];
 }
 
 size_t Grid::get_memory_usage() const { 
@@ -96,11 +91,7 @@ size_t Grid::size() const {
 
 bool Grid::store(const Vector2d& p, const cell_value_t new_value) {
     if(contains(p)){
-	const double width_2 = layout.get_half_width();
-	const double precision = layout.get_precision();
-        const size_t x_index = (p[0] - layout.get_x() + width_2)/precision;
-        const size_t y_index = (p[1] - layout.get_y() + width_2)/precision;
-        get_cell(x_index, y_index) = new_value;
+        storage[layout.rhash(p.x(), p.y())] = new_value;
         return true;
     }
 
