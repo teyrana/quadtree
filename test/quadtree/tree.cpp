@@ -40,6 +40,19 @@ void assert_layouts_match( const Layout& first, const Layout& second ){
     EXPECT_EQ(        first.get_size(),      second.get_size());
 }
 
+TEST( QuadTreeTest, CalculateMemoryUsage){
+    Tree tree;
+    Terrain terrain(tree);
+    
+    assert_layouts_match( terrain.get_layout(), default_layout);
+
+    EXPECT_EQ(sizeof(Terrain<Tree>), 32);
+    EXPECT_EQ(sizeof(Layout), 64);
+    EXPECT_EQ(sizeof(Tree), 72);     // composed of: Layout, root-pointer
+    EXPECT_EQ(sizeof(Vector2d), 16);
+    EXPECT_EQ(sizeof(Node), 40);
+}
+
 TEST(QuadTreeTest, ConstructDefault) {
     Tree tree;
     Terrain terrain(tree);
@@ -162,19 +175,6 @@ TEST( QuadTreeTest, CalculateFullLoading){
     ASSERT_EQ( Tree::calculate_complete_tree(5), 1365);
 }
 
-TEST( QuadTreeTest, CalculateMemoryUsage){
-    Tree tree;
-    Terrain terrain(tree);
-    
-    assert_layouts_match( terrain.get_layout(), default_layout);
-
-    EXPECT_EQ(sizeof(Terrain<Tree>), 32);
-    EXPECT_EQ(sizeof(Layout), 56);
-    EXPECT_EQ(sizeof(Tree), 64);     // composed of: Layout, root-pointer
-    EXPECT_EQ(sizeof(Vector2d), 16);
-    EXPECT_EQ(sizeof(Node), 40);
-}
-    
 TEST( QuadTreeTest, CalculateLoadFactor){
     Tree tree;
     Terrain terrain(tree);

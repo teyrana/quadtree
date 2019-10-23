@@ -41,11 +41,11 @@ std::unique_ptr<Layout> Layout::make_from_json(nlohmann::json& doc){
 
 }
 
-double Layout::constrain_x( double x) const {
+double Layout::constrain_x( const double x) const {
     return std::max(get_x_min(), std::min(x, get_x_max()));
 }
 
-double Layout::constrain_y( double y) const {
+double Layout::constrain_y( const double y) const {
     return std::max(get_y_min(), std::min(y, get_y_max()));
 }
 
@@ -61,7 +61,6 @@ bool Layout::contains(const Vector2d& at) const {
     }
     return true;
 }
-
     
 const Vector2d Layout::get_anchor() const {
     return {get_x_min(), get_y_min()};

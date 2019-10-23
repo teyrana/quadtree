@@ -4,6 +4,7 @@
 #ifndef _GRID_LAYOUT_HPP_
 #define _GRID_LAYOUT_HPP_
 
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -14,6 +15,8 @@
 using Eigen::Vector2d;
 
 namespace terrain::geometry {
+
+typedef uint64_t index_t;
 
 ///! \brief Layout is used to encapsulate common logic about how to layout a square grid
 class Layout {
@@ -39,6 +42,7 @@ public:
     inline Vector2d get_center() const { return {x,y}; }
     inline size_t get_dimension() const { return dimension; }
     inline double get_half_width() const { return half_width; }
+    inline uint8_t get_padding() const { return padding; }
     inline double get_precision() const { return precision; }
     inline size_t get_size() const { return size; }
     double get_x() const { return x; }
@@ -49,12 +53,22 @@ public:
     double get_y_min() const;
     inline size_t get_width() const { return width; }
 
+    ///! \brief hashes x,y ... into a simple row-major indexing
+    constexpr index_t rhash( const Eigen::Vector2d& p) const { return rhash( p[0], p[1]); }
+    constexpr index_t rhash( const double x, const double y) const;
+    constexpr index_t rhash( const uint32_t i, const uint32_t j) const;
+
+    ///! \brief hashes x,y ... by a Z-Order Curve
+    ///! [1] http://en.wikipedia.org/wiki/Z-Order_curve
+    constexpr index_t zhash( const Eigen::Vector2d& p) const { return zhash( p[0], p[1]); }
+    constexpr index_t zhash( const double x, const double y) const;
+    constexpr index_t zhash( const uint32_t i, const uint32_t j) const;
 
     ///! \brief factory method for creating from a json document
     static std::unique_ptr<Layout> make_from_json(nlohmann::json& doc);
 
-    double constrain_x( double x) const;
-    double constrain_y( double y) const;
+    double constrain_x( const double x) const;
+    double constrain_y( const double y) const;
 
     nlohmann::json to_json() const;
 
@@ -64,11 +78,17 @@ public:
 public:
     // used for comparisons
     constexpr static double epsilon = 1e-6;
+    constexpr static size_t index_bit_size = 64;
+    constexpr static size_t maximum_supported_dimension = std::numeric_limits<uint32_t>::max();
 
 private:
+    constexpr uint64_t interleave( const uint32_t input) const;
+
     ///! \brief snaps this precision to match the next-power-of-2 dimension that covers the width
     ///! dimension * precision = width
     constexpr double snap_precision(const double precision, const double width);
+    
+    constexpr uint8_t calculate_padding( const double dimension);
 
 private:  // primary variables
     double precision;
@@ -86,6 +106,7 @@ private:  // primary variables
 private: // secondary / cached variables
     size_t dimension;
     double half_width;
+    uint8_t padding;  // left-pad the z-index with this many zeros.  Ranges from 0-64... which fits into a byte.
     size_t size;
 };
 
