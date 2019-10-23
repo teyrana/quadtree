@@ -31,5 +31,5 @@ References
 - [5] [libpng](http://www.libpng.org/)
 - [6] [Google Test Framework](https://github.com/google/googletest)
 - [7] [Eigen library](http://eigen.tuxfamily.org/index.php?title=Main_Page)
-
-
+- [8] [Z-Order Curve](https://en.wikipedia.org/wiki/Z-order_curve)
+- [9] [Comparable Implementation](https://github.com/google/s2geometry)
