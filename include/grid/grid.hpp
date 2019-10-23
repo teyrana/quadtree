@@ -75,15 +75,8 @@ public:
      */
     inline const Layout& get_layout() const { return layout; }
 
-    /** 
-     *                   +---+---+     +---+---+
-     * Index:            | 0 | 1 | ... |n-1| n |
-     *                   +---+---+     +---+---+
-     *                   |                     |
-     * Coordinate:     (center - w/2)       (center + w/2)
-
+    ///! \brief simply returns the value or reference to the internal data
     ///! \warning !! DOES NOT CHECK BOUNDS !!
-     */
     cell_value_t& get_cell(const size_t xi, const size_t yi);
     cell_value_t get_cell(const size_t xi, const size_t yi) const ;
    
