@@ -4,6 +4,7 @@
 // NOTE: This is the template-class implementation -- 
 //       It is not compiled until referenced, even though it contains the function implementations.
 
+#include <cstddef>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -16,12 +17,12 @@ using std::string;
 
 #include <Eigen/Geometry>
 
-#include <nlohmann/json/json.hpp>
-
-#ifdef ENABLE_LIBPNG
-#include <png.h>
-#include <zlib.h>
+#ifdef ENABLE_GDAL
+#include "gdal.h"
+#include "gdal_priv.h"
 #endif
+
+#include <nlohmann/json/json.hpp>
 
 #include "geometry/layout.hpp"
 #include "geometry/polygon.hpp"
@@ -42,12 +43,23 @@ const static inline string grid_key("grid");
 const static inline string tree_key("tree");
 
 template<typename T>
-Terrain<T>::Terrain(): impl(*(new T())) {}
+Terrain<T>::Terrain(): Terrain(*(new T())) {}
 
 template<typename T>
 Terrain<T>::Terrain(T& _ref): 
     impl(_ref) 
-{}
+{
+#ifdef ENABLE_GDAL
+    GDALAllRegister();
+#endif
+}
+
+template<typename T>
+Terrain<T>::~Terrain(){
+#ifdef ENABLE_GDAL
+    GDALDestroyDriverManager();
+#endif
+}
 
 template<typename T>
 cell_value_t Terrain<T>::classify(const Vector2d& p) const {
@@ -347,116 +359,64 @@ nlohmann::json Terrain<T>::to_json_grid() const {
 }
 
 template<typename T>
-bool Terrain<T>::to_png(const string& filename){
-#ifdef ENABLE_LIBPNG
-    FILE* dest = fopen(filename.c_str(), "wb");
-    if(nullptr == dest){
-        cerr << "could not open destination .png file ("<<filename<<") for reading." << endl;
-        return false;
-    }
-    return to_png(dest);
-#else
-    cerr << "libpng is disabled!! Could not save."
+bool Terrain<T>::to_png(FILE* dest){
+    cerr << "libpng is disabled!! Could not save.\n";
     return false;
-#endif //#ifdef ENABLE_LIBPNG
 }
 
 template<typename T>
-bool Terrain<T>::to_png(FILE* dest){
-#ifdef ENABLE_LIBPNG
-    // from: < http://www.libpng.org/pub/png/libpng-manual.txt >
-    // from: < https://dev.w3.org/Amaya/libpng/example.c >
-    // (search for 'write_png' function near the end)
-    if(nullptr == dest){
+bool Terrain<T>::to_png(const string& filepath){
+#ifdef ENABLE_GDAL
+    const Layout& layout = impl.get_layout();
+    const size_t image_width = layout.get_dimension();
+
+    // create the source dataset (load into this source dataset)
+    GDALDriver* p_memory_driver = GetGDALDriverManager()->GetDriverByName("MEM");
+    GDALDataset *p_grid_dataset = p_memory_driver->Create("", image_width, image_width, 1, GDT_Byte, nullptr);
+    if( nullptr == p_grid_dataset ){
+        cerr << "!! error allocating grid dataset ?!" << endl;
         return false;
     }
 
-    png_structp png_ptr;
-    png_infop  info_ptr;
-    //png_colorp palette;
-
-    // allocate and initialize libpng structures:
-    {
-        // the nulls at the end indicate we are using 'standard' error handling:
-        //     i.e. 'setjmp' and 'png_jmpbuf'
-        png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,NULL, NULL, NULL);
-        if (!png_ptr){
-            cerr << "[Tree::to_png] png_create_write_struct failed" << endl;
-            fclose(dest);
-            return false;
-        }
-        
-        info_ptr = png_create_info_struct(png_ptr);
-        if (!info_ptr){
-            cerr << "[Tree::to_png] png_create_info_struct failed" << endl;
-            fclose(dest);
-            png_destroy_write_struct(&png_ptr,  NULL);
-            return false;
-        }
-
-        // associated this structure with our file pointer:
-        png_init_io(png_ptr, dest);
-            if (setjmp(png_jmpbuf(png_ptr))){
-            cerr << "[Tree::to_png] Error during init_io" << endl;
-            fclose(dest);
-            png_destroy_write_struct(&png_ptr, &info_ptr);
-            return false;
-        }
-    }
-
-
-    // write header:
-    // Output is 8-bit depth, grayscale, alpha-less format.
-    const png_uint_32 image_width = impl.get_layout().get_dimension();
-                               // = static_cast<size_t>(get_layout().width() / precision);
-    png_set_IHDR(png_ptr, info_ptr,
-                 image_width, image_width,
-                 8, PNG_COLOR_TYPE_GRAY,
-                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
-                 PNG_FILTER_TYPE_DEFAULT);
-    png_write_info(png_ptr, info_ptr);
-    if (setjmp(png_jmpbuf(png_ptr))){
-        cerr << "[Grid:to_png] Error while writing header info" << endl;
+    auto p_gray_band = p_grid_dataset->GetRasterBand(1);
+    // unfortunately, this is not automatic
+    if( CE_Failure == p_gray_band->SetColorInterpretation(GCI_GrayIndex)){
+        cerr << "?? Unsupported color format? --- probably a program error." << endl;
+        GDALClose( p_grid_dataset );
         return false;
     }
 
     // allocate data buffers
-    std::vector<png_byte> buffer( image_width * image_width );
-    std::vector<png_bytep> row_pointers( image_width );
+    const double sample_increment = layout.get_precision();
+    std::vector<cell_value_t> buffer( image_width * image_width );
 
-    const Layout& layout = impl.get_layout();
-    const double pixel_increment = static_cast<double>(layout.get_width() / image_width);
-    for( int yj = image_width-1; 0 <= yj ; --yj){
-        double y = layout.get_y_min() + (yj + 0.5)* pixel_increment;
-        for( int xi = 0; xi < image_width; ++xi){
-            double x = layout.get_x_min() + (xi + 0.5)* pixel_increment;
-            buffer[yj*image_width + xi] = impl.classify({x,y});
+    int i = image_width-1;
+    for( double y = sample_increment/2; y < layout.get_dimension(); y += sample_increment, --i ){
+        int j = 0;
+        for( double x = sample_increment/2; x < layout.get_dimension(); x += sample_increment, ++j ){
+            buffer[i*image_width + j] = impl.classify({x,y});
         }
-        row_pointers[image_width - 1 - yj] = &(buffer[yj*image_width]);
     }
 
-    // write out the entire image data in one call
-    png_write_image(png_ptr, row_pointers.data());
-
-    // error during write
-    if (setjmp(png_jmpbuf(png_ptr))){
-        cerr << "[Tree::to_png] Error during end of write" << endl;
-        fclose(dest);
-        png_destroy_write_struct(&png_ptr, &info_ptr);
+    if( CE_Failure == p_gray_band->RasterIO(GF_Write, 0, 0, image_width, image_width, buffer.data(), image_width, image_width, GDT_Byte, 0, 0)){
+        GDALClose( p_grid_dataset );
         return false;
     }
-    
-    png_write_end(png_ptr, info_ptr);
 
-    // clean up libpng structs
-    if (png_ptr && info_ptr){
-        png_destroy_write_struct(&png_ptr, &info_ptr);
+    // Use the png driver to copy the source dataset
+    GDALDriver* p_png_driver = GetGDALDriverManager()->GetDriverByName("PNG");
+    GDALDataset *p_png_dataset = p_png_driver->CreateCopy(filepath.c_str(), p_grid_dataset, FALSE, nullptr, nullptr, nullptr);
+    if( nullptr != p_png_dataset ){
+        GDALClose( p_png_dataset );
     }
-    fclose(dest); // close file
+    GDALClose( p_grid_dataset );
+
     return true;
+
 #else
-    cerr << "libpng is disabled!! Could not save."
+    cerr << "libpng is disabled!! Could not save.\n";
     return false;
+
 #endif //#ifdef ENABLE_LIBPNG
 }
 

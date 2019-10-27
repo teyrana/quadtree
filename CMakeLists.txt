@@ -29,21 +29,26 @@ ENDIF( WALL_ON)
 
 # ============= libpng =================
 # (Enables output of graph to images)
-SET(LIBPNG_LINKAGE "/usr/local/Cellar/libpng/1.6.37/lib/libpng.dylib")
-ADD_DEFINITIONS(-DENABLE_LIBPNG)
+# SET(LIBPNG_LINKAGE "/usr/local/Cellar/libpng/1.6.37/lib/libpng.dylib")
+# ADD_DEFINITIONS(-DENABLE_LIBPNG)
 
-
-SET(LIBRARY_LINKAGE ${LIBPNG_LINKAGE})
+# # want to migrate from libpng -> gdal (see below)
+# SET(LIBRARY_LINKAGE ${LIBPNG_LINKAGE})
+# SET(LIBRARY_LINKAGE ${LIBRARY_LINKAGE} png)
+ #MESSAGE( STATUS "    with path: ${GDAL_PATH}")
 
 # ============= GDal =================
-# (Enables loading *.shp shapefiles)
-# >> assumes that you're just installing shapelib from you OS's packaging system...
+# Used for most file I/O
+# -- Assumed to be already installed:
 
+SET(GDAL_PATH "/usr/local/Cellar/gdal/2.4.2/lib/")
+# SET(GDAL_LINKAGE "/usr/local/Cellar/gdal/2.4.2/lib/libgdal.dylib")
+SET(GDAL_LINKAGE gdal)
+SET(LIBRARY_LINKAGE ${LIBRARY_LINKAGE} ${GDAL_LINKAGE})
+ADD_DEFINITIONS(-DENABLE_GDAL)
 
-SET(SHAPE_LIB_LINKAGE   /usr/local/Cellar/shapelib/1.5.0/lib/libshp.1.5.0.dylib)
-
-MESSAGE( STATUS "Configured Shapelib...")
-MESSAGE( STATUS "    with name: ${SHAPE_LIB_LINKAGE}")
+MESSAGE( STATUS "Configured GDal... ")
+MESSAGE( STATUS "    with path: ${GDAL_PATH}")
 
 #=============================================================================
 # Add Subdirectories
@@ -106,7 +111,7 @@ SET(TEST_SOURCES
                     test/quadtree/node.cpp
                     test/quadtree/tree.cpp                    )
                     
-SET(TEST_LINKAGE ${QUAD_TREE_LIB_NAME} gtest gtest_main ) 
+SET(TEST_LINKAGE ${QUAD_TREE_LIB_NAME} ${LIBRARY_LINKAGE} gtest gtest_main ) 
 
 MESSAGE( STATUS "Generating tests for ${LIB_NAME}") 
 MESSAGE( STATUS "    with name: ${TEST_EXE}") 
@@ -126,7 +131,7 @@ SET(PROFILE_EXE proftree)
 SET(PROFILE_SOURCES src/profile/main.cpp)
 
 # We don't YET need this:
-# SET(PROFILE_LINKAGE ${QUAD_TREE_LIB_NAME} ${SHAPE_LIB_LINKAGE})
+# SET(PROFILE_LINKAGE ${QUAD_TREE_LIB_NAME} ${GDAL_LINKAGE})
 
 
 MESSAGE( STATUS "Generating profiling program: ${PROFILE_EXE}")

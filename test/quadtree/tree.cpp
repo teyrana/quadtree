@@ -590,19 +590,9 @@ TEST( QuadTreeTest, SavePNG) {
     EXPECT_EQ( terrain.get_layout().get_dimension(),        64);
     EXPECT_EQ( terrain.get_layout().get_size(),           4096);
 
-    // DEVEL
-    // ASSERT_TRUE(false) << " !! Note: this is unique to the QuadTree storage, and is visible in both debug and png output.\n";
-
     // // Because this manually tested, comment this block until needed:
     // const string filename("tree.test.png");
-    // {
-    //     FILE* dest = fopen(filename.c_str(), "wb");
-    //     if(nullptr == dest){
-    //         cerr << "could not open destination .png file ("<<filename<<") for reading." << endl;
-    //         return;
-    //     }
-    //     terrain.png(dest);
-    // }
+    // terrain.to_png(filename);
 }
 
 } // namespace quadtree

@@ -231,33 +231,25 @@ TEST(GridTest, LoadPolygonFromJSON) {
 
 TEST(GridTest, SavePNG) {
     Terrain<Grid> terrain;
-    const json source = generate_diamond(  16.,   // boundary_width
+    const json source = generate_diamond(  64.,   // boundary_width
                                             1.0);  // desired_precision);
-
     std::istringstream stream(source.dump());
-
     ASSERT_TRUE(terrain.load_from_json_stream(stream));
 
     // // DEBUG
     // terrain.debug();
 
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),         8.);
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),         8.);
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    16.);
-    EXPECT_EQ( terrain.get_layout().get_dimension(), 16);
-    EXPECT_EQ( terrain.get_layout().get_size(),     256);
-    
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),        32.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),        32.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    64.);
+    EXPECT_EQ( terrain.get_layout().get_dimension(), 64);
+    EXPECT_EQ( terrain.get_layout().get_size(),    4096);
+
+    // // Because this manually tested, comment this block until needed:
     // const string filename("grid.test.png");
-    // // Because this manually tested, turn off by default.
-    // {
-    //     FILE* dest = fopen(filename.c_str(), "wb");
-    //     if(nullptr == dest){
-    //         cerr << "could not open destination .png file ("<<filename<<") for reading." << endl;
-    //         return;
-    //     }
-    //     terrain.png(dest);
-    // }
+    // terrain.to_png(filename);
+
 }
 
 }; // namespace terrain::grid

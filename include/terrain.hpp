@@ -39,6 +39,22 @@ public:
 
     Terrain(T& _ref);
 
+    //copy constructor
+    Terrain(const Terrain& t) = delete;
+
+    //move constructor
+    Terrain(Terrain&& t) = delete;
+
+    // copy assignment operator
+    Terrain& operator=(const Terrain& t) = delete;
+
+    //move assignment operator
+    Terrain& operator=(Terrain&& t) = delete;
+
+    ~Terrain();
+
+    
+
     geometry::cell_value_t classify(const Eigen::Vector2d& p) const;
 
     ///! \brief writes debug information to std err
@@ -82,7 +98,8 @@ public:
 
     ///! \brief writes a png file to the given outstream
     bool to_png(const std::string& filename);
-    
+    bool to_png(FILE* dest);
+
 private:
     ///! \brief 
     bool load_grid_from_json(nlohmann::json grid );
@@ -100,7 +117,6 @@ private:
 
     nlohmann::json to_json_grid() const;
 
-    bool to_png(FILE* dest);
 
 }; // class Terrain<T>
 
