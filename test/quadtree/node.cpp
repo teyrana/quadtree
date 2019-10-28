@@ -8,7 +8,19 @@ using std::isnan;
 
 namespace terrain::quadtree {
 
-TEST(NodeTest, ConstructByCenterAndSize) {
+TEST(NodeTest, ConstructDefault) {
+    Node n;
+    
+    ASSERT_TRUE( n.is_leaf() );
+    ASSERT_EQ( n.northeast.get(), nullptr);
+    ASSERT_EQ( n.northwest.get(), nullptr);
+    ASSERT_EQ( n.southwest.get(), nullptr);
+    ASSERT_EQ( n.southeast.get(), nullptr);
+
+    ASSERT_EQ( n.get_value(), 0);
+}
+
+TEST(NodeTest, ConstructWithValue) {
     Node n(0);
     
     ASSERT_TRUE( n.is_leaf() );
@@ -45,7 +57,7 @@ TEST(NodeTest, OperatorEquals){
 }
 
 TEST(NodeTest, SplitNodeImperative){
-    Node n(NAN);
+    Node n;
 
     ASSERT_TRUE(n.is_leaf());
     n.split();

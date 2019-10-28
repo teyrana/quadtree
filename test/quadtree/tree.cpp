@@ -362,25 +362,36 @@ TEST( QuadTreeTest, WriteLoadCycle){
     EXPECT_EQ( source_terrain.get_layout().get_dimension(),         4);
     EXPECT_EQ( source_terrain.get_layout().get_size(),             16);
 
-    // modify tree in a characteristic way
-    source_tree.root->split();
-    source_tree.root->get_northeast()->split();
-    source_tree.root->get_southwest()->split();
+    source_tree.root->split(32, 128);
 
     // Set interesting values
     source_tree.root->get_northeast()->get_northeast()->set_value(21);
     source_tree.root->get_northeast()->get_northwest()->set_value(22);
     source_tree.root->get_northeast()->get_southeast()->set_value(23);
     source_tree.root->get_northeast()->get_southwest()->set_value(24);
-    source_tree.root->get_northwest()->set_value(11);
+
+    source_tree.root->get_northwest()->get_northeast()->set_value(11);
+    source_tree.root->get_northwest()->get_northwest()->set_value(11);
+    source_tree.root->get_northwest()->get_southeast()->set_value(11);
+    source_tree.root->get_northwest()->get_southwest()->set_value(11);
+    
     source_tree.root->get_southwest()->get_northeast()->set_value(31);
     source_tree.root->get_southwest()->get_northwest()->set_value(32);
     source_tree.root->get_southwest()->get_southeast()->set_value(33);
     source_tree.root->get_southwest()->get_southwest()->set_value(34);
-    source_tree.root->get_southeast()->set_value(55);
     
+    source_tree.root->get_southeast()->get_northeast()->set_value(55);
+    source_tree.root->get_southeast()->get_northwest()->set_value(55);
+    source_tree.root->get_southeast()->get_southeast()->set_value(55);
+    source_tree.root->get_southeast()->get_southwest()->set_value(55);
+
     // // DEBUG
-    // source_tree.debug();
+    // source_tree.debug_tree();
+
+    source_tree.root->prune();
+
+    // // DEBUG
+    // source_tree.debug_tree();
 
     // write tree #1 to the serialization buffer
     std::stringstream buffer;
@@ -397,7 +408,7 @@ TEST( QuadTreeTest, WriteLoadCycle){
     ASSERT_TRUE(load_terrain.load_from_json_stream(buffer));
 
     // // DEBUG
-    // load_tree.debug();
+    // load_tree.debug_tree();
 
     // test contents of test_tree
     { // test layout:
@@ -435,7 +446,7 @@ TEST( QuadTreeTest, WriteLoadCycle){
 TEST( QuadTreeTest, SearchExplicitTree) {
     Tree tree({50, 0, 0, 100});
     Terrain terrain(tree);
-    tree.root->split();
+    tree.root->split(50, 100);
 
     ASSERT_FALSE(tree.root->is_leaf());
 

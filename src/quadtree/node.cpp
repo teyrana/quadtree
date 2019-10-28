@@ -26,7 +26,7 @@ using std::unique_ptr;
 using terrain::geometry::cell_value_t;
 using terrain::quadtree::Node;
 
-Node::Node(): Node(NAN) {}
+Node::Node(): Node(0) {}
 
 Node::Node(const cell_value_t _value):
     northeast(nullptr), northwest(nullptr), southwest(nullptr), southeast(nullptr), value(_value)
@@ -149,11 +149,12 @@ void Node::prune() {
     southeast->prune();
     southwest->prune();
 
-    if( get_northeast()->is_leaf() && 
-        get_northwest()->is_leaf() && 
-        get_southeast()->is_leaf() &&
-        get_southwest()->is_leaf())
-    {
+    bool has_only_leaves = get_northeast()->is_leaf()
+                        && get_northwest()->is_leaf()
+                        && get_southeast()->is_leaf()
+                        && get_southwest()->is_leaf();
+    
+    if( has_only_leaves ){
         auto nev = get_northeast()->get_value();
         auto nwv = get_northwest()->get_value();
         auto sev = get_southeast()->get_value();

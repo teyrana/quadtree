@@ -49,8 +49,6 @@ public:
     ///! \brief coalesce groups of leaf nodes with identice values (for some value of "identical")
     void prune();
 
-    void split();
-
     void split(const double precision, const double width);
 
     void reset();
@@ -62,6 +60,9 @@ public:
     nlohmann::json to_json() const;
 
     std::string to_string() const;
+
+private:
+    void split();
 
 private:
     // By design, any given node will only cantain (a) children or (b) a value.
@@ -77,10 +78,10 @@ private:
 
 private:
     friend class NodeTest_ConstructDefault_Test;
-    friend class NodeTest_ConstructByCenterAndSize_Test;
+    friend class NodeTest_ConstructWithValue_Test;
     friend class NodeTest_SetGet_Test;
-    friend class NodeTest_SplitNode_Test;
-    friend class NodeTest_InterpolateValue_Test;
+    friend class NodeTest_SplitNodeImperative_Test;
+
 };
 
 } // namespace terrain::quadtree
