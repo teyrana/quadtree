@@ -15,6 +15,8 @@
 #include "geometry/polygon.hpp"
 #include "quadtree/tree.hpp"
 #include "terrain.hpp"
+#include "io/readers.hpp"
+#include "io/writers.hpp"
 
 using std::cerr;
 using std::endl;
@@ -118,7 +120,7 @@ TEST( QuadTreeTest, LoadMalformedSource){
     std::istringstream source(R"({"bounds": {"x": 100, "y": 100, "width": )");
 
     // this should fail. Gracefully.
-    EXPECT_FALSE(terrain.load_from_json_stream(source));
+    EXPECT_FALSE( terrain::io::load_from_json_stream(terrain, source));
 
     // these tests should be *exactly* the same as before the 'load' call
     assert_layouts_match( terrain.get_layout(), default_layout);
@@ -134,7 +136,7 @@ TEST( QuadTreeTest, LoadBoundsOnly){
     std::stringstream stream(R"({"bounds": {"x": 100, "y": 100, "width": 64}} )");
 
     // this should fail. (gracefully)
-    EXPECT_FALSE(terrain.load_from_json_stream(stream));
+    EXPECT_FALSE( terrain::io::load_from_json_stream(terrain, stream));
 
     // these tests should be *exactly* the same as before the 'load' call
     assert_layouts_match( terrain.get_layout(), default_layout);
@@ -229,7 +231,7 @@ TEST(QuadTreeTest, LoadGridFromJSON) {
                  [88, 88, 88,  0, 88, 88, 88, 88]]} )");
 
     // test target
-    ASSERT_TRUE(terrain.load_from_json_stream(stream));
+    ASSERT_TRUE( terrain::io::load_from_json_stream(terrain, stream));
     // test target
 
     // // DEBUG
@@ -304,7 +306,7 @@ TEST(QuadTreeTest, LoadPolygonFromJSON) {
     // // DEBUG
     // cerr << "======\n" << source.dump(4) << "\n======\n" << endl;
 
-    ASSERT_TRUE(terrain.load_from_json_stream(stream));
+    ASSERT_TRUE( terrain::io::load_from_json_stream(terrain, stream));
 
     // // DEBUG
     // terrain.debug();
@@ -351,98 +353,6 @@ TEST(QuadTreeTest, LoadPolygonFromJSON) {
     ASSERT_EQ( tree.classify({ 15.5, 5.5}), 0x99);
 }
 
-TEST( QuadTreeTest, WriteLoadCycle){
-    Tree source_tree({32, 11,11, 128});
-    Terrain source_terrain(source_tree);
-
-    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_precision(), 32.);
-    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_x(),         11.);
-    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_y(),         11.);
-    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_width(),    128);
-    EXPECT_EQ( source_terrain.get_layout().get_dimension(),         4);
-    EXPECT_EQ( source_terrain.get_layout().get_size(),             16);
-
-    source_tree.root->split(32, 128);
-
-    // Set interesting values
-    source_tree.root->get_northeast()->get_northeast()->set_value(21);
-    source_tree.root->get_northeast()->get_northwest()->set_value(22);
-    source_tree.root->get_northeast()->get_southeast()->set_value(23);
-    source_tree.root->get_northeast()->get_southwest()->set_value(24);
-
-    source_tree.root->get_northwest()->get_northeast()->set_value(11);
-    source_tree.root->get_northwest()->get_northwest()->set_value(11);
-    source_tree.root->get_northwest()->get_southeast()->set_value(11);
-    source_tree.root->get_northwest()->get_southwest()->set_value(11);
-    
-    source_tree.root->get_southwest()->get_northeast()->set_value(31);
-    source_tree.root->get_southwest()->get_northwest()->set_value(32);
-    source_tree.root->get_southwest()->get_southeast()->set_value(33);
-    source_tree.root->get_southwest()->get_southwest()->set_value(34);
-    
-    source_tree.root->get_southeast()->get_northeast()->set_value(55);
-    source_tree.root->get_southeast()->get_northwest()->set_value(55);
-    source_tree.root->get_southeast()->get_southeast()->set_value(55);
-    source_tree.root->get_southeast()->get_southwest()->set_value(55);
-
-    // // DEBUG
-    // source_tree.debug_tree();
-
-    source_tree.root->prune();
-
-    // // DEBUG
-    // source_tree.debug_tree();
-
-    // write tree #1 to the serialization buffer
-    std::stringstream buffer;
-    ASSERT_TRUE(source_terrain.to_json(buffer));
-    
-    // // DEBUG
-    // cerr << buffer.str() << endl;
-    
-    // load contents into another tree
-    Tree load_tree;
-    Terrain load_terrain(load_tree);
-
-    buffer.seekg(0);
-    ASSERT_TRUE(load_terrain.load_from_json_stream(buffer));
-
-    // // DEBUG
-    // load_tree.debug_tree();
-
-    // test contents of test_tree
-    { // test layout:
-        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_precision(), 32.);
-        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_x(),         11.);
-        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_y(),         11.);
-        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_width(),    128);
-        EXPECT_EQ( load_terrain.get_layout().get_dimension(),         4);
-        EXPECT_EQ( load_terrain.get_layout().get_size(),             16);
-    }
-    { // test tree shape
-        auto & root = load_tree.root;
-        ASSERT_FALSE(root->is_leaf());
-        {
-            auto* ne_quad = root->get_northeast();
-            ASSERT_FALSE(ne_quad->is_leaf());
-            ASSERT_TRUE(ne_quad->get_northeast()->is_leaf());
-            ASSERT_TRUE(ne_quad->get_northwest()->is_leaf());
-            ASSERT_TRUE(ne_quad->get_southwest()->is_leaf());
-            ASSERT_TRUE(ne_quad->get_southeast()->is_leaf());
-        }
-        ASSERT_TRUE(root->get_northwest()->is_leaf());
-        ASSERT_TRUE(root->get_southeast()->is_leaf());
-        {
-            auto* sw_quad = root->get_northeast();
-            ASSERT_FALSE(sw_quad->is_leaf());
-            ASSERT_TRUE(sw_quad->get_northeast()->is_leaf());
-            ASSERT_TRUE(sw_quad->get_northwest()->is_leaf());
-            ASSERT_TRUE(sw_quad->get_southwest()->is_leaf());
-            ASSERT_TRUE(sw_quad->get_southeast()->is_leaf());	    
-        }
-    }
-}
-    
 TEST( QuadTreeTest, SearchExplicitTree) {
     Tree tree({50, 0, 0, 100});
     Terrain terrain(tree);
@@ -497,7 +407,7 @@ TEST( QuadTreeTest, SampleTree ){
                  [  9, 10, 11, 12],
                  [ 13, 14, 15, 16]]} )");
 
-    EXPECT_TRUE(terrain.load_from_json_stream(stream));
+    EXPECT_TRUE( terrain::io::load_from_json_stream(terrain, stream));
 
     // // DEBUG
     // tree.debug_tree(true);
@@ -589,7 +499,7 @@ TEST( QuadTreeTest, SavePNG) {
 
     std::istringstream stream(source.dump());
 
-    ASSERT_TRUE(terrain.load_from_json_stream(stream));
+    ASSERT_TRUE( terrain::io::load_from_json_stream(terrain, stream));
 
     // // DEBUG
     // terrain.debug();
@@ -604,6 +514,100 @@ TEST( QuadTreeTest, SavePNG) {
     // // Because this manually tested, comment this block until needed:
     // const string filename("tree.test.png");
     // terrain.to_png(filename);
+}
+
+
+
+TEST( QuadTreeTest, WriteLoadCycle){
+    Tree source_tree({32, 11,11, 128});
+    Terrain source_terrain(source_tree);
+
+    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_precision(), 32.);
+    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_x(),         11.);
+    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_y(),         11.);
+    EXPECT_DOUBLE_EQ( source_terrain.get_layout().get_width(),    128);
+    EXPECT_EQ( source_terrain.get_layout().get_dimension(),         4);
+    EXPECT_EQ( source_terrain.get_layout().get_size(),             16);
+
+    source_tree.root->split(32, 128);
+
+    // Set interesting values
+    source_tree.root->get_northeast()->get_northeast()->set_value(21);
+    source_tree.root->get_northeast()->get_northwest()->set_value(22);
+    source_tree.root->get_northeast()->get_southeast()->set_value(23);
+    source_tree.root->get_northeast()->get_southwest()->set_value(24);
+
+    source_tree.root->get_northwest()->get_northeast()->set_value(11);
+    source_tree.root->get_northwest()->get_northwest()->set_value(11);
+    source_tree.root->get_northwest()->get_southeast()->set_value(11);
+    source_tree.root->get_northwest()->get_southwest()->set_value(11);
+    
+    source_tree.root->get_southwest()->get_northeast()->set_value(31);
+    source_tree.root->get_southwest()->get_northwest()->set_value(32);
+    source_tree.root->get_southwest()->get_southeast()->set_value(33);
+    source_tree.root->get_southwest()->get_southwest()->set_value(34);
+    
+    source_tree.root->get_southeast()->get_northeast()->set_value(55);
+    source_tree.root->get_southeast()->get_northwest()->set_value(55);
+    source_tree.root->get_southeast()->get_southeast()->set_value(55);
+    source_tree.root->get_southeast()->get_southwest()->set_value(55);
+
+    // // DEBUG
+    // source_tree.debug_tree();
+
+    source_tree.root->prune();
+
+    // // DEBUG
+    // source_tree.debug_tree();
+
+    // write tree #1 to the serialization buffer
+    std::stringstream buffer;
+    ASSERT_TRUE( terrain::io::to_json(source_terrain, buffer));
+    
+    // // DEBUG
+    // cerr << buffer.str() << endl;
+
+    // load contents into another tree
+    Tree load_tree;
+    Terrain load_terrain(load_tree);
+
+    buffer.seekg(0);
+    ASSERT_TRUE( terrain::io::load_from_json_stream(load_terrain, buffer));
+
+    // // DEBUG
+    // load_tree.debug_tree();
+
+    // test contents of test_tree
+    { // test layout:
+        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_precision(), 32.);
+        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_x(),         11.);
+        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_y(),         11.);
+        EXPECT_DOUBLE_EQ( load_terrain.get_layout().get_width(),    128);
+        EXPECT_EQ( load_terrain.get_layout().get_dimension(),         4);
+        EXPECT_EQ( load_terrain.get_layout().get_size(),             16);
+    }
+    { // test tree shape
+        auto & root = load_tree.root;
+        ASSERT_FALSE(root->is_leaf());
+        {
+            auto* ne_quad = root->get_northeast();
+            ASSERT_FALSE(ne_quad->is_leaf());
+            ASSERT_TRUE(ne_quad->get_northeast()->is_leaf());
+            ASSERT_TRUE(ne_quad->get_northwest()->is_leaf());
+            ASSERT_TRUE(ne_quad->get_southwest()->is_leaf());
+            ASSERT_TRUE(ne_quad->get_southeast()->is_leaf());
+        }
+        ASSERT_TRUE(root->get_northwest()->is_leaf());
+        ASSERT_TRUE(root->get_southeast()->is_leaf());
+        {
+            auto* sw_quad = root->get_northeast();
+            ASSERT_FALSE(sw_quad->is_leaf());
+            ASSERT_TRUE(sw_quad->get_northeast()->is_leaf());
+            ASSERT_TRUE(sw_quad->get_northwest()->is_leaf());
+            ASSERT_TRUE(sw_quad->get_southwest()->is_leaf());
+            ASSERT_TRUE(sw_quad->get_southeast()->is_leaf());	    
+        }
+    }
 }
 
 } // namespace quadtree

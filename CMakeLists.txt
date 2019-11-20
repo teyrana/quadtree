@@ -59,9 +59,12 @@ SET(LIB_HEADERS include/terrain.hpp include/terrain.inl
                 include/geometry/layout.hpp
                 include/geometry/polygon.hpp
                 include/grid/grid.hpp
+                include/io/json.hpp
+                include/io/readers.hpp include/io/readers.inl
+                include/io/writers.hpp include/io/writers.inl
                 include/quadtree/node.hpp
                 include/quadtree/tree.hpp)
-                
+
 SET(LIB_SOURCES src/terrain.cpp
                 src/geometry/interpolate.cpp
                 src/geometry/layout.cpp

@@ -20,6 +20,10 @@ using nlohmann::json;
 #include "grid/grid.hpp"
 #include "quadtree/tree.hpp"
 #include "terrain.hpp"
+#include "io/readers.hpp"
+#include "io/writers.hpp"
+
+using namespace terrain::io;
 
 using terrain::grid::Grid;
 using terrain::quadtree::Tree;
@@ -144,9 +148,9 @@ int main(int argc, char* argv[]){
     
     bool load_success;
     if(use_grid){
-        load_success = grid.load_from_json_stream(*document_stream);
+        load_success = load_from_json_stream(grid, *document_stream);
     }else{
-        load_success = tree.load_from_json_stream(*document_stream);
+        load_success = load_from_json_stream(tree, *document_stream);
     }
     if(!load_success){
         cerr << "!!!! error while loading into the tree!!!!\n";
@@ -170,9 +174,9 @@ int main(int argc, char* argv[]){
     if(write_output){
         cerr << "##>> writing output...\n";
         if(use_grid){
-            grid.to_png(output_path);
+            to_png(grid, output_path);
         }else{
-            tree.to_png(output_path);
+            to_png(tree, output_path);
         }
     }
 

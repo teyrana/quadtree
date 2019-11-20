@@ -11,6 +11,8 @@
 
 #include "grid/grid.hpp"
 #include "terrain.hpp"
+#include "io/readers.hpp"
+#include "io/writers.hpp"
 
 using std::cerr;
 using std::endl;
@@ -89,7 +91,7 @@ TEST( GridTest, LoadMalformedSource){
     // this is simply a malformed document.  It should not parse.
     std::istringstream source(R"({"bounds": {"x": 100, "y": 100, "width": )");
     // this should fail. Gracefully.
-    EXPECT_FALSE(terrain.load_from_json_stream(source));
+    EXPECT_FALSE( terrain::io::load_from_json_stream(terrain, source));
 
     // these tests should be *exactly* the same as before the 'load' call
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
@@ -110,7 +112,7 @@ TEST( GridTest, LoadValidBoundsFromJSON){
     // construct a valid document, with correct fields, but missing required fields:
     std::istringstream source(R"({"layout": {"precision": 1.0, "x": 100, "y": 100, "width": 64}} )");
     // this should fail. gracefully.
-    EXPECT_FALSE(terrain.load_from_json_stream(source));
+    EXPECT_FALSE( terrain::io::load_from_json_stream(terrain, source));
 
     // these tests should be *exactly* the same as before the 'load' call
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
@@ -134,7 +136,7 @@ TEST(GridTest, LoadGridFromJSON) {
                   [88, 88, 88, 88, 88, 88, 88, 88]]})");
     
     // Test Target
-    ASSERT_TRUE(terrain.load_from_json_stream(stream));
+    ASSERT_TRUE( terrain::io::load_from_json_stream(terrain, stream));
     // Test Target
     
     // // DEBUG
@@ -180,7 +182,7 @@ TEST(GridTest, LoadPolygonFromJSON) {
 
     std::istringstream stream(source.dump());
 
-    EXPECT_TRUE(terrain.load_from_json_stream(stream));
+    EXPECT_TRUE( terrain::io::load_from_json_stream(terrain, stream) );
     // print error, if it is set:
     ASSERT_TRUE( terrain.get_error().empty() ) << terrain.get_error();
 
@@ -234,7 +236,7 @@ TEST(GridTest, SavePNG) {
     const json source = generate_diamond(  64.,   // boundary_width
                                             1.0);  // desired_precision);
     std::istringstream stream(source.dump());
-    ASSERT_TRUE(terrain.load_from_json_stream(stream));
+    ASSERT_TRUE( terrain::io::load_from_json_stream(terrain, stream) );
 
     // // DEBUG
     // terrain.debug();

@@ -53,8 +53,6 @@ public:
 
     ~Terrain();
 
-    
-
     geometry::cell_value_t classify(const Eigen::Vector2d& p) const;
 
     ///! \brief writes debug information to std err
@@ -69,9 +67,6 @@ public:
      * @param {std::istream} input stream containing the serialization text
      */
     void inline fill(const geometry::Polygon& source, const geometry::cell_value_t fill_value);
-
-    ///! \brief loads a json document from the given input stream
-    bool load_from_json_stream(std::istream& source);
 
     ///! \brief counts the number of cells *actually* tracked
     size_t get_count() const;
@@ -92,31 +87,6 @@ public:
     size_t get_size() const;
 
     std::string summary() const;
-
-    ///! \brief writes a json document to given output stream
-    bool to_json(std::ostream& document);
-
-    ///! \brief writes a png file to the given outstream
-    bool to_png(const std::string& filename);
-    bool to_png(FILE* dest);
-
-private:
-    ///! \brief 
-    bool load_grid_from_json(nlohmann::json grid );
-
-    ///! \brief loads all the allowed and blocked areas
-    ///! @param allow - a (json) list of allowed areas, as defined by polygons, as defined by a list of points.
-    ///! @param block - a (json) list of blocked areas, as defined by polygons, as defined by a list of points.
-    bool load_areas_from_json(nlohmann::json allow, nlohmann::json block);
-
-    ///! \brief loads list of polygons from json, into a structure
-    ///!
-    ///! @param allow - a (json) list of allowed areas, as defined by polygons, as defined by a list of points.
-    ///! @return vector of polygons
-    std::vector<geometry::Polygon> make_polygons_from_json(nlohmann::json list);
-
-    nlohmann::json to_json_grid() const;
-
 
 }; // class Terrain<T>
 
