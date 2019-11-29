@@ -25,10 +25,17 @@ public:
     Polygon(std::vector<Eigen::Vector2d>& init);
     Polygon(std::initializer_list<Eigen::Vector2d> init);
 
+    inline auto begin() const { return points.cbegin(); }
+    inline auto cbegin() const { return points.cbegin(); }
+
+
     // clears the internal point vector
     void clear();
 
     void emplace(const double x, const double y);
+
+    inline auto end() const { return points.cend(); }
+    inline auto cend() const { return points.cend(); }
 
     // Retrieves the precomputed center of the polygon:
     // Currently, this is a naive, unweighted average of the polygon points.

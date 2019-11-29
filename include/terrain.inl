@@ -80,9 +80,9 @@ void Terrain<T>::debug() const {
 
     cerr << "           ======== ======== ======== ======== As Grid: ======== ======== ======== ========\n";
     // print header (x-axis-labels: 
-    cerr << "               ";
+    cerr << "             ";
     for(double x = (layout.get_x_min() + precision/2); x < layout.get_x_max(); x += precision){
-        fprintf(stderr, "%5.1f ", x);
+        fprintf(stderr, "%5.2f ", x);
     } cerr << endl;
     // print top border
     cerr << "           +";
@@ -92,7 +92,7 @@ void Terrain<T>::debug() const {
 
     for(double y = (layout.get_y_max() - precision/2); y > layout.get_y_min(); y -= precision ){
         // print left header:
-        fprintf(stderr, "     %5.1f | ", y);
+        fprintf(stderr, "     %5.2f | ", y);
         for(double x = (layout.get_x_min() + precision/2); x < layout.get_x_max(); x += precision){
             auto value = impl.classify({x,y});
             if( 0 < value ){
@@ -102,7 +102,7 @@ void Terrain<T>::debug() const {
             }
         }
         // print right header:
-        fprintf(stderr, "  | %5.1f\n", y);
+        fprintf(stderr, "  | %5.2f\n", y);
     }
     // print bottom border
     cerr << "           +";
@@ -110,9 +110,9 @@ void Terrain<T>::debug() const {
         fprintf(stderr, "------");
     } cerr << "---+\n";
     // print footer: (x-axis-labels: 
-    cerr << "               ";
+    cerr << "             ";
     for(double x = (layout.get_x_min() + precision/2); x < layout.get_x_max(); x += precision){
-        fprintf(stderr, "%5.1f ", x);
+        fprintf(stderr, "%5.2f ", x);
     } cerr << endl << endl;
 }
 
@@ -130,9 +130,10 @@ void inline Terrain<T>::fill(const Polygon& poly, const cell_value_t fill_value)
     const Layout& layout = impl.get_layout();
     const double precision = layout.get_precision();
     const double width = layout.get_width();
-    
+    const double precision_2 = precision / 2;
+
     // Loop through the rows of the image.
-    for( double y = precision/2; y < width; y += precision ){
+    for( double y = precision_2; y < width; y += precision ){
         // generate a list of line-segment crossings from the polygon
         std::vector<double> crossings;
         for (int i=0; i < poly.size()-1; ++i) {
@@ -153,14 +154,14 @@ void inline Terrain<T>::fill(const Polygon& poly, const cell_value_t fill_value)
         if( 0 == crossings.size()){
             continue;
         }
-
+        
         // Sort the crossings:
         std::sort(crossings.begin(), crossings.end());
         
         //  Fill the pixels between node pairs.
         for( int crossing_index = 0; crossing_index < crossings.size(); crossing_index += 2){
-            const double start_x = layout.constrain_x(crossings[crossing_index]);
-            const double end_x = layout.constrain_x(crossings[crossing_index+1]);
+            const double start_x = layout.constrain_x(crossings[crossing_index] + precision_2);
+            const double end_x = layout.constrain_x(crossings[crossing_index+1] + precision_2);
             for( double x = start_x; x < end_x; x += precision){
                 impl.store({x,y}, fill_value);
             }

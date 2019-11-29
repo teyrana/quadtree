@@ -182,7 +182,7 @@ TEST(LayoutTest, ManufactureFromJSON) {
     EXPECT_EQ(layout.get_size(),              4);
 }
 
-TEST(LayoutTest, HashByRowMajor) {
+TEST(LayoutTest, HashBy_RowMajor_p1_w4) {
     ASSERT_EQ( sizeof(uint64_t), 8);  // should be guaranteed, by spec
     ASSERT_EQ( sizeof(size_t), 8);    // not strictly necessary
 
@@ -215,7 +215,40 @@ TEST(LayoutTest, HashByRowMajor) {
     ASSERT_EQ( layout.rhash(3.5, 3.5), 15);
 }
 
-TEST(LayoutTest, HashByZOrderCurve) {
+TEST(LayoutTest, HashBy_RowMajor_p05_w8) {
+    ASSERT_EQ( sizeof(uint64_t), 8);  // should be guaranteed, by spec
+    ASSERT_EQ( sizeof(size_t), 8);    // not strictly necessary
+
+    Layout layout(0.8,  2.,  2., 4);
+
+    EXPECT_DOUBLE_EQ(layout.get_precision(),  0.5);
+    EXPECT_DOUBLE_EQ(layout.get_x(),          2.);
+    EXPECT_DOUBLE_EQ(layout.get_y(),          2.);
+    EXPECT_DOUBLE_EQ(layout.get_width(),      4.);
+    EXPECT_EQ(layout.get_dimension(),         8);
+
+    EXPECT_EQ( layout.rhash(0.25, 0.25),  0);
+    EXPECT_EQ( layout.rhash(0.75, 0.25),  1);
+    EXPECT_EQ( layout.rhash(1.25, 0.25),  2);
+    EXPECT_EQ( layout.rhash(1.75, 0.25),  3);
+
+    ASSERT_EQ( layout.rhash(0.25, 0.75),  8);
+    ASSERT_EQ( layout.rhash(0.75, 0.75),  9);
+    ASSERT_EQ( layout.rhash(1.25, 0.75), 10);
+    ASSERT_EQ( layout.rhash(1.75, 0.75), 11);
+
+    ASSERT_EQ( layout.rhash(2.25, 2.25), 36);
+    ASSERT_EQ( layout.rhash(2.75, 2.25), 37);
+    ASSERT_EQ( layout.rhash(3.25, 2.25), 38);
+    ASSERT_EQ( layout.rhash(3.75, 2.25), 39);
+
+    ASSERT_EQ( layout.rhash(2.25, 3.75), 60);
+    ASSERT_EQ( layout.rhash(2.75, 3.75), 61);
+    ASSERT_EQ( layout.rhash(3.25, 3.75), 62);
+    ASSERT_EQ( layout.rhash(3.75, 3.75), 63);
+}
+
+TEST(LayoutTest, HashBy_ZOrderCurve) {
     ASSERT_EQ( sizeof(uint64_t), 8);  // should be guaranteed, by spec
     ASSERT_EQ( sizeof(size_t), 8);    // not strictly necessary
 

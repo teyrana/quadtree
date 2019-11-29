@@ -53,7 +53,7 @@ bool Grid::contains(const Vector2d& p) const {
 
 cell_value_t Grid::classify(const Vector2d& p) const {
     if(contains(p)){
-        return storage[layout.rhash(static_cast<uint32_t>(p.x()), static_cast<uint32_t>(p.y()))];
+        return storage[layout.rhash(p.x(), p.y())];
     }
 
     return geometry::cell_default_value;

@@ -200,7 +200,7 @@ TEST(GridTest, LoadPolygonFromJSON) {
     ASSERT_EQ( g.get_cell(4,15), 0x99);
     ASSERT_EQ( g.get_cell(4,14), 0x99);
     ASSERT_EQ( g.get_cell(4,13), 0x99);
-    ASSERT_EQ( g.get_cell(4,12),    0);
+    ASSERT_EQ( g.get_cell(4,12), 0x99);
     ASSERT_EQ( g.get_cell(4,11),    0);
     ASSERT_EQ( g.get_cell(4, 9),    0);
     ASSERT_EQ( g.get_cell(4, 8),    0);
@@ -208,14 +208,14 @@ TEST(GridTest, LoadPolygonFromJSON) {
     ASSERT_EQ( g.get_cell(4, 6),    0);
     ASSERT_EQ( g.get_cell(4, 5),    0);
     ASSERT_EQ( g.get_cell(4, 4),    0);
-    ASSERT_EQ( g.get_cell(4, 3),    0);
+    ASSERT_EQ( g.get_cell(4, 3), 0x99);
     ASSERT_EQ( g.get_cell(4, 2), 0x99);
     ASSERT_EQ( g.get_cell(4, 1), 0x99);
     ASSERT_EQ( g.get_cell(4, 0), 0x99);
 
     ASSERT_EQ( g.get_cell( 0, 5), 0x99);
     ASSERT_EQ( g.get_cell( 1, 5), 0x99);
-    ASSERT_EQ( g.get_cell( 2, 5),    0);
+    ASSERT_EQ( g.get_cell( 2, 5), 0x99);
     ASSERT_EQ( g.get_cell( 3, 5),    0);
     ASSERT_EQ( g.get_cell( 4, 5),    0);
     ASSERT_EQ( g.get_cell( 5, 5),    0);
@@ -226,10 +226,94 @@ TEST(GridTest, LoadPolygonFromJSON) {
     ASSERT_EQ( g.get_cell(10, 5),    0);
     ASSERT_EQ( g.get_cell(11, 5),    0);
     ASSERT_EQ( g.get_cell(12, 5),    0);
-    ASSERT_EQ( g.get_cell(13, 5), 0x99);
+    ASSERT_EQ( g.get_cell(13, 5),    0);
     ASSERT_EQ( g.get_cell(14, 5), 0x99);
     ASSERT_EQ( g.get_cell(15, 5), 0x99);
 }
+
+TEST(GridTest, LoadHoledPolygon) {
+    Terrain<Grid> terrain;
+
+    constexpr double boundary_width = 8.;   // overall boundary
+    constexpr double desired_precision = 0.5;
+    // =====
+    const double width_2 = boundary_width/2;
+    const json source = {
+            {"layout",  {{"precision", desired_precision},
+                         {"x", width_2},
+                         {"y", width_2},
+                         {"width", boundary_width}}},
+            {"allow", {{{  1,  1},
+                        {  1, 7},
+                        {  7, 7},
+                        {  7,  1}}}},
+            {"block", {{{  2,  5},
+                        {  2,  6},
+                        {  3,  6},
+                        {  3,  5}},
+                       {{  4,  4},
+                        {  4,  6},
+                        {  6,  6},
+                        {  6,  4}} }}};
+
+    std::istringstream stream(source.dump());
+
+    EXPECT_TRUE( terrain::io::load_from_json_stream(terrain, stream) );
+    // print error, if it is set:
+    ASSERT_TRUE( terrain.get_error().empty() ) << terrain.get_error();
+
+    // // DEBUG
+    // terrain.debug();
+
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 0.5);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),         4.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),         4.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),     8.);
+    EXPECT_EQ( terrain.get_layout().get_dimension(), 16);
+    EXPECT_EQ( terrain.get_layout().get_size(),    256);
+
+    ASSERT_EQ( terrain.classify({ 0.2, 0.2}), 0x99);
+    ASSERT_EQ( terrain.classify({ 0.8, 0.8}), 0x99);
+    ASSERT_EQ( terrain.classify({ 1.1, 1.1}), 0);
+    ASSERT_EQ( terrain.classify({ 2.2, 2.2}), 0);
+    ASSERT_EQ( terrain.classify({ 3.2, 3.2}), 0);
+    ASSERT_EQ( terrain.classify({ 4.2, 4.2}), 0x99);
+    ASSERT_EQ( terrain.classify({ 4.2, 4.7}), 0x99);
+    ASSERT_EQ( terrain.classify({ 5.2, 5.2}), 0x99);
+    ASSERT_EQ( terrain.classify({ 5.2, 5.7}), 0x99);
+    ASSERT_EQ( terrain.classify({ 6.2, 6.2}), 0);
+    ASSERT_EQ( terrain.classify({ 6.7, 6.7}), 0);
+    ASSERT_EQ( terrain.classify({ 7.2, 7.2}), 0x99);
+    ASSERT_EQ( terrain.classify({ 7.7, 7.7}), 0x99);
+
+    // above-diagonal square
+    ASSERT_EQ( terrain.classify({ 2.2, 5.2}), 0x99);
+    ASSERT_EQ( terrain.classify({ 2.2, 5.7}), 0x99);
+
+}
+
+// TEST(GridTest, LoadShapeFile) {
+//     Terrain<Grid> terrain;
+    
+//     string shapefile("data/massachusetts/navigation_area_100k.shp");
+
+//     ASSERT_TRUE( terrain::io::load_shape_from_file(terrain, shapefile) );
+
+//     // DEBUG
+//     terrain.debug();
+
+//     EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
+//     EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),        32.);
+//     EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),        32.);
+//     EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    64.);
+//     EXPECT_EQ( terrain.get_layout().get_dimension(), 64);
+//     EXPECT_EQ( terrain.get_layout().get_size(),    4096);
+
+//     // // Because this manually tested, comment this block until needed:
+//     // const string filename("grid.test.png");
+//     // terrain.to_png(filename);
+
+// }
 
 TEST(GridTest, SavePNG) {
     Terrain<Grid> terrain;

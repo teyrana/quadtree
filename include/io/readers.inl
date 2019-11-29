@@ -144,8 +144,8 @@ bool terrain::io::load_areas_from_json(terrain_t& t, nlohmann::json allow_doc, n
 inline std::vector<Polygon> terrain::io::make_polygons_from_json( nlohmann::json doc){
     std::vector<Polygon> result(static_cast<size_t>(doc.size()));
     if(0 < result.size()){
-        size_t polygon_index = 0;
-        for( auto& poly_doc : doc){
+        for( size_t polygon_index = 0; polygon_index < doc.size(); ++polygon_index ){
+            auto& poly_doc = doc[polygon_index];
             result[polygon_index] = {Polygon(poly_doc)};
         }
     }
