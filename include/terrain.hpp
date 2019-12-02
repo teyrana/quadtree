@@ -86,6 +86,9 @@ public:
     ///! \brief gets the total count of cells in this data structure
     size_t get_size() const;
 
+    void inline reset();
+    void inline reset(const geometry::Layout& _layout);
+
     std::string summary() const;
 
 }; // class Terrain<T>

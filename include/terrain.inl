@@ -187,6 +187,16 @@ inline double Terrain<T>::get_load_factor() const {
 }
 
 template<typename T>
+void inline Terrain<T>::reset(){
+    impl.reset();
+}
+
+template<typename T>
+void inline Terrain<T>::reset(const Layout& _layout){
+    impl.reset(_layout);
+}
+
+template<typename T>
 std::string Terrain<T>::summary() const {
     std::ostringstream buffer;
     buffer.imbue(std::locale(""));
