@@ -20,6 +20,7 @@ using std::string;
 #ifdef ENABLE_GDAL
 #include "gdal.h"
 #include "gdal_priv.h"
+#include <gnm.h>
 #endif
 
 #include <nlohmann/json/json.hpp>
@@ -62,15 +63,16 @@ bool terrain::io::load_from_json_stream(terrain_t& t, std::istream& source){
 
     // data fields
     if( doc.contains(grid_key) ){
-        t.impl.reset(*new_layout);
+        t.reset(*new_layout);
         return load_grid_from_json(t, doc[grid_key]);
 
     }else if( doc.contains(tree_key)){
         t.error_message = "!! Tree loading not implemented!\n";
         return false;
-        
+
     }else if(doc.contains(allow_key)){
-        t.impl.reset(*new_layout);
+        t.reset(*new_layout);
+
         return load_areas_from_json(t, doc[allow_key], doc[block_key]);
     }
 
@@ -146,66 +148,121 @@ inline std::vector<Polygon> terrain::io::make_polygons_from_json( nlohmann::json
     if(0 < result.size()){
         for( size_t polygon_index = 0; polygon_index < doc.size(); ++polygon_index ){
             auto& poly_doc = doc[polygon_index];
-            result[polygon_index] = {Polygon(poly_doc)};
+            result[polygon_index] = Polygon(poly_doc);
         }
     }
     return result;
 }
 
-template<typename terrain_t>
-bool terrain::io::load_shp_from_file(terrain_t& t, const string& filepath){
 #ifdef ENABLE_GDAL
+inline Polygon terrain::io::make_polygons_from_OGRLine( const OGRLinearRing& source ){
+    const size_t point_count = static_cast<size_t>(source.getNumPoints());
     
-    // // create the source dataset (load into this source dataset)
-    // GDALDriver* p_memory_driver = GetGDALDriverManager()->GetDriverByName("MEM");
-    // GDALDataset *p_grid_dataset = p_memory_driver->Create("", image_width, image_width, 1, GDT_Byte, nullptr);
-    // if( nullptr == p_grid_dataset ){
-    //     cerr << "!! error allocating grid dataset ?!" << endl;
-    //     return false;
+    if(0 < point_count ){
+        Polygon result(point_count);
+        
+        OGRPoint scratch;
+        for( size_t point_index=0; point_index < point_count; ++point_index ){
+            source.getPoint(point_index, &scratch);
+            result[point_index] = {scratch.getX(), scratch.getY()};
+        }
+
+        result.complete();
+
+        return result;
+    }
+
+    return {};
+}
+#endif // #ifdef ENABLE_GDAL
+
+template<typename terrain_t>
+bool terrain::io::load_shape_from_file(terrain_t& t, const string& filepath){
+#ifdef ENABLE_GDAL
+    auto * source_dataset = (GDALDataset*) GDALOpenEx( filepath.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL );
+    if( source_dataset == NULL ){
+        cerr << "!> Open failed. " << filepath << " into memory...\n";
+        return false;
+    }
+    // // DEBUG
+    // cerr << "#> Loaded file: " << filepath << " into memory...\n";
+    // // DEBUG
+    // for( auto * each_layer: source_dataset->GetLayers() ){
+    //     GNMGenericLayer * each_gnm_layer = (GNMGenericLayer*)each_layer;
+    //     cerr << "___?> Layer.Name: " << each_gnm_layer->GetName() << endl;
     // }
 
-    // auto p_gray_band = p_grid_dataset->GetRasterBand(1);
-    // // unfortunately, this is not automatic
-    // if( CE_Failure == p_gray_band->SetColorInterpretation(GCI_GrayIndex)){
-    //     cerr << "?? Unsupported color format? --- probably a program error." << endl;
-    //     GDALClose( p_grid_dataset );
-    //     return false;
-    // }
+    OGRLayer* shape_layer = source_dataset->GetLayer( 0 );
+    // ... ->GetLayerByName( "navigation_area_100k" );
+    if( nullptr == shape_layer ){
+        fprintf( stderr, "    !! dataset doesn't contain any layer? ");
+        goto CLEANUP_LOAD_SHAPEFILE;
+    }
 
-    // // allocate data buffers
-    // const double sample_increment = layout.get_precision();
-    // std::vector<cell_value_t> buffer( image_width * image_width );
+    shape_layer->ResetReading();
+    OGRFeature *poly_feature;
+    while( (poly_feature = shape_layer->GetNextFeature()) != NULL ){
+        
+        OGRGeometry * geom = poly_feature->GetGeometryRef();
+        if( geom == NULL ){
+            fprintf( stderr, "    !! layer -> feature: could not load geometry! \n");
+            goto CLEANUP_LOAD_SHAPEFILE;
+        }
 
-    // int i = image_width-1;
-    // for( double y = sample_increment/2; y < layout.get_dimension(); y += sample_increment, --i ){
-    //     int j = 0;
-    //     for( double x = sample_increment/2; x < layout.get_dimension(); x += sample_increment, ++j ){
-    //         buffer[i*image_width + j] = impl.classify({x,y});
-    //     }
-    // }
+        if( wkbPolygon != wkbFlatten(geom->getGeometryType()) ){
+            fprintf( stderr, "    <! geometry is not a polygon! aborting!\n" );
+            goto CLEANUP_LOAD_SHAPEFILE;
+        }
 
-    // if( CE_Failure == p_gray_band->RasterIO(GF_Write, 0, 0, image_width, image_width, buffer.data(), image_width, image_width, GDT_Byte, 0, 0)){
-    //     GDALClose( p_grid_dataset );
-    //     return false;
-    // }
+        // Reference: OGRPolygon
+        // https://gdal.org/api/ogrgeometry_cpp.html#ogrpolygon-class
+        OGRPolygon* poly = geom->toPolygon();
+        const Polygon& exterior = make_polygons_from_OGRLine( * poly->getExteriorRing());
 
-    // // Use the png driver to copy the source dataset
-    // GDALDriver* p_png_driver = GetGDALDriverManager()->GetDriverByName("PNG");
-    // GDALDataset *p_png_dataset = p_png_driver->CreateCopy(filepath.c_str(), p_grid_dataset, FALSE, nullptr, nullptr, nullptr);
-    // if( nullptr != p_png_dataset ){
-    //     GDALClose( p_png_dataset );
-    // }
-    // GDALClose( p_grid_dataset );
+        t.reset( exterior.make_layout(16.) );
+        // cerr << "    .... loaded layout"  << t.get_layout().to_string() << endl;
 
-    // return true;
-    
-    cerr << "loading .shp files is not yet implemented! Could not load file: " << filepath << endl;
+        t.fill( block_value );
+
+        //fprintf( stderr, "    .... loading exterior ring with %zu points.\n", exterior.size() );
+        t.fill( exterior, allow_value );
+
+        // if we have any interior rings, load them:
+        if( 0 < poly->getNumInteriorRings()){
+            if( wkbLineString != poly->getInteriorRing(0)->getGeometryType() ){
+                fprintf( stderr, "    !! polygon does not contain wkbLineString/LINEARRING geometries!\n");
+                fprintf( stderr, "        (instead found : %s (%d) )\n", poly->getInteriorRing(0)->getGeometryName(), poly->getInteriorRing(0)->getGeometryType() );
+                goto CLEANUP_LOAD_SHAPEFILE;
+            }
+
+            // fprintf( stderr, "       .... loading %d interior rings: \n", poly->getNumInteriorRings() );
+            bool skip = true;
+            for( const OGRLinearRing* ring : poly ){
+                if(skip){
+                    // the zeroth entry is the exterior ring, which is treated specially
+                    skip = false;
+                    continue;
+                }
+                const Polygon& block_poly = make_polygons_from_OGRLine( *ring );
+                t.fill(block_poly, block_value);
+
+                // fputc('.', stderr);
+            }
+            // fputc( '\n', stderr);
+        }
+
+        OGRFeature::DestroyFeature(poly_feature);
+    }
+    t.impl.prune();
+
+    CLEANUP_LOAD_SHAPEFILE:
+        GDALClose( source_dataset );
+        return true;
+
+#else //#ifdef ENABLE_GDAL
+    cerr << "GDAL functionality is disabled!! Could not save.\n";
     return false;
 
-#else
-    cerr << "libpng is disabled!! Could not save.\n";
-    return false;
-
-#endif //#ifdef ENABLE_LIBPNG
+#endif //#ifdef ENABLE_GDAL
 }
 

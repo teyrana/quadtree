@@ -19,6 +19,10 @@
 
 namespace terrain::io {
 
+
+inline const cell_value_t allow_value = 0;
+inline const cell_value_t block_value = 0x99;
+
 ///! \brief generates a sample json document, used for creating debug terrain
 template<typename terrain_t>
 nlohmann::json generate_diamond(terrain_t& terrain,
@@ -47,9 +51,11 @@ bool load_areas_from_json(terrain_t& terrain, nlohmann::json allow, nlohmann::js
 ///! @return vector of polygons
 inline std::vector<geometry::Polygon> make_polygons_from_json(nlohmann::json list);
 
+inline geometry::Polygon make_polygons_from_OGRLine( const OGRLinearRing& source );
+
 ///! \brief load a .shp file into this terrain.
 template<typename terrain_t>
-bool load_shp_from_file(terrain_t& terrain, const string& filepath);
+bool load_shape_from_file(terrain_t& terrain, const string& filepath);
 
 }; // namespace terrain::io
 

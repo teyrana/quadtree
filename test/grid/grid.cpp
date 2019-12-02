@@ -341,10 +341,63 @@ TEST(GridTest, LoadOffsetPolygon) {
     
 }
 
-//     ASSERT_TRUE( terrain::io::load_shape_from_file(terrain, shapefile) );
+TEST(GridTest, LoadSomervilleShapeFile) {
+    Terrain<Grid> terrain;
 
-//     // DEBUG
-//     terrain.debug();
+    string shapefile("data/Somerville/CityLimits.shp");
+
+    const bool load_result = terrain::io::load_shape_from_file(terrain, shapefile);
+    // terrain.debug();
+    // terrain.print();
+
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(),    16.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),        763251.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),       2969340.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),     32768.);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),  2048);
+    EXPECT_EQ( terrain.get_layout().get_size(),    4194304);
+
+    // Because this manually tested, comment this block until needed:
+    const string filename("test.somerville.shapefile.png");
+    terrain::io::to_png(terrain, filename);
+
+    ASSERT_TRUE( load_result );
+}
+
+// TEST(GridTest, LoadMassachusettsShapeFile) {
+//     Terrain<Grid> terrain;
+
+//     string shapefile("data/massachusetts/navigation_area_100k.shp");
+
+//     const bool load_result = terrain::io::load_shape_from_file(terrain, shapefile);
+//     // terrain.debug();
+//     // terrain.print();
+
+//     EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(),  64.);
+//     EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),        305000.);
+//     EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),        861400.);
+//     EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    262144.);
+//     // EXPECT_EQ( terrain.get_layout().get_dimension(),  1024);
+//     // EXPECT_EQ( terrain.get_layout().get_size(),    1048576);
+//     EXPECT_EQ( terrain.get_layout().get_dimension(),  4096);
+//     EXPECT_EQ( terrain.get_layout().get_size(),   16777216);
+
+//     // Because this manually tested, comment this block until needed:
+//     const string filename("shapefile.test.png");
+//     terrain::io::to_png(terrain, filename);
+
+//     ASSERT_TRUE( load_result );
+// }
+
+// TEST(GridTest, SavePNG) {
+//     Terrain<Grid> terrain;
+//     const json source = generate_diamond(  64.,   // boundary_width
+//                                             1.0);  // desired_precision);
+//     std::istringstream stream(source.dump());
+//     ASSERT_TRUE( terrain::io::load_from_json_stream(terrain, stream) );
+
+//     // // DEBUG
+//     // terrain.debug();
 
 //     EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
 //     EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),        32.);
@@ -353,33 +406,9 @@ TEST(GridTest, LoadOffsetPolygon) {
 //     EXPECT_EQ( terrain.get_layout().get_dimension(), 64);
 //     EXPECT_EQ( terrain.get_layout().get_size(),    4096);
 
-//     // // Because this manually tested, comment this block until needed:
-//     // const string filename("grid.test.png");
-//     // terrain.to_png(filename);
-
+//     // Because this manually tested, comment this block until needed:
+//     const string filename("grid.test.png");
+//     terrain::io::to_png(terrain, filename);
 // }
-
-TEST(GridTest, SavePNG) {
-    Terrain<Grid> terrain;
-    const json source = generate_diamond(  64.,   // boundary_width
-                                            1.0);  // desired_precision);
-    std::istringstream stream(source.dump());
-    ASSERT_TRUE( terrain::io::load_from_json_stream(terrain, stream) );
-
-    // // DEBUG
-    // terrain.debug();
-
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),        32.);
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),        32.);
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    64.);
-    EXPECT_EQ( terrain.get_layout().get_dimension(), 64);
-    EXPECT_EQ( terrain.get_layout().get_size(),    4096);
-
-    // // Because this manually tested, comment this block until needed:
-    // const string filename("grid.test.png");
-    // terrain.to_png(filename);
-
-}
 
 }; // namespace terrain::grid

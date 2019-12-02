@@ -104,13 +104,14 @@ bool terrain::io::to_png(const terrain_t& t, const string& filepath){
     }
 
     // allocate data buffers
-    const double sample_increment = layout.get_precision();
+    const double precision = layout.get_precision();
     std::vector<cell_value_t> buffer( image_width * image_width );
 
+    // // Loop through the rows of the image.
     int i = image_width-1;
-    for( double y = sample_increment/2; y < layout.get_dimension(); y += sample_increment, --i ){
+    for( double y = layout.get_y_min() + precision/2; y < layout.get_y_max(); y += precision, --i ){
         int j = 0;
-        for( double x = sample_increment/2; x < layout.get_dimension(); x += sample_increment, ++j ){
+        for( double x = layout.get_x_min() + precision/2; x < layout.get_x_max(); x += precision, ++j ){
             buffer[i*image_width + j] = t.classify({x,y});
         }
     }
