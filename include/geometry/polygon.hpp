@@ -15,6 +15,8 @@
 
 #include <nlohmann/json/json_fwd.hpp>
 
+#include "geometry/layout.hpp"
+
 namespace terrain::geometry {
 
 class Polygon {
@@ -44,6 +46,8 @@ public:
     bool load(std::vector<Eigen::Vector2d> source);
 
     bool load(nlohmann::json doc);
+
+    terrain::geometry::Layout make_layout(const double precision) const;
 
     Eigen::Vector2d& operator[](const size_t index);
 

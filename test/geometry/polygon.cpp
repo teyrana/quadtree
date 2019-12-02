@@ -1,16 +1,18 @@
+#include <iostream>
 #include <memory>
 #include <vector>
 
 #include "gtest/gtest.h"
 
 #include "geometry/polygon.hpp"
+#include "geometry/layout.hpp"
 
 using std::vector;
 
 using Eigen::Vector2d;
 
 using terrain::geometry::Polygon;
-
+using terrain::geometry::Layout;
 
 namespace terrain::geometry {
 
@@ -24,7 +26,6 @@ TEST(PolygonTest, DefaultConfiguration) {
     ASSERT_TRUE(points[3].isApprox(Vector2d(0,1)));
 }
 
-#include <iostream>
 TEST(PolygonTest, LoadList_5Point) {
     // Note:  this polygen is configured as CW:
     //    it will be enclosed, and reversed, internally
@@ -45,7 +46,6 @@ TEST(PolygonTest, LoadList_5Point) {
     ASSERT_EQ( shape[5], Vector2d(  3,  4));
 }
 
-
 TEST(PolygonTest, LoadList_DiamondRhombus) {
     Polygon shape({{1,0},{0,1},{-1,0},{0,-1}});
 
@@ -60,7 +60,42 @@ TEST(PolygonTest, LoadList_DiamondRhombus) {
 
 }
 
-// TEST(BoundAreaTests, InBoundingBoxByX) {
+TEST(PolygonTest, MakeLayout) {
+    Polygon bounds;
+    Polygon shape( {{ 5, 6},
+                    { 9, 5},
+                    {12, 8},
+                    { 5,11},
+                    { 3, 4},
+                    { 5, 6}} );
+
+    const double precision = 0.5;
+    const Layout& layout = shape.make_layout(precision);
+
+    // ====== ====== Preconditions ====== ======
+    EXPECT_DOUBLE_EQ(layout.get_precision(),  1.0);
+    EXPECT_DOUBLE_EQ(layout.get_x(),          8);
+    EXPECT_DOUBLE_EQ(layout.get_y(),          8);
+    EXPECT_DOUBLE_EQ(layout.get_width(),     16);
+    EXPECT_EQ(layout.get_dimension(),        16);
+    EXPECT_EQ(layout.get_size(),            256);
+
+    EXPECT_FALSE( layout.contains({ -1., -1.}) );
+    EXPECT_FALSE( layout.contains({ -2., -2.}) );
+
+    EXPECT_EQ( layout.rhash(0.1, 0.1),  0);
+    EXPECT_EQ( layout.rhash(1.1, 0.1),  1);
+    EXPECT_EQ( layout.rhash(0.1, 1.1), 16);
+    EXPECT_EQ( layout.rhash(1.1, 1.1), 17);
+
+    ASSERT_EQ( layout.rhash(2., 0.), 2);
+    ASSERT_EQ( layout.rhash(3., 0.), 3);
+    ASSERT_EQ( layout.rhash(2., 1.), 18);
+    ASSERT_EQ( layout.rhash(3., 1.), 19);
+}
+
+
+// TEST(PolygonTest, InBoundingBoxByX) {
 //     BoundaryPolygon bounds;
 //     bounds.setParam("margin", "20.");
 //     bounds.setParam("priority_function", "linear");
