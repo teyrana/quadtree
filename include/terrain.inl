@@ -186,6 +186,34 @@ inline double Terrain<T>::get_load_factor() const {
     return -1.0; // error. fixme!
 }
 
+
+template<typename T>
+void Terrain<T>::print() const {
+    const Layout& layout = impl.get_layout();
+    const double precision = layout.get_precision();
+
+    cerr << " ======== ======== Print Grid: ======== ======== ======== ========\n";
+
+    // // print top border
+    // for(double x = (layout.get_x_min() + precision/2); x < layout.get_x_max(); x += precision){
+    //     fprintf(stderr, "------");
+    // } cerr << '\n';
+
+    for(double y = (layout.get_y_max() - precision/2); y > layout.get_y_min(); y -= precision ){
+        for(double x = (layout.get_x_min() + precision/2); x < layout.get_x_max(); x += precision){
+            auto value = impl.classify({x,y});
+            if( 0 < value ){
+                cerr << 'X';
+            }else{
+                cerr << ' ';
+            }
+        }
+        cerr << endl;
+    }
+    cerr << " ======== ======== ======== ======== ======== ======== ========\n";
+
+}
+
 template<typename T>
 void inline Terrain<T>::reset(){
     impl.reset();
