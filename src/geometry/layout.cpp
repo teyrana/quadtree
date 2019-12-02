@@ -38,7 +38,6 @@ std::unique_ptr<Layout> Layout::make_from_json(nlohmann::json& doc){
     const double width = doc[width_key].get<double>();
 
     return std::make_unique<Layout>(precision, x, y, width);
-
 }
 
 double Layout::constrain_x( const double x) const {

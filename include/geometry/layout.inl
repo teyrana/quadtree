@@ -15,7 +15,7 @@ constexpr Layout::Layout()
 {}
 
 constexpr Layout::Layout(const double _precision, const double _x, const double _y, const double _width)
-    : precision(snap_precision(_precision,_width)), width(_width), x(_x), y(_y),     // primary fields
+    : precision(snap_precision(_precision)), width(snap_width(_width)), x(_x), y(_y),     // primary fields
       dimension(width/precision), half_width(width/2), padding(calculate_padding(dimension)), size(dimension*dimension)     // derived fields
 {
     assert( dimension <= maximum_supported_dimension );
@@ -24,6 +24,7 @@ constexpr Layout::Layout(const double _precision, const double _x, const double 
 constexpr uint8_t Layout::calculate_padding( const double dimension ){
     size_t power = 1;
     size_t padding = 64;
+
     // this loop basically calculates log2(dimension), but in constexpr 
     while( dimension > power){
         power <<= 1;
@@ -33,17 +34,39 @@ constexpr uint8_t Layout::calculate_padding( const double dimension ){
     return padding;
 }
 
-constexpr double Layout::snap_precision( const double precision, const double width){
-    const double dimension_estimate = width / precision;
-
-    // calculate the next-higher power-of-2, in constexpr form
-    size_t power = 1;
-    while( dimension_estimate > power){
-        power = power << 1;
+constexpr double Layout::snap_precision( double _precision){
+    double next_precision = 1.;
+    while( 1 < _precision ){
+        if( 2 > _precision ){
+            return next_precision;
+        }
+        _precision *= 0.5;
+        next_precision *= 2;
     }
 
-    return width / power;
+    return next_precision;
 }
+
+// constexpr double Layout::snap_precision( const double precision, const double width){
+//     const double dimension_estimate = width / precision;
+//     // calculate the next-higher power-of-2, in constexpr form
+//     size_t power = 1;
+//     while( dimension_estimate > power){
+//         power = power << 1;
+//     }
+//     return width / power;
+// }
+
+constexpr double Layout::snap_width( const double _width){
+    double next_width = precision;
+
+    while( next_width < _width){
+        next_width *= 2;
+    }
+
+    return next_width;
+}
+
 
 constexpr uint64_t Layout::interleave( const uint32_t input) const {
     uint64_t word = input;

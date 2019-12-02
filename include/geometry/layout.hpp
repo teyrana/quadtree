@@ -80,14 +80,17 @@ public:
     constexpr static double epsilon = 1e-6;
     constexpr static size_t index_bit_size = 64;
     constexpr static size_t maximum_supported_dimension = std::numeric_limits<uint32_t>::max();
+    constexpr static double minimum_supported_precision = 1.;
 
 private:
     constexpr uint64_t interleave( const uint32_t input) const;
 
-    ///! \brief snaps this precision to match the next-power-of-2 dimension that covers the width
-    ///! dimension * precision = width
-    constexpr double snap_precision(const double precision, const double width);
-    
+    ///! \brief snaps this precision to match the next-power-of-2 dimension that covers the precision
+    ///!
+    ///! Note:  Precision <= 1.0
+    constexpr double snap_precision(const double precision);
+    constexpr double snap_width( const double _width);
+
     constexpr uint8_t calculate_padding( const double dimension);
 
 private:  // primary variables

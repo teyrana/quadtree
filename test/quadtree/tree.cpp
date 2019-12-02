@@ -92,10 +92,10 @@ TEST( QuadTreeTest, ConstructAndSetBounds) {
     Terrain terrain(tree);
 
     // pre-conditions
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 0.53125);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),         5.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),         3.);
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    17.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    32.);
     EXPECT_EQ( terrain.get_layout().get_dimension(),       32);
     EXPECT_EQ( terrain.get_layout().get_size(),          1024);
 
@@ -360,12 +360,12 @@ TEST( QuadTreeTest, SearchExplicitTree) {
 
     ASSERT_FALSE(tree.root->is_leaf());
 
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 50.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 32.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),          0.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),          0.);
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    100);
-    EXPECT_EQ( terrain.get_layout().get_dimension(),         2);
-    EXPECT_EQ( terrain.get_layout().get_size(),              4);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),    128);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),         4);
+    EXPECT_EQ( terrain.get_layout().get_size(),             16);
 
     cell_value_t false_value = 5;
     cell_value_t true_value = 14;
@@ -504,12 +504,12 @@ TEST( QuadTreeTest, SavePNG) {
     // // DEBUG
     // terrain.debug();
 
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(),  0.25);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(),  1.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),          8.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),          8.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),     16);
-    EXPECT_EQ( terrain.get_layout().get_dimension(),        64);
-    EXPECT_EQ( terrain.get_layout().get_size(),           4096);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),        16);
+    EXPECT_EQ( terrain.get_layout().get_size(),            256);
 
     // // Because this manually tested, comment this block until needed:
     // const string filename("tree.test.png");

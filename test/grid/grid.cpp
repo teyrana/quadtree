@@ -53,17 +53,17 @@ TEST(GridTest, ConstructWithSizeSpacingCenter) {
     EXPECT_EQ( terrain.get_layout().get_size(),     16);
 }
 
-TEST(GridTest, ConstructWithUnitSize){
+TEST(GridTest, ConstructWithSubUnitPrecision){
     grid::Grid g({1./16., 0, 0, 1.});
     Terrain terr(g);
  
-    EXPECT_DOUBLE_EQ( terr.get_layout().get_precision(), 0.0625);
+    EXPECT_DOUBLE_EQ( terr.get_layout().get_precision(), 1.0);
     EXPECT_DOUBLE_EQ( terr.get_layout().get_x(),         0.);
     EXPECT_DOUBLE_EQ( terr.get_layout().get_y(),         0.);
     EXPECT_DOUBLE_EQ( terr.get_layout().get_width(),     1.);
 
-    EXPECT_EQ( terr.get_layout().get_dimension(), 16);
-    EXPECT_EQ( terr.get_layout().get_size(),     256);
+    EXPECT_EQ( terr.get_layout().get_dimension(), 1);
+    EXPECT_EQ( terr.get_layout().get_size(),      1);
 }
 
 TEST(GridTest, ConstructWithOddSize) {
@@ -265,12 +265,12 @@ TEST(GridTest, LoadHoledPolygon) {
     // // DEBUG
     // terrain.debug();
 
-    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 0.5);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(), 1.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),         4.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),         4.);
     EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),     8.);
-    EXPECT_EQ( terrain.get_layout().get_dimension(), 16);
-    EXPECT_EQ( terrain.get_layout().get_size(),    256);
+    EXPECT_EQ( terrain.get_layout().get_dimension(), 8);
+    EXPECT_EQ( terrain.get_layout().get_size(),     64);
 
     ASSERT_EQ( terrain.classify({ 0.2, 0.2}), 0x99);
     ASSERT_EQ( terrain.classify({ 0.8, 0.8}), 0x99);

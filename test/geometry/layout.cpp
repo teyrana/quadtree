@@ -70,10 +70,10 @@ TEST(LayoutTest, ConstructExplicitEvenNumbers) {
 TEST(LayoutTest, ConstructExplicitUneven_p2_w5) {
     Layout layout(2., 0, 0, 5.);
 
-    EXPECT_DOUBLE_EQ(layout.get_precision(),  1.25);
+    EXPECT_DOUBLE_EQ(layout.get_precision(),  2.);
     EXPECT_DOUBLE_EQ(layout.get_x(),          0.);
     EXPECT_DOUBLE_EQ(layout.get_y(),          0.);
-    EXPECT_DOUBLE_EQ(layout.get_width(),      5.0);
+    EXPECT_DOUBLE_EQ(layout.get_width(),      8.0);
 
     EXPECT_EQ(layout.get_padding(),          60);
     EXPECT_EQ(layout.get_dimension(),         4);
@@ -81,20 +81,20 @@ TEST(LayoutTest, ConstructExplicitUneven_p2_w5) {
 }
 
 TEST(LayoutTest, ConstructExplictUneven_p04_w16) {
-    Layout layout(0.4, 8,8, 16.);
+    Layout layout(0.4, 8, 8, 16.);
 
-    EXPECT_DOUBLE_EQ(layout.get_precision(),  0.25);
+    EXPECT_DOUBLE_EQ(layout.get_precision(),  1.0);
     EXPECT_DOUBLE_EQ(layout.get_x(),          8.);
     EXPECT_DOUBLE_EQ(layout.get_y(),          8.);
     EXPECT_DOUBLE_EQ(layout.get_width(),     16.0);
 
-    EXPECT_EQ(layout.get_padding(),          52);
-    EXPECT_EQ( layout.get_dimension(),       64);
-    EXPECT_EQ( layout.get_size(),          4096);
+    EXPECT_EQ(layout.get_padding(),          56);
+    EXPECT_EQ( layout.get_dimension(),       16);
+    EXPECT_EQ( layout.get_size(),           256);
 }
 
 TEST(LayoutTest, ConstructExplictUneven_p7_w32) {
-    Layout layout(7, 0,0, 32.);
+    Layout layout(7, 0, 0, 32.);
 
     EXPECT_DOUBLE_EQ(layout.get_precision(),  4.0);
     EXPECT_DOUBLE_EQ(layout.get_x(),          0.);
@@ -219,33 +219,29 @@ TEST(LayoutTest, HashBy_RowMajor_p05_w8) {
     ASSERT_EQ( sizeof(uint64_t), 8);  // should be guaranteed, by spec
     ASSERT_EQ( sizeof(size_t), 8);    // not strictly necessary
 
-    Layout layout(0.8,  2.,  2., 4);
+    Layout layout(0.5,  4.,  4., 8.);
 
-    EXPECT_DOUBLE_EQ(layout.get_precision(),  0.5);
-    EXPECT_DOUBLE_EQ(layout.get_x(),          2.);
-    EXPECT_DOUBLE_EQ(layout.get_y(),          2.);
-    EXPECT_DOUBLE_EQ(layout.get_width(),      4.);
+    EXPECT_DOUBLE_EQ(layout.get_precision(),  1.);
+    EXPECT_DOUBLE_EQ(layout.get_x(),          4.);
+    EXPECT_DOUBLE_EQ(layout.get_y(),          4.);
+    EXPECT_DOUBLE_EQ(layout.get_width(),      8.);
     EXPECT_EQ(layout.get_dimension(),         8);
 
     EXPECT_EQ( layout.rhash(0.25, 0.25),  0);
-    EXPECT_EQ( layout.rhash(0.75, 0.25),  1);
-    EXPECT_EQ( layout.rhash(1.25, 0.25),  2);
-    EXPECT_EQ( layout.rhash(1.75, 0.25),  3);
+    EXPECT_EQ( layout.rhash(0.75, 0.25),  0);
+    EXPECT_EQ( layout.rhash(1.25, 0.25),  1);
+    EXPECT_EQ( layout.rhash(1.75, 0.25),  1);
 
-    ASSERT_EQ( layout.rhash(0.25, 0.75),  8);
-    ASSERT_EQ( layout.rhash(0.75, 0.75),  9);
-    ASSERT_EQ( layout.rhash(1.25, 0.75), 10);
-    ASSERT_EQ( layout.rhash(1.75, 0.75), 11);
+    ASSERT_EQ( layout.rhash(0.25, 0.75),  0);
+    ASSERT_EQ( layout.rhash(0.75, 0.75),  0);
+    ASSERT_EQ( layout.rhash(1.25, 0.75),  1);
+    ASSERT_EQ( layout.rhash(1.75, 0.75),  1);
 
-    ASSERT_EQ( layout.rhash(2.25, 2.25), 36);
-    ASSERT_EQ( layout.rhash(2.75, 2.25), 37);
-    ASSERT_EQ( layout.rhash(3.25, 2.25), 38);
-    ASSERT_EQ( layout.rhash(3.75, 2.25), 39);
+    ASSERT_EQ( layout.rhash(2.5, 0.5), 2);
+    ASSERT_EQ( layout.rhash(3.5, 0.5), 3);
 
-    ASSERT_EQ( layout.rhash(2.25, 3.75), 60);
-    ASSERT_EQ( layout.rhash(2.75, 3.75), 61);
-    ASSERT_EQ( layout.rhash(3.25, 3.75), 62);
-    ASSERT_EQ( layout.rhash(3.75, 3.75), 63);
+    ASSERT_EQ( layout.rhash(2.5, 1.5), 10);
+    ASSERT_EQ( layout.rhash(3.5, 1.5), 11);
 }
 
 TEST(LayoutTest, HashBy_ZOrderCurve) {
