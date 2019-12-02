@@ -129,11 +129,10 @@ void inline Terrain<T>::fill(const Polygon& poly, const cell_value_t fill_value)
 
     const Layout& layout = impl.get_layout();
     const double precision = layout.get_precision();
-    const double width = layout.get_width();
-    const double precision_2 = precision / 2;
+    const double precision_2 = layout.get_precision()/2;
 
     // Loop through the rows of the image.
-    for( double y = precision_2; y < width; y += precision ){
+    for( double y = layout.get_y_min() + precision_2; y < layout.get_y_max(); y += precision ){
         // generate a list of line-segment crossings from the polygon
         std::vector<double> crossings;
         for (int i=0; i < poly.size()-1; ++i) {

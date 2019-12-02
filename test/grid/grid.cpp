@@ -292,10 +292,54 @@ TEST(GridTest, LoadHoledPolygon) {
 
 }
 
-// TEST(GridTest, LoadShapeFile) {
-//     Terrain<Grid> terrain;
+TEST(GridTest, LoadOffsetPolygon) {
+    Terrain<Grid> terrain;
+
+    // =====
+    const json source = {
+            {"layout",  {{"precision", 32},
+                         {"x", 232000},
+                         {"y", 811000},
+                         {"width", 1024}}},
+            {"allow", {{{231600, 810800},
+                        {231800, 810600},
+                        {232440, 810600},
+                        {232440, 810850},
+                        {232220, 811000},
+                        {232440, 811150},
+                        {232440, 811400},
+                        {232200, 811400},
+                        {231600, 810800}}}}};
+    std::istringstream stream(source.dump());
+
+    EXPECT_TRUE( terrain::io::load_from_json_stream(terrain, stream) );
+    // print error, if it is set:
+    ASSERT_TRUE( terrain.get_error().empty() ) << terrain.get_error();
+
+    // DEBUG
+    // terrain.debug();
+    // terrain.print();
+
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_precision(),    32.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_x(),        232000.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_y(),        811000.);
+    EXPECT_DOUBLE_EQ( terrain.get_layout().get_width(),      1024.);
+    EXPECT_EQ( terrain.get_layout().get_dimension(),  32);
+    EXPECT_EQ( terrain.get_layout().get_size(),     1024);
+
+    ASSERT_EQ( terrain.classify({ 231500, 811500}), 0x99);
+    ASSERT_EQ( terrain.classify({ 231600, 811400}), 0x99);
+    ASSERT_EQ( terrain.classify({ 231700, 811300}), 0x99);
+    ASSERT_EQ( terrain.classify({ 231800, 811200}), 0x99);
+    ASSERT_EQ( terrain.classify({ 231900, 811100}), 0x99);
+    ASSERT_EQ( terrain.classify({ 232000, 811000}), 0);
+    ASSERT_EQ( terrain.classify({ 232100, 810900}), 0);
+    ASSERT_EQ( terrain.classify({ 232200, 810800}), 0);
+    ASSERT_EQ( terrain.classify({ 232300, 810700}), 0);
+    ASSERT_EQ( terrain.classify({ 232400, 810600}), 0);
+    ASSERT_EQ( terrain.classify({ 232500, 810500}), 0x99);
     
-//     string shapefile("data/massachusetts/navigation_area_100k.shp");
+}
 
 //     ASSERT_TRUE( terrain::io::load_shape_from_file(terrain, shapefile) );
 
