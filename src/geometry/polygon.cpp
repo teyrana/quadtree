@@ -36,7 +36,7 @@ Polygon::Polygon(){
 Polygon::Polygon(const size_t initial_capacity):
     points(initial_capacity)
 {
-    set_default();
+    points.resize(initial_capacity);
 }
 
 Polygon::Polygon(nlohmann::json doc){
