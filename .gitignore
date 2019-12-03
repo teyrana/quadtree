@@ -5,3 +5,5 @@ lib/*
 vendor/googletest
 
 *.png
+
+TODO.txt
