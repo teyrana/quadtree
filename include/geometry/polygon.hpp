@@ -30,6 +30,8 @@ public:
     inline auto begin() const { return points.cbegin(); }
     inline auto cbegin() const { return points.cbegin(); }
 
+    ///! \brief when manually constructing a polygon, call this to ensure it format-matches
+    void complete();
 
     // clears the internal point vector
     void clear();
@@ -63,7 +65,6 @@ public:
     void write_yaml(std::ostream& sink, std::string indent="") const; 
 
 protected:
-    void complete();
 
     // if necessary, adds an extra point to the end of the polygon-point vector to wrap it back to the first point.
     // this is not strictly operationally necessary, but it simplifies most of the algorithms that need to iterate over the points.
